@@ -1,75 +1,77 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ozen Antivirus Pro | Next-Gen Solo Shield</title>
-    
-    <!-- SEARCH ENGINE RECOGNITION KEYS -->
-    <meta name="description" content="Ozen Antivirus Pro is a next-generation standalone desktop security suite featuring a hybrid Java-Python cross-platform scanning engine.">
-    <meta name="keywords" content="Ozen Antivirus, Ozen Antivirus Pro, Guardian Engine, free antivirus download, solo project antivirus, Java Python antivirus, download Ozen antivirus">
-    <meta name="author" content="Ozen Security">
-    <meta name="robots" content="index, follow">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ozen Antivirus Pro | AV 1.1 Launch</title>
+  
+  <!-- SEO -->
+  <meta name="description" content="Ozen Antivirus Pro 1.1 — Next-gen Windows C++ security suite with dynamic shield UI, Always Scan, and extra tools.">
+  <meta name="keywords" content="Ozen Antivirus, AV 1.1 Pro, sandbox.exe, free antivirus download, Windows C++ antivirus">
+  <meta name="author" content="Ozen Security">
+  <meta name="robots" content="index, follow">
 
-    <!-- CLEAN MODERN WHITE DESIGN CSS STRUCTURING -->
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: #fcfcfc; color: #1e1e1e; line-height: 1.6; }
-        header { background: linear-gradient(135deg, #f5f5f5, #ffffff); padding: 60px 20px; text-align: center; border-bottom: 2px solid #27ae60; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .shield-logo { font-size: 80px; margin-bottom: 10px; animation: pulse 2s infinite; }
-        h1 { font-size: 2.8rem; letter-spacing: 1px; color: #111111; font-weight: 800; }
-        .tagline { font-size: 1.2rem; color: #27ae60; margin-top: 10px; font-weight: bold; }
-        .container { max-width: 1000px; margin: 40px auto; padding: 0 20px; }
-        .section { background-color: #ffffff; padding: 30px; border-radius: 8px; border: 1px solid #e0e0e0; margin-bottom: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
-        h2 { color: #27ae60; margin-bottom: 15px; font-size: 1.8rem; border-bottom: 1px solid #eee; padding-bottom: 8px; }
-        p { color: #555555; font-size: 1.1rem; margin-bottom: 15px; }
-        ul { list-style-type: none; }
-        li { margin-bottom: 10px; font-size: 1.05rem; color: #333333; display: flex; align-items: center; }
-        li::before { content: "✔"; color: #27ae60; margin-right: 10px; font-weight: bold; }
-        .btn-container { text-align: center; margin: 50px 0; }
-        .download-btn { background-color: #27ae60; color: #ffffff; font-weight: bold; font-size: 1.3rem; padding: 15px 40px; border: none; border-radius: 30px; cursor: pointer; text-decoration: none; transition: transform 0.2s, box-shadow 0.2s; display: inline-block; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3); }
-        .download-btn:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(39, 174, 96, 0.5); }
-        footer { text-align: center; padding: 30px; color: #888888; font-size: 0.9rem; border-top: 1px solid #eaeaea; margin-top: 50px; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); } }
-    </style>
+  <!-- Modern CSS -->
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+    body { background: #fdfdfd; color: #222; line-height: 1.6; overflow-x: hidden; }
+    header { background: linear-gradient(135deg, #27ae60, #2ecc71); padding: 60px 20px; text-align: center; color: #fff; position: relative; }
+    header h1 { font-size: 3rem; font-weight: 800; animation: slideDown 1.5s ease; }
+    header .tagline { font-size: 1.2rem; margin-top: 10px; animation: fadeIn 2s ease; }
+    .shield-logo { font-size: 80px; margin-bottom: 15px; animation: pulse 2s infinite; }
+
+    .container { max-width: 1000px; margin: 40px auto; padding: 0 20px; }
+    .section { background: #fff; padding: 30px; border-radius: 8px; margin-bottom: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); animation: fadeUp 1.2s ease; }
+    h2 { color: #27ae60; margin-bottom: 15px; font-size: 1.8rem; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+    p { font-size: 1.1rem; margin-bottom: 15px; color: #555; }
+    ul { list-style: none; }
+    li { margin-bottom: 10px; font-size: 1.05rem; display: flex; align-items: center; }
+    li::before { content: "✔"; color: #27ae60; margin-right: 10px; font-weight: bold; }
+
+    .btn-container { text-align: center; margin: 50px 0; }
+    .download-btn { background: #27ae60; color: #fff; font-weight: bold; font-size: 1.3rem; padding: 15px 40px; border-radius: 30px; text-decoration: none; transition: transform 0.3s, box-shadow 0.3s; display: inline-block; box-shadow: 0 4px 15px rgba(39,174,96,0.3); }
+    .download-btn:hover { transform: translateY(-5px) scale(1.05); box-shadow: 0 8px 25px rgba(39,174,96,0.5); }
+
+    footer { text-align: center; padding: 30px; color: #888; font-size: 0.9rem; border-top: 1px solid #eaeaea; margin-top: 50px; }
+
+    /* Animations */
+    @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+    @keyframes slideDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes fadeUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  </style>
 </head>
 <body>
 
-    <header>
-        <div class="shield-logo">🛡️</div>
-        <h1>OZEN ANTIVIRUS PRO</h1>
-        <div class="tagline">Next-Generation Hybrid Protection Engine</div>
-    </header>
+  <header>
+    <div class="shield-logo">🛡️</div>
+    <h1>OZEN ANTIVIRUS PRO 1.1</h1>
+    <div class="tagline">Official Release — June 10th, 12:30 IST</div>
+  </header>
 
-    <div class="container">
-        <div class="section">
-            <h2>How It Works</h2>
-            <p>Ozen Antivirus utilizes a pioneering <strong>Dual-Core Hybrid Architecture</strong>. The system decouples the user interface from low-level processes by running an independent, multi-threaded Java Swing Core for rapid data tracking alongside an ultra-fast background Python heuristics engine.</p>
-            <p>The two layers communicate seamlessly over encrypted local network loop sockets using optimized 65KB data transfer buffers to analyze data footprints in real-time with zero system latency.</p>
-        </div>
-
-        <div class="section">
-            <h2>Core Protection Features</h2>
-            <ul>
-                <li><strong>Dual-Engine Scanning:</strong> Cross-platform path crawling tracking both profile sectors and deep system drive roots.</li>
-                <li><strong>Resilient Anti-Clog Design:</strong> Explicit 5-second socket isolation boundaries prevent background process freezes.</li>
-                <li><strong>Self-Healing Fallback:</strong> The Java layer autonomously handles file checking if the background driver drops.</li>
-                <li><strong>Real-Time Download Watcher:</strong> Instant file metadata intercepts right inside your downloads directory.</li>
-                <li><strong>Taskbar Background Integration:</strong> Minimizes cleanly to the taskbar system tray with adaptive icon monitoring.</li>
-                <li><strong>Developer Access Gateway:</strong> Enter secure token "4309" to unlock premium sentinel shield layers.</li>
-            </ul>
-        </div>
-
-        <div class="btn-container">
-            <!-- CODES ALIGNED: Download reference re-mapped to exactly target your uploaded server archive -->
-            <a href="Ozen-antivirus.zip" class="download-btn" download>Download Ozen Antivirus (v1.0 Pro Folder)</a>
-            <p style="margin-top: 15px; font-size: 0.9rem; color: #888888;">Includes Double-Click Batch Launcher. Requires Java Runtime & Python 3.11+</p>
-        </div>
+  <div class="container">
+    <div class="section">
+      <h2>🚀 What’s New</h2>
+      <ul>
+        <li>Dynamic Shield UI with glow effects</li>
+        <li>Always Scan with staged progress</li>
+        <li>Update checker & registry persistence</li>
+        <li>Extra Tools: File Shredder & Disinfection</li>
+        <li>Fullscreen status panel with drive/VPN checks</li>
+      </ul>
     </div>
 
-    <footer>
-        Natively Developed and Published Solo by Ozen Security &copy; 2026. All Rights Reserved.
-    </footer>
+    <div class="btn-container">
+      <!-- Updated download link -->
+      <a href="sandbox.exe" class="download-btn" download>⬇️ Download AV 1.1 Pro (sandbox.exe)</a>
+      <p style="margin-top: 15px; font-size: 0.9rem; color: #888;">Windows 10/11 compatible — built in C++ & Win32 API</p>
+    </div>
+  </div>
+
+  <footer>
+    © 2026 Ozen Security | AV 1.1 Pro — Built in C++ & Win32 API
+  </footer>
 
 </body>
 </html>
+
