@@ -7,6 +7,10 @@
   <style>
     body { font-family: Segoe UI, sans-serif; margin:0; background:#fafafa; }
     header { background:#0078d7; color:#fff; padding:20px; text-align:center; }
+    .banner {
+      background:#ffcc00; color:#333; padding:10px;
+      font-weight:bold; text-align:center;
+    }
     main { padding:40px; text-align:center; }
     a.download {
       display:inline-block; padding:12px 24px; margin-top:20px;
@@ -21,12 +25,20 @@
     <h1>AV 1.1 Pro</h1>
     <p>AI‑powered Windows Antivirus</p>
   </header>
+
+  <!-- Version banner -->
+  <div class="banner">
+    Build v1.1.0 — Released June 12, 2026
+  </div>
+
   <main>
     <h2>Download</h2>
-    <!-- Make sure sandbox.exe is in the repo root -->
     <a class="download" href="sandbox.exe" download>Download sandbox.exe</a>
     <p>Latest build with integrated AI assistant.</p>
+    <!-- Fallback plain link -->
+    <p><a href="sandbox.exe">Direct link to sandbox.exe</a></p>
   </main>
+
   <footer>
     <p>&copy; 2026 Ozentime Security Tools</p>
   </footer>
