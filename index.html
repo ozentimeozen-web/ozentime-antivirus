@@ -2,78 +2,33 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>AV Security Hub</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AV 1.1 Pro</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; }
-    header { background: #1a1a1a; color: white; padding: 30px; text-align: center; }
-    nav { background: #0078D7; padding: 15px; text-align: center; }
-    nav a { color: white; margin: 0 20px; text-decoration: none; font-weight: bold; transition: color 0.3s ease; }
-    nav a:hover { color: #ffcc00; }
-
-    .download-btn { padding: 15px 25px; margin: 10px; border: none; cursor: pointer; font-size: 16px; transition: all 0.3s ease; }
-    .active { background: #0078D7; color: white; }
-    .active:hover { transform: scale(1.05); background: #005bb5; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-    .disabled { background: #aaa; color: #666; cursor: not-allowed; }
-
-    section { padding: 50px; text-align: center; opacity: 0; transform: translateY(50px); transition: all 1s ease; }
-    section.visible { opacity: 1; transform: translateY(0); }
-
-    footer { background: #1a1a1a; color: white; padding: 20px; text-align: center; }
-    .info-btn { background: #333; color: white; padding: 10px 20px; border: none; cursor: pointer; transition: background 0.3s ease; }
-    .info-btn:hover { background: #555; }
+    body { font-family: Segoe UI, sans-serif; margin:0; background:#fafafa; }
+    header { background:#0078d7; color:#fff; padding:20px; text-align:center; }
+    main { padding:40px; text-align:center; }
+    a.download {
+      display:inline-block; padding:12px 24px; margin-top:20px;
+      background:#0078d7; color:#fff; text-decoration:none; border-radius:4px;
+    }
+    a.download:hover { background:#005a9e; }
+    footer { background:#333; color:#ccc; text-align:center; padding:10px; margin-top:40px; }
   </style>
 </head>
 <body>
   <header>
-    <h1>AV Security Hub</h1>
-    <p>Security for Everyone, Everywhere.</p>
+    <h1>AV 1.1 Pro</h1>
+    <p>AI‑powered Windows Antivirus</p>
   </header>
-
-  <nav>
-    <a href="#downloads">Downloads</a>
-    <a href="#features">Capabilities</a>
-    <a href="#roadmap">Upcoming</a>
-    <a href="#community">Community</a>
-  </nav>
-
-  <section id="downloads">
-    <h2>Download AV 1.1 Pro</h2>
-    <button class="download-btn active">Windows</button>
-    <button class="download-btn disabled">macOS</button>
-    <button class="download-btn active">Linux</button>
-    <p><small>Note: macOS build coming soon.</small></p>
-  </section>
-
-  <section id="features">
-    <h2>What Our AV Does</h2>
-    <p>Scanning, Quarantine, Prevention, Logging, Adaptive GUI.</p>
-    <button class="info-btn">More Info</button>
-  </section>
-
-  <section id="roadmap">
-    <h2>Upcoming AV 1.2</h2>
-    <p>VPN integration, network protection, mobile edition.</p>
-  </section>
-
-  <section id="community">
-    <h2>Join the Community</h2>
-    <p>Feedback, GitHub contributions, early testing program.</p>
-  </section>
-
+  <main>
+    <h2>Download</h2>
+    <!-- Make sure sandbox.exe is in the repo root -->
+    <a class="download" href="sandbox.exe" download>Download sandbox.exe</a>
+    <p>Latest build with integrated AI assistant.</p>
+  </main>
   <footer>
-    <p>&copy; 2026 AV Security Project | GitHub | Support</p>
+    <p>&copy; 2026 Ozentime Security Tools</p>
   </footer>
-
-  <!-- ScrollReveal animation -->
-  <script src="https://unpkg.com/scrollreveal"></script>
-  <script>
-    ScrollReveal().reveal('section', {
-      duration: 1000,
-      origin: 'bottom',
-      distance: '50px',
-      easing: 'ease-in-out',
-      reset: true
-    });
-  </script>
 </body>
 </html>
