@@ -2,74 +2,78 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ozen Antivirus Pro | AV 1.1 Launch</title>
-  
-  <!-- SEO -->
-  <meta name="description" content="Ozen Antivirus Pro 1.1 — Next-gen Windows C++ security suite with dynamic shield UI, Always Scan, and extra tools.">
-  <meta name="keywords" content="Ozen Antivirus, AV 1.1 Pro, sandbox.exe, free antivirus download, Windows C++ antivirus">
-  <meta name="author" content="Ozen Security">
-  <meta name="robots" content="index, follow">
-
-  <!-- Modern CSS -->
+  <title>AV Security Hub</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
-    body { background: #fdfdfd; color: #222; line-height: 1.6; overflow-x: hidden; }
-    header { background: linear-gradient(135deg, #27ae60, #2ecc71); padding: 60px 20px; text-align: center; color: #fff; position: relative; }
-    header h1 { font-size: 3rem; font-weight: 800; animation: slideDown 1.5s ease; }
-    header .tagline { font-size: 1.2rem; margin-top: 10px; animation: fadeIn 2s ease; }
-    .shield-logo { font-size: 80px; margin-bottom: 15px; animation: pulse 2s infinite; }
+    body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; }
+    header { background: #1a1a1a; color: white; padding: 30px; text-align: center; }
+    nav { background: #0078D7; padding: 15px; text-align: center; }
+    nav a { color: white; margin: 0 20px; text-decoration: none; font-weight: bold; transition: color 0.3s ease; }
+    nav a:hover { color: #ffcc00; }
 
-    .container { max-width: 1000px; margin: 40px auto; padding: 0 20px; }
-    .section { background: #fff; padding: 30px; border-radius: 8px; margin-bottom: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); animation: fadeUp 1.2s ease; }
-    h2 { color: #27ae60; margin-bottom: 15px; font-size: 1.8rem; border-bottom: 1px solid #eee; padding-bottom: 8px; }
-    p { font-size: 1.1rem; margin-bottom: 15px; color: #555; }
-    ul { list-style: none; }
-    li { margin-bottom: 10px; font-size: 1.05rem; display: flex; align-items: center; }
-    li::before { content: "✔"; color: #27ae60; margin-right: 10px; font-weight: bold; }
+    .download-btn { padding: 15px 25px; margin: 10px; border: none; cursor: pointer; font-size: 16px; transition: all 0.3s ease; }
+    .active { background: #0078D7; color: white; }
+    .active:hover { transform: scale(1.05); background: #005bb5; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+    .disabled { background: #aaa; color: #666; cursor: not-allowed; }
 
-    .btn-container { text-align: center; margin: 50px 0; }
-    .download-btn { background: #27ae60; color: #fff; font-weight: bold; font-size: 1.3rem; padding: 15px 40px; border-radius: 30px; text-decoration: none; transition: transform 0.3s, box-shadow 0.3s; display: inline-block; box-shadow: 0 4px 15px rgba(39,174,96,0.3); }
-    .download-btn:hover { transform: translateY(-5px) scale(1.05); box-shadow: 0 8px 25px rgba(39,174,96,0.5); }
+    section { padding: 50px; text-align: center; opacity: 0; transform: translateY(50px); transition: all 1s ease; }
+    section.visible { opacity: 1; transform: translateY(0); }
 
-    footer { text-align: center; padding: 30px; color: #888; font-size: 0.9rem; border-top: 1px solid #eaeaea; margin-top: 50px; }
-
-    /* Animations */
-    @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
-    @keyframes slideDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    @keyframes fadeUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    footer { background: #1a1a1a; color: white; padding: 20px; text-align: center; }
+    .info-btn { background: #333; color: white; padding: 10px 20px; border: none; cursor: pointer; transition: background 0.3s ease; }
+    .info-btn:hover { background: #555; }
   </style>
 </head>
 <body>
-
   <header>
-    <div class="shield-logo">🛡️</div>
-    <h1>OZEN ANTIVIRUS PRO 1.1</h1>
-    <div class="tagline">Official Release — June 10th, 12:30 IST</div>
+    <h1>AV Security Hub</h1>
+    <p>Security for Everyone, Everywhere.</p>
   </header>
 
-  <div class="container">
-    <div class="section">
-      <h2>🚀 What’s New</h2>
-      <ul>
-        <li>Dynamic Shield UI with glow effects</li>
-        <li>Always Scan with staged progress</li>
-        <li>Update checker & registry persistence</li>
-        <li>Extra Tools: File Shredder & Disinfection</li>
-        <li>Fullscreen status panel with drive/VPN checks</li>
-      </ul>
-    </div>
+  <nav>
+    <a href="#downloads">Downloads</a>
+    <a href="#features">Capabilities</a>
+    <a href="#roadmap">Upcoming</a>
+    <a href="#community">Community</a>
+  </nav>
 
-    <div class="btn-container">
-      <!-- Updated download link -->
-      <a href="sandbox.exe" class="download-btn" download>⬇️ Download AV 1.1 Pro (sandbox.exe)</a>
-      <p style="margin-top: 15px; font-size: 0.9rem; color: #888;">Windows 10/11 compatible — built in C++ & Win32 API</p>
-    </div>
-  </div>
+  <section id="downloads">
+    <h2>Download AV 1.1 Pro</h2>
+    <button class="download-btn active">Windows</button>
+    <button class="download-btn disabled">macOS</button>
+    <button class="download-btn active">Linux</button>
+    <p><small>Note: macOS build coming soon.</small></p>
+  </section>
+
+  <section id="features">
+    <h2>What Our AV Does</h2>
+    <p>Scanning, Quarantine, Prevention, Logging, Adaptive GUI.</p>
+    <button class="info-btn">More Info</button>
+  </section>
+
+  <section id="roadmap">
+    <h2>Upcoming AV 1.2</h2>
+    <p>VPN integration, network protection, mobile edition.</p>
+  </section>
+
+  <section id="community">
+    <h2>Join the Community</h2>
+    <p>Feedback, GitHub contributions, early testing program.</p>
+  </section>
 
   <footer>
-    © 2026 Ozen Security | AV 1.1 Pro — Built in C++ & Win32 API
+    <p>&copy; 2026 AV Security Project | GitHub | Support</p>
   </footer>
+
+  <!-- ScrollReveal animation -->
+  <script src="https://unpkg.com/scrollreveal"></script>
+  <script>
+    ScrollReveal().reveal('section', {
+      duration: 1000,
+      origin: 'bottom',
+      distance: '50px',
+      easing: 'ease-in-out',
+      reset: true
+    });
+  </script>
 </body>
 </html>
