@@ -3,44 +3,103 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AV 1.1 Pro</title>
+  <title>Ozentime Antivirus 1.2</title>
   <style>
-    body { font-family: Segoe UI, sans-serif; margin:0; background:#fafafa; }
-    header { background:#0078d7; color:#fff; padding:20px; text-align:center; }
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: #fff;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+    }
+    header {
+      padding: 2rem;
+      background: rgba(0,0,0,0.4);
+    }
+    h1 {
+      margin: 0;
+      font-size: 2.5rem;
+    }
     .banner {
-      background:#ffcc00; color:#333; padding:10px;
-      font-weight:bold; text-align:center;
+      margin: 1rem 0;
+      font-size: 1.2rem;
+      color: #00ffcc;
     }
-    main { padding:40px; text-align:center; }
-    a.download {
-      display:inline-block; padding:12px 24px; margin-top:20px;
-      background:#0078d7; color:#fff; text-decoration:none; border-radius:4px;
+    .download-btn {
+      display: inline-block;
+      margin: 2rem;
+      padding: 1rem 2rem;
+      background: #00ffcc;
+      color: #000;
+      font-weight: bold;
+      text-decoration: none;
+      border-radius: 8px;
+      transition: background 0.3s ease;
     }
-    a.download:hover { background:#005a9e; }
-    footer { background:#333; color:#ccc; text-align:center; padding:10px; margin-top:40px; }
+    .download-btn:hover {
+      background: #00cc99;
+    }
+    nav {
+      margin-top: 2rem;
+    }
+    nav a {
+      margin: 0 1rem;
+      color: #fff;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    nav a:hover {
+      text-decoration: underline;
+    }
+    footer {
+      margin-top: 3rem;
+      padding: 1rem;
+      background: rgba(0,0,0,0.3);
+      font-size: 0.9rem;
+    }
   </style>
 </head>
 <body>
   <header>
-    <h1>AV 1.1 Pro</h1>
-    <p>AI‑powered Windows Antivirus</p>
+    <h1>Ozentime Antivirus</h1>
+    <div class="banner">Now serving: Version 1.2</div>
   </header>
 
-  <!-- Version banner -->
-  <div class="banner">
-    Build v1.1.0 — Released June 12, 2026
-  </div>
-
   <main>
-    <h2>Download</h2>
-    <a class="download" href="sandbox.exe" download>Download sandbox.exe</a>
-    <p>Latest build with integrated AI assistant.</p>
-    <!-- Fallback plain link -->
-    <p><a href="sandbox.exe">Direct link to sandbox.exe</a></p>
+    <p>Lightweight. Fast. Secure. Built in under 2 hours, optimized for 3–5% resource usage.</p>
+    <a href="downloads/ozentime1.2.exe" class="download-btn" download>Download Ozentime 1.2</a>
+    
+    <nav>
+      <a href="#features">Features</a>
+      <a href="#roadmap">Roadmap</a>
+      <a href="#contact">Contact</a>
+    </nav>
   </main>
 
+  <section id="features">
+    <h2>Key Features</h2>
+    <ul>
+      <li>Always Scan background mode</li>
+      <li>Heuristic rebuild engine</li>
+      <li>Cluster-based malware removal</li>
+      <li>Gmail integration placeholder</li>
+      <li>Resource usage capped at 3–5%</li>
+    </ul>
+  </section>
+
+  <section id="roadmap">
+    <h2>Roadmap</h2>
+    <p>Upcoming: Mobile app, AI assistant integration, advanced GUI polish.</p>
+  </section>
+
+  <section id="contact">
+    <h2>Contact</h2>
+    <p>Developed in Pune, India. Reach out via GitHub Issues for support.</p>
+  </section>
+
   <footer>
-    <p>&copy; 2026 Ozentime Security Tools</p>
+    &copy; 2026 Ozentime Antivirus Project
   </footer>
 </body>
 </html>
