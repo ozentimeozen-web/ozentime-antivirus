@@ -2,28 +2,28 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self';">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ozentime Antivirus 1.2</title>
+  <title>Ozentime Antivirus 1.2 Pro</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      background: #111;
       color: #fff;
+      text-align: center;
       margin: 0;
       padding: 0;
-      text-align: center;
     }
     header {
       padding: 2rem;
-      background: rgba(0,0,0,0.4);
+      background: #222;
     }
     h1 {
       margin: 0;
-      font-size: 2.5rem;
+      font-size: 2rem;
     }
     .banner {
-      margin: 1rem 0;
-      font-size: 1.2rem;
+      margin-top: 1rem;
       color: #00ffcc;
     }
     .download-btn {
@@ -34,31 +34,38 @@
       color: #000;
       font-weight: bold;
       text-decoration: none;
-      border-radius: 8px;
-      transition: background 0.3s ease;
+      border-radius: 6px;
     }
     .download-btn:hover {
       background: #00cc99;
     }
+    .checksum {
+      font-size: 0.9rem;
+      color: #aaa;
+      margin-top: 1rem;
+    }
     footer {
       margin-top: 3rem;
       padding: 1rem;
-      background: rgba(0,0,0,0.3);
-      font-size: 0.9rem;
+      background: #222;
+      font-size: 0.8rem;
     }
   </style>
 </head>
 <body>
   <header>
     <h1>Ozentime Antivirus</h1>
-    <div class="banner">Now serving: Version 1.2</div>
+    <div class="banner">Version 1.2 Pro</div>
   </header>
 
   <main>
-    <p>Lightweight. Fast. Secure. Optimized for 3–5% resource usage.</p>
-    <!-- Direct GitHub link to the file -->
-    <a href="https://github.com/<your-username>/<repo>/releases/download/v1.2/ozentime1.2.exe" 
-       class="download-btn">Download Ozentime 1.2</a>
+    <p>Lightweight. Fast. Secure.</p>
+    <!-- Direct raw GitHub link -->
+    <a href="https://raw.githubusercontent.com/ozentimeozen-web/ozentime-antivirus/main/ozentime1.2pro.exe" 
+       class="download-btn">Download Ozentime 1.2 Pro</a>
+    <div class="checksum">
+      SHA-256: <code>paste-your-checksum-here</code>
+    </div>
   </main>
 
   <footer>
@@ -66,4 +73,3 @@
   </footer>
 </body>
 </html>
-
