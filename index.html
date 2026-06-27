@@ -2,46 +2,84 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Ozentime Antivirus Downloads</title>
+  <title>Ozentime AV 1.2 Total Security</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #f4f4f4; text-align: center; padding: 50px; }
-    h1 { color: #222; }
-    .version-box {
-      margin: 20px auto;
-      padding: 20px;
-      background: #fff;
-      border-radius: 8px;
-      width: 450px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-    .download-btn {
-      display: inline-block;
-      margin: 10px;
-      padding: 12px 20px;
-      background: #0078d7;
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
       color: #fff;
-      text-decoration: none;
-      border-radius: 5px;
-      font-weight: bold;
+      text-align: center;
+      overflow-x: hidden;
     }
-    .download-btn:hover { background: #005a9e; }
-    .desc { font-size: 0.95em; color: #444; margin-top: 10px; }
+    header {
+      padding: 40px;
+      animation: fadeDown 1.5s ease;
+    }
+    h1 {
+      font-size: 3em;
+      margin: 0;
+      text-shadow: 2px 2px 8px #000;
+    }
+    .btn {
+      display: inline-block;
+      margin: 20px;
+      padding: 15px 30px;
+      font-size: 1.2em;
+      color: #fff;
+      background: #ff0000;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.3s, background 0.3s;
+    }
+    .btn:hover {
+      transform: scale(1.1);
+      background: #cc0000;
+    }
+    .info-box {
+      margin: 30px auto;
+      max-width: 600px;
+      padding: 20px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 10px;
+      animation: fadeUp 2s ease;
+    }
+    @keyframes fadeDown {
+      from {opacity: 0; transform: translateY(-50px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+    @keyframes fadeUp {
+      from {opacity: 0; transform: translateY(50px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+    footer {
+      margin-top: 50px;
+      padding: 20px;
+      font-size: 0.9em;
+      opacity: 0.7;
+    }
   </style>
 </head>
 <body>
-  <h1>Ozentime Antivirus Versions</h1>
+  <header>
+    <h1>Ozentime Antivirus 1.2</h1>
+    <p>Total Security Edition</p>
+  </header>
 
-  <div class="version-box">
-    <h2>Version 1.1 Pro</h2>
-    <a href="https://raw.githubusercontent.com/ozentimeozen-web/ozentime-antivirus/main/sandbox.exe" class="download-btn">Download 1.1 Pro</a>
-    <p class="desc">Provides standard security for users. Lightweight and user‑friendly.</p>
+  <button class="btn">Download 1.2 Max</button>
+  <button class="btn">Download 1.2 Total Security</button>
+
+  <div class="info-box">
+    <h2>Red Alert Mode</h2>
+    <p>
+      🚨 Under development. The shield indicator works, but pressing the Red Alert button will not trigger any action in this version.  
+      Future builds will auto‑activate Red Alert during severe threats.
+    </p>
   </div>
 
-  <div class="version-box">
-    <h2>Version 1.2 Max</h2>
-    <a href="https://raw.githubusercontent.com/ozentimeozen-web/ozentime-antivirus/main/ozentime1.2max.exe" class="download-btn">Download 1.2 Max</a>
-    <p class="desc">Full security suite. Prevents virus spreading through Wi‑Fi and offers real‑time protection.</p>
-  </div>
-
+  <footer>
+    &copy; 2026 Ozentime Security Labs
+  </footer>
 </body>
 </html>
