@@ -2,74 +2,46 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self';">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ozentime Antivirus 1.2 Pro</title>
+  <title>Ozentime Antivirus Downloads</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #111;
-      color: #fff;
-      text-align: center;
-      margin: 0;
-      padding: 0;
-    }
-    header {
-      padding: 2rem;
-      background: #222;
-    }
-    h1 {
-      margin: 0;
-      font-size: 2rem;
-    }
-    .banner {
-      margin-top: 1rem;
-      color: #00ffcc;
+    body { font-family: Arial, sans-serif; background: #f4f4f4; text-align: center; padding: 50px; }
+    h1 { color: #222; }
+    .version-box {
+      margin: 20px auto;
+      padding: 20px;
+      background: #fff;
+      border-radius: 8px;
+      width: 450px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
     .download-btn {
       display: inline-block;
-      margin: 2rem;
-      padding: 1rem 2rem;
-      background: #00ffcc;
-      color: #000;
-      font-weight: bold;
+      margin: 10px;
+      padding: 12px 20px;
+      background: #0078d7;
+      color: #fff;
       text-decoration: none;
-      border-radius: 6px;
+      border-radius: 5px;
+      font-weight: bold;
     }
-    .download-btn:hover {
-      background: #00cc99;
-    }
-    .checksum {
-      font-size: 0.9rem;
-      color: #aaa;
-      margin-top: 1rem;
-    }
-    footer {
-      margin-top: 3rem;
-      padding: 1rem;
-      background: #222;
-      font-size: 0.8rem;
-    }
+    .download-btn:hover { background: #005a9e; }
+    .desc { font-size: 0.95em; color: #444; margin-top: 10px; }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Ozentime Antivirus</h1>
-    <div class="banner">Version 1.2 Pro</div>
-  </header>
+  <h1>Ozentime Antivirus Versions</h1>
 
-  <main>
-    <p>Lightweight. Fast. Secure.</p>
-    <!-- Direct raw GitHub link -->
-    <a href="https://raw.githubusercontent.com/ozentimeozen-web/ozentime-antivirus/main/ozentime1.2pro.exe" 
-       class="download-btn">Download Ozentime 1.2 Pro</a>
-    <div class="checksum">
-      SHA-256: <code>paste-your-checksum-here</code>
-    </div>
-  </main>
+  <div class="version-box">
+    <h2>Version 1.1 Pro</h2>
+    <a href="https://raw.githubusercontent.com/ozentimeozen-web/ozentime-antivirus/main/sandbox.exe" class="download-btn">Download 1.1 Pro</a>
+    <p class="desc">Provides standard security for users. Lightweight and user‑friendly.</p>
+  </div>
 
-  <footer>
-    &copy; 2026 Ozentime Antivirus Project
-  </footer>
+  <div class="version-box">
+    <h2>Version 1.2 Max</h2>
+    <a href="https://raw.githubusercontent.com/ozentimeozen-web/ozentime-antivirus/main/ozentime1.2max.exe" class="download-btn">Download 1.2 Max</a>
+    <p class="desc">Full security suite. Prevents virus spreading through Wi‑Fi and offers real‑time protection.</p>
+  </div>
+
 </body>
 </html>
