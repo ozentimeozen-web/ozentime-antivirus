@@ -2,56 +2,73 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Ozentime AV 1.2</title>
+  <title>Ozentime Antivirus</title>
   <style>
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      background: #000; /* Black background */
       color: #fff;
       text-align: center;
-      overflow-x: hidden;
     }
     header {
+      background: #001f4d; /* Deep blue banner */
       padding: 40px;
-      animation: fadeDown 1.5s ease;
     }
-    h1 {
-      font-size: 3em;
+    header h1 {
       margin: 0;
-      text-shadow: 2px 2px 8px #000;
+      font-size: 3em;
+      color: #fff; /* White text */
+    }
+    header p {
+      font-size: 1.2em;
+      color: #fff;
+    }
+    .warning {
+      color: #ff3333; /* Red warning text */
+      font-weight: bold;
+      margin: 20px;
     }
     .btn {
       display: inline-block;
       margin: 20px;
       padding: 15px 30px;
       font-size: 1.2em;
-      color: #fff;
-      background: #ff0000;
+      color: #000;
+      background: #87ceeb; /* Sky blue buttons */
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      transition: transform 0.3s, background 0.3s;
+      transition: transform 0.3s, box-shadow 0.3s;
     }
     .btn:hover {
       transform: scale(1.1);
-      background: #cc0000;
+      box-shadow: 0 0 15px #87ceeb;
     }
-    .info-box {
-      margin: 30px auto;
-      max-width: 600px;
+    .versions {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin: 40px auto;
+      flex-wrap: wrap;
+    }
+    .card {
+      background: rgba(255,255,255,0.05);
       padding: 20px;
-      background: rgba(255,255,255,0.1);
       border-radius: 10px;
-      animation: fadeUp 2s ease;
+      width: 250px;
+      text-align: left;
     }
-    @keyframes fadeDown {
-      from {opacity: 0; transform: translateY(-50px);}
-      to {opacity: 1; transform: translateY(0);}
+    .card h2 {
+      text-align: center;
+      color: #87ceeb;
     }
-    @keyframes fadeUp {
-      from {opacity: 0; transform: translateY(50px);}
-      to {opacity: 1; transform: translateY(0);}
+    .card ul {
+      list-style: none;
+      padding: 0;
+    }
+    .card li {
+      margin: 8px 0;
     }
     footer {
       margin-top: 50px;
@@ -62,12 +79,18 @@
   </style>
 </head>
 <body>
+  <!-- Banner -->
   <header>
     <h1>Ozentime Antivirus</h1>
-    <p>Version 1.1 Pro & 1.2 Max</p>
+    <p>🚀 What’s New: Today we release Version 1.2 Max!</p>
   </header>
 
-  <!-- Corrected Download Buttons -->
+  <!-- Warning -->
+  <div class="warning">
+    🚨 Red Alert Mode is under development. Shield works, but pressing the Red Alert button does nothing yet.
+  </div>
+
+  <!-- Download Buttons -->
   <button class="btn" onclick="window.location.href='downloads/sandbox.exe'">
     Download 1.1 Pro
   </button>
@@ -76,18 +99,33 @@
     Download 1.2 Max
   </button>
 
-  <!-- Red Alert Info -->
-  <div class="info-box">
-    <h2>Red Alert Mode</h2>
-    <p>
-      🚨 Under development. The shield indicator works, but pressing the Red Alert button will not trigger any action in this version.  
-      Future builds will auto‑activate Red Alert during severe threats.
-    </p>
-  </div>
+  <!-- Version Features -->
+  <section class="versions">
+    <div class="card">
+      <h2>Version 1.1 Pro</h2>
+      <ul>
+        <li>🔍 Scan</li>
+        <li>📂 Deep Scan</li>
+        <li>🗂️ Quarantine</li>
+        <li>🧠 Heuristic Scanning</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>Version 1.2 Max</h2>
+      <ul>
+        <li>🔍 Scan</li>
+        <li>📂 Deep Scan</li>
+        <li>📶 Wi‑Fi Blocking</li>
+        <li>⚡ 1000+ Threats Blocked Simultaneously</li>
+        <li>🗂️ Quarantine</li>
+        <li>🧹 Disinfection & Removal</li>
+      </ul>
+    </div>
+  </section>
 
+  <!-- Footer -->
   <footer>
     &copy; 2026 Ozentime Security Labs
   </footer>
 </body>
 </html>
-
