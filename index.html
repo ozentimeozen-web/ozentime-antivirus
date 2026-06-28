@@ -2,213 +2,149 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Ozentime AV</title>
+  <title>Ozentime Antivirus</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 0; padding: 0;
-      background: #f4f4f4;
-      color: #222;
+      background: #111;
+      color: #eee;
+      margin: 0;
+      padding: 0;
     }
     header {
-      background: linear-gradient(90deg, #003366, #006699);
-      color: white;
-      text-align: center;
-      padding: 40px 20px;
-    }
-    .goal {
-      font-size: 20px;
-      margin-top: 10px;
-      font-weight: bold;
-    }
-    .note {
-      font-size: 16px;
-      margin-top: 10px;
-      color: #ffcc00;
-    }
-    .hover-table {
-      display: flex;
-      justify-content: center;
-      margin: 30px auto;
-      width: 80%;
-    }
-    .version {
-      flex: 1;
-      background: white;
-      margin: 10px;
+      background: linear-gradient(90deg, #0d6efd, #6610f2);
       padding: 20px;
-      border-radius: 8px;
-      transition: transform 0.3s, box-shadow 0.3s;
-      cursor: pointer;
+      text-align: center;
+      color: #fff;
+    }
+    h1 {
+      margin: 0;
+    }
+    .accomplishments, .features, .reasons, footer {
+      padding: 20px;
       text-align: center;
     }
-    .version:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 15px rgba(0,0,0,0.2);
-    }
-    .download-btn {
-      display: inline-block;
-      margin-top: 10px;
-      padding: 10px 20px;
-      background: #006699;
-      color: white;
-      text-decoration: none;
-      border-radius: 5px;
-      transition: background 0.3s;
-    }
-    .download-btn:hover {
-      background: #004466;
-    }
-    .upcoming {
-      background: #ddd;
-      color: #666;
-      cursor: not-allowed;
-      opacity: 0.6;
-    }
-    .upcoming:hover {
-      transform: none;
-      box-shadow: none;
-    }
-    .upcoming .download-btn {
-      background: #999;
-      cursor: not-allowed;
-    }
-    section {
-      padding: 50px 20px;
-      text-align: center;
-      background: white;
+    table {
       margin: 20px auto;
+      border-collapse: collapse;
       width: 80%;
-      border-radius: 8px;
     }
-    h2 {
-      color: #003366;
+    table, th, td {
+      border: 1px solid #444;
+    }
+    th, td {
+      padding: 10px;
     }
     .feature {
-      margin: 20px 0;
+      margin: 10px auto;
+      width: 60%;
+      background: #222;
+      border-radius: 8px;
+      overflow: hidden;
     }
-    .file-size {
-      font-size: 24px;
-      font-weight: bold;
-      color: #006699;
-    }
-    ul {
-      list-style: none;
-      padding: 0;
+    .feature button {
+      width: 100%;
+      padding: 12px;
+      background: #28a745; /* green flag style */
+      border: none;
+      color: #fff;
       font-size: 16px;
-      text-align: left;
-      margin-top: 15px;
+      cursor: pointer;
     }
-    ul li {
-      margin: 6px 0;
+    .feature button:hover {
+      background: #218838;
+    }
+    .content {
+      display: none;
+      padding: 15px;
+      background: #333;
+      text-align: left;
+    }
+    footer {
+      background: #222;
+      color: #aaa;
+      padding: 10px;
     }
   </style>
 </head>
 <body>
   <header>
     <h1>Ozentime Antivirus</h1>
-    <p class="goal">Our Goal: Free, Safe, Secure Protection for Everyone</p>
-    <p class="note">Note: The Red Alert button is not yet functional — don’t worry, pressing it does nothing.</p>
-    <p>Hover to compare, scroll to explore</p>
+    <p>The New World of Protection</p>
   </header>
 
-  <!-- Accomplishments Section -->
-  <section>
-    <h2>What Ozentime AV Has Accomplished</h2>
-    <ul>
-      <li>✅ Smallest GPU & RAM usage yet — capped at 3–5%</li>
-      <li>✅ Smallest Antivirus build yet — under 300 KB</li>
-      <li>✅ First Independent Antivirus project — built from scratch</li>
-    </ul>
+  <section class="accomplishments">
+    <h2>Accomplishments</h2>
+    <p>Version 1.2 released with Always Scan mode, Gmail placeholder, and capped resource usage.</p>
   </section>
 
-  <!-- Download Table -->
-  <div class="hover-table">
-    <div class="version active">
-      <h2>AV 1.1 Pro</h2>
-      <p>Standard Security, Lightweight & User-Friendly</p>
-      <p class="file-size">~200 KB</p>
-      <a href="downloads/ozentime.exe" class="download-btn">Download</a>
-      <ul>
-        <li>🧠 Heuristic Scanning</li>
-        <li>📦 Quarantine</li>
-        <li>💾 RAM Check</li>
-        <li>🌐 VPN Protection</li>
-        <li>💽 Disk Protection</li>
-      </ul>
+  <section class="features">
+    <h2>Download Versions</h2>
+    <table>
+      <tr>
+        <th>Version</th>
+        <th>Status</th>
+        <th>Features</th>
+      </tr>
+      <tr>
+        <td>1.2 Pro</td>
+        <td>Active</td>
+        <td>Lightweight, Always Scan, Gmail integration placeholder</td>
+      </tr>
+      <tr>
+        <td>1.5 Pro</td>
+        <td>Upcoming</td>
+        <td>4-layer AI net, 50+ heuristic scanners, child process defense</td>
+      </tr>
+    </table>
+  </section>
+
+  <section class="reasons">
+    <h2>Why Choose Ozentime AV?</h2>
+    <p>Minimal GPU/RAM usage, cross-platform, free flagship protection, optional premium combo.</p>
+  </section>
+
+  <section class="interactive">
+    <h2>Interactive Abilities</h2>
+
+    <div class="feature">
+      <button onclick="toggleContent('memory')">Memory Tracking</button>
+      <div id="memory" class="content">
+        <p>Memorizes system states and spots unusual changes instantly.</p>
+      </div>
     </div>
-    <div class="version active">
-      <h2>AV 1.2 Max</h2>
-      <p>Full Security + Wi-Fi Protection + Real-Time Scan</p>
-      <p class="file-size">~250 KB</p>
-      <a href="downloads/ozentime.exe" class="download-btn">Download</a>
-      <ul>
-        <li>🧠 Heuristic Scanning</li>
-        <li>📦 Quarantine</li>
-        <li>💾 RAM Check</li>
-        <li>🌐 VPN Protection</li>
-        <li>💽 Disk Protection</li>
-        <li>📡 Wi-Fi Spreading Prevention</li>
-        <li>⚡ Real-Time Protection</li>
-        <li>🛡️ Simultaneous 1000+ Virus Blocking</li>
-      </ul>
+
+    <div class="feature">
+      <button onclick="toggleContent('vpn')">VPN Monitoring</button>
+      <div id="vpn" class="content">
+        <p>Logs and verifies secure connections, protecting privacy.</p>
+      </div>
     </div>
-    <div class="version upcoming">
-      <h2>AV 1.5 (Coming Soon)</h2>
-      <p>Multicross Platform Core + Pro Themes</p>
-      <p class="file-size">Not Yet Available</p>
-      <button disabled class="download-btn">Unavailable</button>
+
+    <div class="feature">
+      <button onclick="toggleContent('wifi')">Wi‑Fi Defense</button>
+      <div id="wifi" class="content">
+        <p>Blocks virus spreading through networks, keeping devices safe.</p>
+      </div>
     </div>
-  </div>
 
-  <!-- Reason Section -->
-  <section>
-    <h2>Why Another Antivirus?</h2>
-    <p>
-      Operating systems like Windows and macOS already include strong defenses —
-      Windows has Windows Defender and TPM 2.0, while macOS has built‑in security layers.
-      But sometimes hackers discover flaws in these defenses and exploit them.
-    </p>
-    <p>
-      That’s why it is recommended to also have a third‑party antivirus of your choice.
-      Ozentime AV adds an extra shield, catching what built‑in tools might miss.
-    </p>
+    <div class="feature">
+      <button onclick="toggleContent('tracker')">Ozentime Tracker</button>
+      <div id="tracker" class="content">
+        <p>AI scans Gmail and downloads, flags suspicious activity, and hands it to AV for deeper inspection.</p>
+      </div>
+    </div>
   </section>
 
-  <!-- Scroll Features -->
-  <section>
-    <h2>Cluster Disinfection</h2>
-    <p class="feature">Smart removal of malware clusters, not just files.</p>
-  </section>
-
-  <section>
-    <h2>Always Scan</h2>
-    <p class="feature">Lightweight background scanning capped at 3–5% usage.</p>
-  </section>
-
-  <section>
-    <h2>Heuristic Rebuild</h2>
-    <p class="feature">Adaptive detection logic without bloat.</p>
-  </section>
-
-  <section>
-    <h2>File Size</h2>
-    <p class="file-size">Ozentime AV: ~250 KB</p>
-    <p>Small enough for speed, strong enough for defense.</p>
-  </section>
-
-  <section>
-    <h2>Ad Blocker</h2>
-    <p class="feature">Blocks intrusive ads and trackers for clean browsing.</p>
-  </section>
-
-  <section>
-    <h2>Revival Tool</h2>
-    <p class="feature">Restores OS or AV if corruption hits.</p>
-  </section>
-
-  <footer style="text-align:center; padding:20px; background:#003366; color:white;">
-    <p>© 2026 Ozentime Security Suite</p>
+  <footer>
+    <p>&copy; 2026 Ozentime Security. Protection without paywalls.</p>
   </footer>
+
+  <script>
+    function toggleContent(id) {
+      const content = document.getElementById(id);
+      content.style.display = content.style.display === "block" ? "none" : "block";
+    }
+  </script>
 </body>
 </html>
