@@ -40,10 +40,13 @@
       border-radius: 8px;
     }
     h2 { color: #003366; }
-    .feature { margin: 20px 0; }
     .file-size { font-size: 24px; font-weight: bold; color: #006699; }
     ul { list-style: none; padding: 0; font-size: 16px; text-align: left; margin-top: 15px; }
     ul li { margin: 6px 0; }
+    table { margin:20px auto; border-collapse:collapse; width:80%; text-align:center; }
+    table, th, td { border:1px solid #444; }
+    th, td { padding:10px; }
+    th { background:#003366; color:white; }
     .badge {
       display:inline-block; background:#ff0000; color:white;
       padding:4px 8px; border-radius:5px; font-size:12px; margin-left:5px;
@@ -75,50 +78,42 @@
       <p>Standard Security, Lightweight & User-Friendly</p>
       <p class="file-size">~200 KB</p>
       <a href="downloads/ozentime.exe" class="download-btn">Download</a>
-      <ul>
-        <li>🧠 Heuristic Scanning</li>
-        <li>📦 Quarantine</li>
-        <li>💾 RAM Check</li>
-        <li>🌐 VPN Protection</li>
-        <li>💽 Disk Protection</li>
-      </ul>
     </div>
     <div class="version active">
       <h2>AV 1.2 Max</h2>
       <p>Full Security + Wi-Fi Protection + Real-Time Scan</p>
       <p class="file-size">~250 KB</p>
       <a href="downloads/ozentime.exe" class="download-btn">Download</a>
-      <ul>
-        <li>🧠 Heuristic Scanning</li>
-        <li>📦 Quarantine</li>
-        <li>💾 RAM Check</li>
-        <li>🌐 VPN Protection</li>
-        <li>💽 Disk Protection</li>
-        <li>📡 Wi-Fi Spreading Prevention</li>
-        <li>⚡ Real-Time Protection</li>
-        <li>🛡️ Simultaneous 1000+ Virus Blocking</li>
-      </ul>
     </div>
     <div class="version active">
       <h2>AV 1.5 Pro <span class="badge">NEW</span></h2>
       <p>Multicross Platform Core + AI Assistant Engine</p>
       <p class="file-size">293 KB</p>
       <a href="downloads/ozentime1.5.exe" class="download-btn">Download</a>
-      <ul>
-        <li>🧠 Heuristic Scanning</li>
-        <li>📦 Quarantine</li>
-        <li>💾 RAM Check</li>
-        <li>🌐 VPN Protection</li>
-        <li>💽 Disk Protection</li>
-        <li>📡 Wi-Fi Defense</li>
-        <li>⚡ Real-Time Protection</li>
-        <li>🛡️ Simultaneous 1000+ Virus Blocking</li>
-        <li>🖥️ Multicross Platform Core</li>
-        <li>🎨 Pro Themes</li>
-        <li>🤖 AI Assistant Engine</li>
-      </ul>
     </div>
   </div>
+
+  <!-- Feature Comparison Table -->
+  <section>
+    <h2>Feature Comparison</h2>
+    <table>
+      <tr>
+        <th>Features</th>
+        <th>AV 1.1 Pro</th>
+        <th>AV 1.2 Max</th>
+        <th>AV 1.5 Pro</th>
+      </tr>
+      <tr><td>Heuristic Scanning</td><td>✅</td><td>✅</td><td>✅</td></tr>
+      <tr><td>Quarantine</td><td>✅</td><td>✅</td><td>✅</td></tr>
+      <tr><td>RAM Check</td><td>✅</td><td>✅</td><td>✅</td></tr>
+      <tr><td>VPN Protection</td><td>✅</td><td>✅</td><td>✅</td></tr>
+      <tr><td>Disk Protection</td><td>✅</td><td>✅</td><td>✅</td></tr>
+      <tr><td>Wi‑Fi Defense</td><td>❌</td><td>✅</td><td>✅</td></tr>
+      <tr><td>Real‑Time Protection</td><td>❌</td><td>✅</td><td>✅</td></tr>
+      <tr><td>Simultaneous 1000+ Virus Blocking</td><td>❌</td><td>✅</td><td>✅</td></tr>
+      <tr><td>AI Assistant Engine</td><td>❌</td><td>❌</td><td>✅</td></tr>
+    </table>
+  </section>
 
   <!-- Reason Section -->
   <section>
@@ -142,8 +137,11 @@
   <section><h2>Ad Blocker</h2><p class="feature">Blocks intrusive ads and trackers for clean browsing.</p></section>
   <section><h2>Revival Tool</h2><p class="feature">Restores OS or AV if corruption hits.</p></section>
 
-  <footer style="text-align:center; padding:20px; background:#003366; color:white;">
-    <p>© 2026 Ozentime Security Suite</p>
-  </footer>
-</body>
-</html>
+  <!-- User Review Section -->
+  <section>
+    <h2>Share Your Review</h2>
+    <p>We value your feedback! Type your review below:</p>
+    <form action="#" method="post" style="max-width:600px; margin:0 auto; text-align:left;">
+      <label for="userReview">Your Review:</label><br>
+      <textarea id="userReview" name="userReview" rows="6" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px;"></textarea><br><br>
+      <button type
