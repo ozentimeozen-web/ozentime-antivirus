@@ -36,15 +36,41 @@
       animation: slideUp 2.5s ease-in-out;
     }
 
-    /* Shield */
+    /* Shield (static, no glow) */
     .shield {
       width: 150px;
       height: 200px;
-      background: linear-gradient(180deg, #1e90ff, #004080);
+      background: #1e90ff;
       clip-path: polygon(50% 0%, 100% 25%, 85% 100%, 15% 100%, 0% 25%);
-      box-shadow: 0 0 25px rgba(30,144,255,0.8);
-      animation: pulse 2s infinite;
       margin-top: 30px;
+    }
+
+    /* Download Buttons */
+    .downloads {
+      text-align: center;
+      padding: 40px;
+      animation: fadeIn 3s ease-in;
+    }
+
+    .downloads h2 {
+      color: #1e90ff;
+      margin-bottom: 20px;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 12px 24px;
+      margin: 10px;
+      background: #1e90ff;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .btn:hover {
+      background: #004080;
+      transform: translateY(-3px);
     }
 
     /* Accomplishments Section */
@@ -79,12 +105,6 @@
       from { transform: translateY(50px); opacity: 0; }
       to { transform: translateY(0); opacity: 1; }
     }
-
-    @keyframes pulse {
-      0% { transform: scale(1); box-shadow: 0 0 25px rgba(30,144,255,0.8); }
-      50% { transform: scale(1.05); box-shadow: 0 0 40px rgba(30,144,255,1); }
-      100% { transform: scale(1); box-shadow: 0 0 25px rgba(30,144,255,0.8); }
-    }
   </style>
 </head>
 <body>
@@ -92,6 +112,12 @@
     <h1>Ozentime Antivirus</h1>
     <p>Lightweight AI-powered protection</p>
     <div class="shield"></div>
+  </section>
+
+  <section class="downloads">
+    <h2>Download Ozentime AV</h2>
+    <a href="sandbox.exe" class="btn">Download v1.2 Max</a>
+    <a href="sandbox.exe" class="btn">Download v1.1 Pro</a>
   </section>
 
   <section class="accomplishments">
