@@ -12,10 +12,15 @@
       line-height: 1.6;
     }
     header {
-      background: linear-gradient(135deg, #004466, #006699);
+      background: linear-gradient(135deg, #000000, #004466);
       color: #fff;
       padding: 40px 20px;
       text-align: center;
+    }
+    header img {
+      width: 140px;
+      height: auto;
+      margin-bottom: 15px;
     }
     header h1 { margin: 0; font-size: 2.2em; }
     header p { margin-top: 10px; font-size: 1.1em; }
@@ -52,7 +57,13 @@
     }
     th { background: #f0f4f8; font-weight: bold; }
 
-    button {
+    /* Custom row styling */
+    .version-15 td:first-child { border-left: 8px solid #007BFF; } /* Blue */
+    .version-15pro td:first-child { border-left: 8px solid #003366; } /* Deep Blue */
+    .version-20 td:first-child { border-left: 8px solid #800080; } /* Purple */
+
+    /* Buttons */
+    .download-btn {
       background: #004466;
       color: #fff;
       border: none;
@@ -61,9 +72,14 @@
       cursor: pointer;
       transition: background 0.3s ease, box-shadow 0.3s ease;
     }
-    button:hover {
+    .download-btn:hover {
       background: #006699;
       box-shadow: 0 0 12px #006699;
+    }
+    .download-btn.disabled {
+      background: #aaa;
+      cursor: not-allowed;
+      box-shadow: none;
     }
 
     @keyframes bounce {
@@ -96,6 +112,8 @@
 </head>
 <body>
   <header>
+    <!-- Logo image -->
+    <img src="ChatGPT Image Jun 30, 2026, 02_22_45 PM.png" alt="Ozentime Logo">
     <span class="lock-icon">🔒</span>
     <h1>Ozentime AV Suite</h1>
     <p>Lightweight • Secure • Professional</p>
@@ -121,23 +139,23 @@
         <th>Self-Learning</th>
         <th>Download</th>
       </tr>
-      <tr>
+      <tr class="version-15">
         <td>AV 1.5</td>
         <td>Windows</td>
         <td>❌ Not Available</td>
-        <td><button class="download-btn">Download</button></td>
+        <td><button class="download-btn disabled">Unavailable</button></td>
       </tr>
-      <tr>
+      <tr class="version-15pro">
         <td>AV 1.5 Pro</td>
         <td>Windows</td>
         <td>✅ Enabled</td>
         <td><button class="download-btn">Download</button></td>
       </tr>
-      <tr>
+      <tr class="version-20">
         <td>AV 2.0</td>
         <td>Windows / Cross‑Platform</td>
         <td>✅ Enhanced AI Self‑Learning</td>
-        <td><button class="download-btn">Download</button></td>
+        <td><button class="download-btn disabled">Unavailable</button></td>
       </tr>
     </table>
   </section>
