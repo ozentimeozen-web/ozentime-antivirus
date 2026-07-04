@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Ozentime AV Suite</title>
   <style>
-    /* Global Styles */
+    /* ===== Global Layout ===== */
     body {
       font-family: 'Segoe UI', Arial, sans-serif;
       margin: 0; padding: 0;
@@ -18,14 +18,8 @@
       padding: 40px 20px;
       text-align: center;
     }
-    header h1 {
-      margin: 0;
-      font-size: 2.2em;
-    }
-    header p {
-      margin-top: 10px;
-      font-size: 1.1em;
-    }
+    header h1 { margin: 0; font-size: 2.2em; }
+    header p { margin-top: 10px; font-size: 1.1em; }
 
     section {
       padding: 40px;
@@ -35,12 +29,9 @@
       border-radius: 10px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     }
-    h2 {
-      color: #004466;
-      margin-bottom: 15px;
-    }
+    h2 { color: #004466; margin-bottom: 15px; }
 
-    /* Scroll reveal animation */
+    /* ===== Scroll Reveal ===== */
     .scroll-reveal {
       opacity: 0;
       transform: translateY(40px);
@@ -51,7 +42,7 @@
       transform: translateY(0);
     }
 
-    /* Table styling */
+    /* ===== Tables ===== */
     table {
       width: 100%;
       border-collapse: collapse;
@@ -67,7 +58,7 @@
       font-weight: bold;
     }
 
-    /* Buttons */
+    /* ===== Buttons ===== */
     button {
       background: #004466;
       color: #fff;
@@ -82,7 +73,7 @@
       box-shadow: 0 0 12px #006699;
     }
 
-    /* Lock icon bounce */
+    /* ===== Lock Icon Animation ===== */
     @keyframes bounce {
       0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
       40% { transform: translateY(-10px); }
@@ -95,25 +86,35 @@
       margin-right: 10px;
     }
 
-    /* Form styling */
+    /* ===== Forms ===== */
     form {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 15px;
       margin-top: 20px;
     }
-    form label {
-      grid-column: span 2;
-      font-weight: bold;
-    }
+    form label { grid-column: span 2; font-weight: bold; }
     form input {
       padding: 8px;
       border: 1px solid #ccc;
       border-radius: 6px;
     }
-    form button {
-      grid-column: span 2;
-      margin-top: 10px;
+    form button { grid-column: span 2; margin-top: 10px; }
+
+    /* ===== Status Indicator ===== */
+    #status {
+      margin-top: 20px;
+      font-size: 0.95em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    #statusDot {
+      height: 12px; width: 12px;
+      border-radius: 50%;
+      display: inline-block;
+      background: yellow;
+      transition: background 0.3s ease;
     }
   </style>
 </head>
@@ -172,6 +173,12 @@
     </form>
 
     <button onclick="eraseAll()" style="margin-top:20px;">Erase All Passwords</button>
+
+    <!-- Status Indicator -->
+    <div id="status">
+      <span id="statusDot"></span>
+      <span id="statusText">Pending...</span>
+    </div>
   </section>
 
   <script>
@@ -179,10 +186,13 @@
     window.onload = function() {
       const saved = JSON.parse(localStorage.getItem("passwords")) || [];
       saved.forEach(p => addRow(p.site, p.username, p.password));
+      updateStatus("Ready", false);
     };
 
     function addPassword(event) {
       event.preventDefault();
+      updateStatus("Saving...", true);
+
       const site = document.getElementById('site').value.trim();
       const username = document.getElementById('username').value.trim();
       const password = document.getElementById('password').value.trim();
@@ -199,6 +209,8 @@
         document.getElementById('site').value = '';
         document.getElementById('username').value = '';
         document.getElementById('password').value = '';
+
+        updateStatus("Password saved", false);
       }
     }
 
@@ -214,6 +226,8 @@
     }
 
     function deleteRow(button, site, username) {
+      updateStatus("Deleting...", true);
+
       const row = button.parentNode.parentNode;
       row.parentNode.removeChild(row);
 
@@ -221,10 +235,14 @@
       let saved = JSON.parse(localStorage.getItem("passwords")) || [];
       saved = saved.filter(p => !(p.site === site && p.username === username));
       localStorage.setItem("passwords", JSON.stringify(saved));
+
+      updateStatus("Password erased", false);
     }
 
     function eraseAll() {
       if (confirm("Are you sure you want to erase all passwords?")) {
+        updateStatus("Erasing all...", true);
+
         document.getElementById('passwordTable').innerHTML = `
           <tr>
             <th>Website</th>
@@ -233,19 +251,12 @@
             <th>Action</th>
           </tr>
         `;
-        localStorage.removeItem("passwords"); // wipe permanently
+        localStorage.removeItem("passwords");
+
+        updateStatus("All passwords erased", false);
       }
     }
 
-    // Scroll reveal animation
-    window.addEventListener('scroll', () => {
-      document.querySelectorAll('.scroll-reveal').forEach(el => {
-        const rect = el.getBoundingClientRect();
-        if (rect.top < window.innerHeight - 100) {
-          el.classList.add('visible');
-        }
-      });
-    });
-  </script>
-</body>
-</html>
+    // Status updater
+    function updateStatus(message, isPending=false) {
+      const statusDot = document.getElementById('
