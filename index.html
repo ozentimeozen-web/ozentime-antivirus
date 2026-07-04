@@ -2,160 +2,163 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Ozentime AV Suite + Password Manager</title>
+  <title>Ozentime AV Suite</title>
   <style>
+    /* Global Styles */
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Segoe UI', Arial, sans-serif;
       margin: 0; padding: 0;
-      background: #f4f4f4;
-      color: #222;
+      background: #f9fafc;
+      color: #333;
+      line-height: 1.6;
     }
     header {
-      background: linear-gradient(90deg, #003366, #006699);
-      color: white;
-      text-align: center;
+      background: linear-gradient(135deg, #004466, #006699);
+      color: #fff;
       padding: 40px 20px;
+      text-align: center;
     }
-    .goal { font-size: 20px; margin-top: 10px; font-weight: bold; }
-    .note { font-size: 16px; margin-top: 10px; color: #ffcc00; }
-    .hover-table {
-      display: flex; justify-content: center;
-      margin: 30px auto; width: 80%;
+    header h1 {
+      margin: 0;
+      font-size: 2.2em;
     }
-    .version {
-      flex: 1; background: white; margin: 10px; padding: 20px;
-      border-radius: 8px; transition: transform 0.3s, box-shadow 0.3s;
-      cursor: pointer; text-align: center;
+    header p {
+      margin-top: 10px;
+      font-size: 1.1em;
     }
-    .version:hover { transform: scale(1.05); box-shadow: 0 0 15px rgba(0,0,0,0.2); }
-    .download-btn {
-      display: inline-block; margin-top: 10px; padding: 10px 20px;
-      background: #006699; color: white; text-decoration: none;
-      border-radius: 5px; transition: background 0.3s;
-    }
-    .download-btn:hover { background: #004466; }
+
     section {
-      padding: 50px 20px; text-align: center;
-      background: white; margin: 20px auto; width: 80%;
-      border-radius: 8px;
+      padding: 40px;
+      margin: 30px auto;
+      max-width: 900px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     }
-    h2 { color: #003366; }
-    .file-size { font-size: 24px; font-weight: bold; color: #006699; }
-    ul { list-style: none; padding: 0; font-size: 16px; text-align: left; margin-top: 15px; }
-    ul li { margin: 6px 0; }
-    table { margin:20px auto; border-collapse:collapse; width:80%; text-align:center; }
-    table, th, td { border:1px solid #444; }
-    th, td { padding:10px; }
-    th { background:#003366; color:white; }
-    .badge {
-      display:inline-block; background:#ff0000; color:white;
-      padding:4px 8px; border-radius:5px; font-size:12px; margin-left:5px;
+    h2 {
+      color: #004466;
+      margin-bottom: 15px;
     }
-    input, button {
-      padding: 10px; margin: 5px 0;
-      border: 1px solid #ccc; border-radius: 5px;
+
+    /* Scroll reveal animation */
+    .scroll-reveal {
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .scroll-reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Table styling */
+    table {
       width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
     }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 12px;
+      text-align: left;
+    }
+    th {
+      background: #f0f4f8;
+      font-weight: bold;
+    }
+
+    /* Buttons */
     button {
-      background: #006699; color: white; cursor: pointer;
-      transition: background 0.3s;
+      background: #004466;
+      color: #fff;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.3s ease, box-shadow 0.3s ease;
     }
-    button:hover { background: #004466; }
+    button:hover {
+      background: #006699;
+      box-shadow: 0 0 12px #006699;
+    }
+
+    /* Lock icon bounce */
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+      40% { transform: translateY(-10px); }
+      60% { transform: translateY(-5px); }
+    }
+    .lock-icon {
+      display: inline-block;
+      animation: bounce 2s infinite;
+      font-size: 28px;
+      margin-right: 10px;
+    }
+
+    /* Form styling */
+    form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-top: 20px;
+    }
+    form label {
+      grid-column: span 2;
+      font-weight: bold;
+    }
+    form input {
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    form button {
+      grid-column: span 2;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
   <header>
-    <h1>Ozentime Antivirus Suite + Password Manager</h1>
-    <p class="goal">Our Goal: Free, Safe, Secure Protection for Everyone</p>
-    <p class="note">Note: The Red Alert button is not yet functional — don’t worry, pressing it does nothing.</p>
-    <p>Hover to compare, scroll to explore</p>
+    <span class="lock-icon">🔒</span>
+    <h1>Ozentime AV Suite</h1>
+    <p>Lightweight • Secure • Professional</p>
   </header>
 
-  <!-- Sidebar Lock Icon -->
-  <div style="position:fixed; top:50%; left:0; transform:translateY(-50%);
-              background:#003366; padding:20px; border-radius:0 8px 8px 0; z-index:1000;">
-    <a href="#password-manager" title="Password Manager" style="font-size:24px; color:white; text-decoration:none;">
-      🔒
-    </a>
-  </div>
-
-  <!-- Accomplishments Section -->
-  <section>
-    <h2>What Ozentime AV Has Accomplished</h2>
+  <!-- Accomplishments -->
+  <section class="scroll-reveal">
+    <h2>Accomplishments</h2>
     <ul>
-      <li>✅ Smallest GPU & RAM usage yet — capped at 3–5%</li>
-      <li>✅ Smallest Antivirus build yet — 293 KB</li>
-      <li>✅ First Independent Antivirus project — built from scratch</li>
+      <li>✔ Released Ozentime AV 1.5 Pro with sys-layer resilience</li>
+      <li>✔ Password Manager prototype integrated</li>
+      <li>✔ Lightweight EXE-only builds, no bloat</li>
     </ul>
   </section>
 
-  <!-- Updated Download Table -->
-  <div class="hover-table">
-    <div class="version" style="background:#3399ff; color:white;">
-      <h2>Normal 1.5</h2>
-      <p>Standard Security, Lightweight Build</p>
-      <p class="file-size">~200 KB</p>
-      <a href="ozentime1.5.exe" class="download-btn">Download</a>
-    </div>
-    <div class="version" style="background:#003366; color:white;">
-      <h2>Pro 1.5 Pro <span class="badge">Coming Soon</span></h2>
-      <p>Deep Security + AI Assistant Engine</p>
-      <p class="file-size">293 KB</p>
-      <!-- No download yet -->
-    </div>
-    <div class="version" style="background:#ffcc00; color:#222;">
-      <h2>Ultimate 2.0 <span class="badge">Coming Later</span></h2>
-      <p>Lufthansa-inspired Core + Multicross Platform</p>
-      <p class="file-size">~350 KB</p>
-      <!-- No download yet -->
-    </div>
-  </div>
-
-  <!-- Feature Comparison Table -->
-  <section>
-    <h2>Feature Comparison</h2>
+  <!-- Downloads -->
+  <section class="scroll-reveal">
+    <h2>Downloads</h2>
     <table>
-      <tr>
-        <th>Features</th>
-        <th>AV 1.1 Pro</th>
-        <th>AV 1.2 Max</th>
-        <th>AV 1.5 Pro</th>
-      </tr>
-      <tr><td>Heuristic Scanning</td><td>✅</td><td>✅</td><td>✅</td></tr>
-      <tr><td>Quarantine</td><td>✅</td><td>✅</td><td>✅</td></tr>
-      <tr><td>RAM Check</td><td>✅</td><td>✅</td><td>✅</td></tr>
-      <tr><td>VPN Protection</td><td>✅</td><td>✅</td><td>✅</td></tr>
-      <tr><td>Disk Protection</td><td>✅</td><td>✅</td><td>✅</td></tr>
-      <tr><td>Wi‑Fi Defense</td><td>❌</td><td>✅</td><td>✅</td></tr>
-      <tr><td>Real‑Time Protection</td><td>❌</td><td>✅</td><td>✅</td></tr>
-      <tr><td>Simultaneous 1000+ Virus Blocking</td><td>❌</td><td>✅</td><td>✅</td></tr>
-      <tr><td>AI Assistant Engine</td><td>❌</td><td>❌</td><td>✅</td></tr>
+      <tr><th>Version</th><th>Platform</th><th>Download</th></tr>
+      <tr><td>AV 1.5 Pro</td><td>Windows</td><td><button class="download-btn">Download</button></td></tr>
+      <tr><td>Password Manager</td><td>Web</td><td><button class="download-btn">Access</button></td></tr>
     </table>
   </section>
 
-  <!-- Password Manager Section -->
-  <section id="password-manager">
+  <!-- Password Manager -->
+  <section id="password-manager" class="scroll-reveal">
     <h2>Password Manager</h2>
     <p>Securely store and manage your passwords</p>
-    <table>
+    <table id="passwordTable">
       <tr>
         <th>Website</th>
         <th>Username</th>
         <th>Password</th>
-      </tr>
-      <tr>
-        <td>example.com</td>
-        <td>user123</td>
-        <td>••••••••</td>
-      </tr>
-      <tr>
-        <td>mail.com</td>
-        <td>ozentime</td>
-        <td>••••••••</td>
+        <th>Action</th>
       </tr>
     </table>
+
     <h3>Add New Password</h3>
-    <form>
+    <form onsubmit="addPassword(event)">
       <label for="site">Website:</label>
       <input type="text" id="site" name="site" placeholder="Enter website URL">
 
@@ -167,6 +170,82 @@
 
       <button type="submit">Save Password</button>
     </form>
+
+    <button onclick="eraseAll()" style="margin-top:20px;">Erase All Passwords</button>
   </section>
+
+  <script>
+    // Load saved passwords from localStorage
+    window.onload = function() {
+      const saved = JSON.parse(localStorage.getItem("passwords")) || [];
+      saved.forEach(p => addRow(p.site, p.username, p.password));
+    };
+
+    function addPassword(event) {
+      event.preventDefault();
+      const site = document.getElementById('site').value.trim();
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+
+      if (site && username && password) {
+        addRow(site, username, password);
+
+        // Save to localStorage
+        const saved = JSON.parse(localStorage.getItem("passwords")) || [];
+        saved.push({site, username, password});
+        localStorage.setItem("passwords", JSON.stringify(saved));
+
+        // Clear form
+        document.getElementById('site').value = '';
+        document.getElementById('username').value = '';
+        document.getElementById('password').value = '';
+      }
+    }
+
+    function addRow(site, username, password) {
+      const table = document.getElementById('passwordTable');
+      const row = table.insertRow(-1);
+      row.innerHTML = `
+        <td>${site}</td>
+        <td>${username}</td>
+        <td>••••••••</td>
+        <td><button onclick="deleteRow(this, '${site}', '${username}')">Erase</button></td>
+      `;
+    }
+
+    function deleteRow(button, site, username) {
+      const row = button.parentNode.parentNode;
+      row.parentNode.removeChild(row);
+
+      // Remove from localStorage
+      let saved = JSON.parse(localStorage.getItem("passwords")) || [];
+      saved = saved.filter(p => !(p.site === site && p.username === username));
+      localStorage.setItem("passwords", JSON.stringify(saved));
+    }
+
+    function eraseAll() {
+      if (confirm("Are you sure you want to erase all passwords?")) {
+        document.getElementById('passwordTable').innerHTML = `
+          <tr>
+            <th>Website</th>
+            <th>Username</th>
+            <th>Password</th>
+            <th>Action</th>
+          </tr>
+        `;
+        localStorage.removeItem("passwords"); // wipe permanently
+      }
+    }
+
+    // Scroll reveal animation
+    window.addEventListener('scroll', () => {
+      document.querySelectorAll('.scroll-reveal').forEach(el => {
+        const rect = el.getBoundingClientRect();
+        if (rect.top < window.innerHeight - 100) {
+          el.classList.add('visible');
+        }
+      });
+    });
+  </script>
 </body>
 </html>
