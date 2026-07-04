@@ -10,17 +10,21 @@
       background: #f9fafc;
       color: #333;
       line-height: 1.6;
+
+      /* Watermark background */
+      background-image: url("assets/ozentime_logo.png");
+      background-repeat: no-repeat;
+      background-position: center center;
+      background-attachment: fixed;
+      background-size: 400px; /* adjust size of watermark */
+      opacity: 0.95; /* keeps text/buttons visible */
     }
+
     header {
       background: linear-gradient(135deg, #000000, #004466);
       color: #fff;
       padding: 40px 20px;
       text-align: center;
-    }
-    header img {
-      width: 140px;
-      height: auto;
-      margin-bottom: 15px;
     }
     header h1 { margin: 0; font-size: 2.2em; }
     header p { margin-top: 10px; font-size: 1.1em; }
@@ -29,7 +33,7 @@
       padding: 40px;
       margin: 30px auto;
       max-width: 900px;
-      background: #fff;
+      background: rgba(255,255,255,0.9); /* semi-transparent so watermark shows faintly */
       border-radius: 10px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     }
@@ -58,9 +62,9 @@
     th { background: #f0f4f8; font-weight: bold; }
 
     /* Custom row styling */
-    .version-15 td:first-child { border-left: 8px solid #007BFF; } /* Blue */
-    .version-15pro td:first-child { border-left: 8px solid #003366; } /* Deep Blue */
-    .version-20 td:first-child { border-left: 8px solid #800080; } /* Purple */
+    .version-15 td:first-child { border-left: 8px solid #007BFF; }
+    .version-15pro td:first-child { border-left: 8px solid #003366; }
+    .version-20 td:first-child { border-left: 8px solid #800080; }
 
     /* Buttons */
     .download-btn {
@@ -112,8 +116,6 @@
 </head>
 <body>
   <header>
-    <!-- Logo image -->
-    <img src="ChatGPT Image Jun 30, 2026, 02_22_45 PM.png" alt="Ozentime Logo">
     <span class="lock-icon">🔒</span>
     <h1>Ozentime AV Suite</h1>
     <p>Lightweight • Secure • Professional</p>
@@ -129,7 +131,7 @@
     </ul>
   </section>
 
-  <!-- Downloads with Self-Learning Column -->
+  <!-- Downloads -->
   <section class="scroll-reveal">
     <h2>Downloads</h2>
     <table>
@@ -160,7 +162,7 @@
     </table>
   </section>
 
-  <!-- Next Products -->
+  <!-- Upcoming Products -->
   <section class="scroll-reveal">
     <h2>Upcoming Products</h2>
     <p>🌐 <strong>AV 2.0</strong> — Cross‑platform resilience with enhanced AI self‑learning.</p>
