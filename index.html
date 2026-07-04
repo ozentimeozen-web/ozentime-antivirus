@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Ozentime AV</title>
+  <title>Ozentime AV Suite + Password Manager</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -51,11 +51,21 @@
       display:inline-block; background:#ff0000; color:white;
       padding:4px 8px; border-radius:5px; font-size:12px; margin-left:5px;
     }
+    input, button {
+      padding: 10px; margin: 5px 0;
+      border: 1px solid #ccc; border-radius: 5px;
+      width: 100%;
+    }
+    button {
+      background: #006699; color: white; cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover { background: #004466; }
   </style>
 </head>
 <body>
   <header>
-    <h1>Ozentime Antivirus</h1>
+    <h1>Ozentime Antivirus Suite + Password Manager</h1>
     <p class="goal">Our Goal: Free, Safe, Secure Protection for Everyone</p>
     <p class="note">Note: The Red Alert button is not yet functional — don’t worry, pressing it does nothing.</p>
     <p>Hover to compare, scroll to explore</p>
@@ -63,8 +73,8 @@
 
   <!-- Sidebar Lock Icon -->
   <div style="position:fixed; top:50%; left:0; transform:translateY(-50%);
-              background:#003366; padding:20px; border-radius:0 8px 8px 0;">
-    <a href="password-manager.html" title="Password Manager" style="font-size:24px; color:white; text-decoration:none;">
+              background:#003366; padding:20px; border-radius:0 8px 8px 0; z-index:1000;">
+    <a href="#password-manager" title="Password Manager" style="font-size:24px; color:white; text-decoration:none;">
       🔒
     </a>
   </div>
@@ -123,32 +133,40 @@
     </table>
   </section>
 
-  <!-- Reason Section -->
-  <section>
-    <h2>Why Another Antivirus?</h2>
-    <p>
-      Operating systems like Windows and macOS already include strong defenses —
-      Windows has Windows Defender and TPM 2.0, while macOS has built‑in security layers.
-      But sometimes hackers discover flaws in these defenses and exploit them.
-    </p>
-    <p>
-      That’s why it is recommended to also have a third‑party antivirus of your choice.
-      Ozentime AV adds an extra shield, catching what built‑in tools might miss.
-    </p>
+  <!-- Password Manager Section -->
+  <section id="password-manager">
+    <h2>Password Manager</h2>
+    <p>Securely store and manage your passwords</p>
+    <table>
+      <tr>
+        <th>Website</th>
+        <th>Username</th>
+        <th>Password</th>
+      </tr>
+      <tr>
+        <td>example.com</td>
+        <td>user123</td>
+        <td>••••••••</td>
+      </tr>
+      <tr>
+        <td>mail.com</td>
+        <td>ozentime</td>
+        <td>••••••••</td>
+      </tr>
+    </table>
+    <h3>Add New Password</h3>
+    <form>
+      <label for="site">Website:</label>
+      <input type="text" id="site" name="site" placeholder="Enter website URL">
+
+      <label for="username">Username:</label>
+      <input type="text" id="username" name="username" placeholder="Enter username">
+
+      <label for="password">Password:</label>
+      <input type="password" id="password" name="password" placeholder="Enter password">
+
+      <button type="submit">Save Password</button>
+    </form>
   </section>
-
-  <!-- Scroll Features -->
-  <section><h2>Cluster Disinfection</h2><p class="feature">Smart removal of malware clusters, not just files.</p></section>
-  <section><h2>Always Scan</h2><p class="feature">Lightweight background scanning capped at 3–5% usage.</p></section>
-  <section><h2>Heuristic Rebuild</h2><p class="feature">Adaptive detection logic without bloat.</p></section>
-  <section><h2>File Size</h2><p class="file-size">Ozentime AV 1.5 Pro: 293 KB</p><p>Small enough for speed, strong enough for defense.</p></section>
-  <section><h2>Ad Blocker</h2><p class="feature">Blocks intrusive ads and trackers for clean browsing.</p></section>
-  <section><h2>Revival Tool</h2><p class="feature">Restores OS or AV if corruption hits.</p></section>
-
-  <!-- User Review Section -->
-  <section>
-    <h2>Share Your Review</h2>
-    <p>We value your feedback! Type your review below:</p>
-    <form action="#" method="post" style="max-width:600px; margin:0 auto; text-align:left;">
-      <label for="userReview">Your Review:</label><br>
-      <textarea id="userReview" name="userReview" rows="6" style="width:100%; padding:10px; border:1px solid #ccc;
+</body>
+</html>
