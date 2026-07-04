@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <title>Ozentime AV Suite</title>
   <style>
-    /* ===== Global Layout ===== */
     body {
       font-family: 'Segoe UI', Arial, sans-serif;
       margin: 0; padding: 0;
@@ -31,7 +30,6 @@
     }
     h2 { color: #004466; margin-bottom: 15px; }
 
-    /* ===== Scroll Reveal ===== */
     .scroll-reveal {
       opacity: 0;
       transform: translateY(40px);
@@ -42,7 +40,6 @@
       transform: translateY(0);
     }
 
-    /* ===== Tables ===== */
     table {
       width: 100%;
       border-collapse: collapse;
@@ -53,12 +50,8 @@
       padding: 12px;
       text-align: left;
     }
-    th {
-      background: #f0f4f8;
-      font-weight: bold;
-    }
+    th { background: #f0f4f8; font-weight: bold; }
 
-    /* ===== Buttons ===== */
     button {
       background: #004466;
       color: #fff;
@@ -73,7 +66,6 @@
       box-shadow: 0 0 12px #006699;
     }
 
-    /* ===== Lock Icon Animation ===== */
     @keyframes bounce {
       0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
       40% { transform: translateY(-10px); }
@@ -86,22 +78,6 @@
       margin-right: 10px;
     }
 
-    /* ===== Forms ===== */
-    form {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 15px;
-      margin-top: 20px;
-    }
-    form label { grid-column: span 2; font-weight: bold; }
-    form input {
-      padding: 8px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-    }
-    form button { grid-column: span 2; margin-top: 10px; }
-
-    /* ===== Status Indicator ===== */
     #status {
       margin-top: 20px;
       font-size: 0.95em;
@@ -130,51 +106,69 @@
     <h2>Accomplishments</h2>
     <ul>
       <li>✔ Released Ozentime AV 1.5 Pro with sys-layer resilience</li>
-      <li>✔ Password Manager prototype integrated</li>
       <li>✔ Lightweight EXE-only builds, no bloat</li>
+      <li>✔ Preparing roadmap for AV 2.0</li>
     </ul>
   </section>
 
-  <!-- Downloads -->
+  <!-- Downloads with Self-Learning Column -->
   <section class="scroll-reveal">
     <h2>Downloads</h2>
     <table>
-      <tr><th>Version</th><th>Platform</th><th>Download</th></tr>
-      <tr><td>AV 1.5 Pro</td><td>Windows</td><td><button class="download-btn">Download</button></td></tr>
-      <tr><td>Password Manager</td><td>Web</td><td><button class="download-btn">Access</button></td></tr>
+      <tr>
+        <th>Version</th>
+        <th>Platform</th>
+        <th>Self-Learning</th>
+        <th>Download</th>
+      </tr>
+      <tr>
+        <td>AV 1.5</td>
+        <td>Windows</td>
+        <td>❌ Not Available</td>
+        <td><button class="download-btn">Download</button></td>
+      </tr>
+      <tr>
+        <td>AV 1.5 Pro</td>
+        <td>Windows</td>
+        <td>✅ Enabled</td>
+        <td><button class="download-btn">Download</button></td>
+      </tr>
+      <tr>
+        <td>AV 2.0</td>
+        <td>Windows / Cross‑Platform</td>
+        <td>✅ Enhanced AI Self‑Learning</td>
+        <td><button class="download-btn">Download</button></td>
+      </tr>
     </table>
   </section>
 
-  <!-- Password Manager -->
-  <section id="password-manager" class="scroll-reveal">
-    <h2>Password Manager</h2>
-    <p>Securely store and manage your passwords</p>
-    <table id="passwordTable">
-      <tr>
-        <th>Website</th>
-        <th>Username</th>
-        <th>Password</th>
-        <th>Action</th>
-      </tr>
-    </table>
+  <!-- Next Products -->
+  <section class="scroll-reveal">
+    <h2>Upcoming Products</h2>
+    <p>🌐 <strong>AV 2.0</strong> — Cross‑platform resilience with enhanced AI self‑learning.</p>
+    <p>📱 <strong>Phone App</strong> — Ozentime AV protection for Android and iOS.</p>
+  </section>
 
-    <h3>Add New Password</h3>
-    <form onsubmit="addPassword(event)">
-      <label for="site">Website:</label>
-      <input type="text" id="site" name="site" placeholder="Enter website URL">
+  <!-- Vision -->
+  <section class="scroll-reveal">
+    <h2>Our Vision</h2>
+    <p>To deliver security tools that are powerful yet lightweight, ensuring every user can protect their system without sacrificing performance.</p>
+  </section>
 
-      <label for="username">Username:</label>
-      <input type="text" id="username" name="username" placeholder="Enter username">
+  <!-- Goals -->
+  <section class="scroll-reveal">
+    <h2>Our Goals</h2>
+    <ul>
+      <li>Pass VB2026 certification</li>
+      <li>Release Ozentime AV 2.0 with cross‑platform support</li>
+      <li>Launch mobile security apps for Android and iOS</li>
+    </ul>
+  </section>
 
-      <label for="password">Password:</label>
-      <input type="password" id="password" name="password" placeholder="Enter password">
-
-      <button type="submit">Save Password</button>
-    </form>
-
-    <button onclick="eraseAll()" style="margin-top:20px;">Erase All Passwords</button>
-
-    <!-- Status Indicator -->
+  <!-- Security Philosophy -->
+  <section class="scroll-reveal">
+    <h2>Our Security</h2>
+    <p>We believe in transparency, resilience, and lightweight builds. No bloat, no hidden processes — just clean protection.</p>
     <div id="status">
       <span id="statusDot"></span>
       <span id="statusText">Pending...</span>
@@ -182,81 +176,34 @@
   </section>
 
   <script>
-    // Load saved passwords from localStorage
-    window.onload = function() {
-      const saved = JSON.parse(localStorage.getItem("passwords")) || [];
-      saved.forEach(p => addRow(p.site, p.username, p.password));
-      updateStatus("Ready", false);
-    };
-
-    function addPassword(event) {
-      event.preventDefault();
-      updateStatus("Saving...", true);
-
-      const site = document.getElementById('site').value.trim();
-      const username = document.getElementById('username').value.trim();
-      const password = document.getElementById('password').value.trim();
-
-      if (site && username && password) {
-        addRow(site, username, password);
-
-        // Save to localStorage
-        const saved = JSON.parse(localStorage.getItem("passwords")) || [];
-        saved.push({site, username, password});
-        localStorage.setItem("passwords", JSON.stringify(saved));
-
-        // Clear form
-        document.getElementById('site').value = '';
-        document.getElementById('username').value = '';
-        document.getElementById('password').value = '';
-
-        updateStatus("Password saved", false);
-      }
-    }
-
-    function addRow(site, username, password) {
-      const table = document.getElementById('passwordTable');
-      const row = table.insertRow(-1);
-      row.innerHTML = `
-        <td>${site}</td>
-        <td>${username}</td>
-        <td>••••••••</td>
-        <td><button onclick="deleteRow(this, '${site}', '${username}')">Erase</button></td>
-      `;
-    }
-
-    function deleteRow(button, site, username) {
-      updateStatus("Deleting...", true);
-
-      const row = button.parentNode.parentNode;
-      row.parentNode.removeChild(row);
-
-      // Remove from localStorage
-      let saved = JSON.parse(localStorage.getItem("passwords")) || [];
-      saved = saved.filter(p => !(p.site === site && p.username === username));
-      localStorage.setItem("passwords", JSON.stringify(saved));
-
-      updateStatus("Password erased", false);
-    }
-
-    function eraseAll() {
-      if (confirm("Are you sure you want to erase all passwords?")) {
-        updateStatus("Erasing all...", true);
-
-        document.getElementById('passwordTable').innerHTML = `
-          <tr>
-            <th>Website</th>
-            <th>Username</th>
-            <th>Password</th>
-            <th>Action</th>
-          </tr>
-        `;
-        localStorage.removeItem("passwords");
-
-        updateStatus("All passwords erased", false);
-      }
-    }
+    // Scroll reveal animation
+    window.addEventListener('scroll', () => {
+      document.querySelectorAll('.scroll-reveal').forEach(el => {
+        const rect = el.getBoundingClientRect();
+        if (rect.top < window.innerHeight - 100) {
+          el.classList.add('visible');
+        }
+      });
+    });
 
     // Status updater
     function updateStatus(message, isPending=false) {
-      const statusDot = document.getElementById('
+      const statusDot = document.getElementById('statusDot');
+      const statusText = document.getElementById('statusText');
+
+      if (isPending) {
+        statusDot.style.background = "yellow";
+        statusText.textContent = "Pending...";
+      } else {
+        statusDot.style.background = "green";
+        statusText.textContent = message;
+      }
+    }
+
+    // Initialize status
+    window.onload = function() {
+      updateStatus("Ready", false);
+    };
+  </script>
+</body>
+</html>
