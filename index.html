@@ -16,8 +16,7 @@
       background-repeat: no-repeat;
       background-position: center center;
       background-attachment: fixed;
-      background-size: 400px; /* adjust size of watermark */
-      opacity: 0.95; /* keeps text/buttons visible */
+      background-size: 400px;
     }
 
     header {
@@ -33,7 +32,7 @@
       padding: 40px;
       margin: 30px auto;
       max-width: 900px;
-      background: rgba(255,255,255,0.9); /* semi-transparent so watermark shows faintly */
+      background: rgba(255,255,255,0.9); /* semi-transparent */
       border-radius: 10px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     }
@@ -145,18 +144,23 @@
         <td>AV 1.5</td>
         <td>Windows</td>
         <td>❌ Not Available</td>
-        <td><button class="download-btn disabled">Unavailable</button></td>
+        <!-- Active download -->
+        <td><a href="assets/ozentime1.5.exe">
+          <button class="download-btn">Download</button>
+        </a></td>
       </tr>
       <tr class="version-15pro">
         <td>AV 1.5 Pro</td>
         <td>Windows</td>
         <td>✅ Enabled</td>
-        <td><button class="download-btn">Download</button></td>
+        <!-- Greyed out -->
+        <td><button class="download-btn disabled">Unavailable</button></td>
       </tr>
       <tr class="version-20">
         <td>AV 2.0</td>
         <td>Windows / Cross‑Platform</td>
         <td>✅ Enhanced AI Self‑Learning</td>
+        <!-- Greyed out -->
         <td><button class="download-btn disabled">Unavailable</button></td>
       </tr>
     </table>
