@@ -74,6 +74,7 @@
       border-radius: 6px;
       cursor: pointer;
       transition: background 0.3s ease, box-shadow 0.3s ease;
+      margin-right: 8px;
     }
     .download-btn:hover {
       background: #006699;
@@ -144,7 +145,6 @@
         <td>AV 1.5</td>
         <td>Windows</td>
         <td>❌ Not Available</td>
-        <!-- Active download pointing to root directory -->
         <td><a href="ozentime1.5.exe">
           <button class="download-btn">Download</button>
         </a></td>
@@ -153,14 +153,20 @@
         <td>AV 1.5 Pro</td>
         <td>Windows</td>
         <td>✅ Enabled</td>
-        <!-- Greyed out -->
-        <td><button class="download-btn disabled">Unavailable</button></td>
+        <!-- Now active with both EXE and SYS -->
+        <td>
+          <a href="ozentime1.5pro.exe">
+            <button class="download-btn">EXE</button>
+          </a>
+          <a href="OzentimeAV.sys">
+            <button class="download-btn">Driver</button>
+          </a>
+        </td>
       </tr>
       <tr class="version-20">
         <td>AV 2.0</td>
         <td>Windows / Cross‑Platform</td>
         <td>✅ Enhanced AI Self‑Learning</td>
-        <!-- Greyed out -->
         <td><button class="download-btn disabled">Unavailable</button></td>
       </tr>
     </table>
