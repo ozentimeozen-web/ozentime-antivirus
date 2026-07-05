@@ -86,6 +86,16 @@
       box-shadow: none;
     }
 
+    .release-badge {
+      display: inline-block;
+      background: #28a745; /* green badge */
+      color: #fff;
+      font-size: 0.8em;
+      padding: 4px 8px;
+      border-radius: 4px;
+      margin-left: 10px;
+    }
+
     @keyframes bounce {
       0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
       40% { transform: translateY(-10px); }
@@ -150,10 +160,12 @@
         </a></td>
       </tr>
       <tr class="version-15pro">
-        <td>AV 1.5 Pro</td>
+        <td>
+          AV 1.5 Pro 
+          <span class="release-badge">Released July 5, 2026</span>
+        </td>
         <td>Windows</td>
         <td>✅ Enabled</td>
-        <!-- Now active with both EXE and SYS -->
         <td>
           <a href="ozentime1.5pro.exe">
             <button class="download-btn">EXE</button>
