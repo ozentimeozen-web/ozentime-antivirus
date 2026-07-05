@@ -11,7 +11,6 @@
       color: #333;
       line-height: 1.6;
 
-      /* Watermark background */
       background-image: url("assets/ozentime_logo.png");
       background-repeat: no-repeat;
       background-position: center center;
@@ -28,25 +27,56 @@
     header h1 { margin: 0; font-size: 2.2em; }
     header p { margin-top: 10px; font-size: 1.1em; }
 
+    nav {
+      background: #003366;
+      padding: 10px;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+    nav ul {
+      list-style: none;
+      margin: 0; padding: 0;
+      display: flex;
+      gap: 20px;
+    }
+    nav li {
+      position: relative;
+    }
+    nav a {
+      color: #fff;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    nav li ul {
+      display: none;
+      position: absolute;
+      background: #004466;
+      padding: 10px;
+      list-style: none;
+      margin: 0;
+      border-radius: 6px;
+    }
+    nav li:hover ul {
+      display: block;
+    }
+    nav li ul li {
+      margin: 5px 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
     section {
       padding: 40px;
       margin: 30px auto;
       max-width: 900px;
-      background: rgba(255,255,255,0.9); /* semi-transparent */
+      background: rgba(255,255,255,0.9);
       border-radius: 10px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     }
     h2 { color: #004466; margin-bottom: 15px; }
-
-    .scroll-reveal {
-      opacity: 0;
-      transform: translateY(40px);
-      transition: opacity 0.8s ease, transform 0.8s ease;
-    }
-    .scroll-reveal.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
 
     table {
       width: 100%;
@@ -60,12 +90,6 @@
     }
     th { background: #f0f4f8; font-weight: bold; }
 
-    /* Custom row styling */
-    .version-15 td:first-child { border-left: 8px solid #007BFF; }
-    .version-15pro td:first-child { border-left: 8px solid #003366; }
-    .version-20 td:first-child { border-left: 8px solid #800080; }
-
-    /* Buttons */
     .download-btn {
       background: #004466;
       color: #fff;
@@ -88,7 +112,7 @@
 
     .release-badge {
       display: inline-block;
-      background: #28a745; /* green badge */
+      background: #28a745;
       color: #fff;
       font-size: 0.8em;
       padding: 4px 8px;
@@ -96,16 +120,16 @@
       margin-left: 10px;
     }
 
-    @keyframes bounce {
-      0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-      40% { transform: translateY(-10px); }
-      60% { transform: translateY(-5px); }
-    }
     .lock-icon {
       display: inline-block;
       animation: bounce 2s infinite;
       font-size: 28px;
       margin-right: 10px;
+    }
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+      40% { transform: translateY(-10px); }
+      60% { transform: translateY(-5px); }
     }
 
     #status {
@@ -131,8 +155,24 @@
     <p>Lightweight • Secure • Professional</p>
   </header>
 
+  <!-- Navigation -->
+  <nav>
+    <ul>
+      <li><a href="#home">Home</a></li>
+      <li>
+        <a href="#products">Products</a>
+        <ul>
+          <li><a href="#product-15">Ozentime AV 1.5</a></li>
+          <li><a href="#product-15pro">Ozentime AV 1.5 Pro</a></li>
+        </ul>
+      </li>
+      <li><a href="#vision">Vision</a></li>
+      <li><a href="#goals">Goals</a></li>
+    </ul>
+  </nav>
+
   <!-- Accomplishments -->
-  <section class="scroll-reveal">
+  <section id="home">
     <h2>Accomplishments</h2>
     <ul>
       <li>✔ Released Ozentime AV 1.5 Pro with sys-layer resilience</li>
@@ -141,111 +181,53 @@
     </ul>
   </section>
 
-  <!-- Downloads -->
-  <section class="scroll-reveal">
-    <h2>Downloads</h2>
+  <!-- Product 1.5 -->
+  <section id="product-15">
+    <h2>Ozentime AV 1.5</h2>
+    <p>Our foundation build — lightweight and simple, designed for basic protection without complexity.</p>
     <table>
-      <tr>
-        <th>Version</th>
-        <th>Platform</th>
-        <th>Self-Learning</th>
-        <th>Download</th>
-      </tr>
-      <tr class="version-15">
-        <td>AV 1.5</td>
-        <td>Windows</td>
-        <td>❌ Not Available</td>
-        <td><a href="ozentime1.5.exe">
-          <button class="download-btn">Download</button>
-        </a></td>
-      </tr>
-      <tr class="version-15pro">
-        <td>
-          AV 1.5 Pro 
-          <span class="release-badge">Released July 5, 2026</span>
-        </td>
-        <td>Windows</td>
-        <td>✅ Enabled</td>
-        <td>
-          <a href="ozentime1.5pro.exe">
-            <button class="download-btn">EXE</button>
-          </a>
-          <a href="OzentimeAV.sys">
-            <button class="download-btn">Driver</button>
-          </a>
-        </td>
-      </tr>
-      <tr class="version-20">
-        <td>AV 2.0</td>
-        <td>Windows / Cross‑Platform</td>
-        <td>✅ Enhanced AI Self‑Learning</td>
-        <td><button class="download-btn disabled">Unavailable</button></td>
-      </tr>
+      <tr><th>Feature</th><th>Coverage</th></tr>
+      <tr><td>Sandbox Protection</td><td>Basic malware isolation</td></tr>
+      <tr><td>Offline Security</td><td>Yes</td></tr>
+      <tr><td>Sys-layer Resilience</td><td>Limited</td></tr>
+      <tr><td>TPM Dependency</td><td>None</td></tr>
     </table>
+    <a href="ozentime1.5.exe"><button class="download-btn">Download 1.5</button></a>
   </section>
 
-  <!-- Upcoming Products -->
-  <section class="scroll-reveal">
-    <h2>Upcoming Products</h2>
-    <p>🌐 <strong>AV 2.0</strong> — Cross‑platform resilience with enhanced AI self‑learning.</p>
-    <p>📱 <strong>Phone App</strong> — Ozentime AV protection for Android and iOS.</p>
+  <!-- Product 1.5 Pro -->
+  <section id="product-15pro">
+    <h2>Ozentime AV 1.5 Pro <span class="release-badge">Released July 5, 2026</span></h2>
+    <p>The advanced edition — stronger resilience, smarter detection, and optimized performance compared to 1.5.</p>
+    <h3>What's New</h3>
+    <ul>
+      <li>✅ Full sys-layer resilience with driver protection</li>
+      <li>✅ Enhanced heuristics and self-learning</li>
+      <li>✅ Even lower performance impact</li>
+    </ul>
+    <h3>Comparison with 1.5</h3>
+    <table>
+      <tr><th>Feature</th><th>AV 1.5</th><th>AV 1.5 Pro</th></tr>
+      <tr><td>Sandbox Protection</td><td>Basic</td><td>Enhanced with sys-layer hooks</td></tr>
+      <tr><td>Sys-layer Resilience</td><td>Limited</td><td>Full driver-level resilience</td></tr>
+      <tr><td>Offline Security</td><td>Yes</td><td>Yes, optimized</td></tr>
+      <tr><td>Performance Impact</td><td>Low</td><td>Even lower</td></tr>
+      <tr><td>TPM Dependency</td><td>None</td><td>None</td></tr>
+    </table>
+    <a href="ozentime1.5pro.exe"><button class="download-btn">Download EXE</button></a>
+    <a href="OzentimeAV.sys"><button class="download-btn">Download Driver</button></a>
   </section>
 
   <!-- Vision -->
-  <section class="scroll-reveal">
+  <section id="vision">
     <h2>Our Vision</h2>
     <p>To deliver security tools that are powerful yet lightweight, ensuring every user can protect their system without sacrificing performance.</p>
   </section>
 
   <!-- Goals -->
-  <section class="scroll-reveal">
+  <section id="goals">
     <h2>Our Goals</h2>
     <ul>
       <li>Pass VB2026 certification</li>
       <li>Release Ozentime AV 2.0 with cross‑platform support</li>
-      <li>Launch mobile security apps for Android and iOS</li>
-    </ul>
-  </section>
-
-  <!-- Security Philosophy -->
-  <section class="scroll-reveal">
-    <h2>Our Security</h2>
-    <p>We believe in transparency, resilience, and lightweight builds. No bloat, no hidden processes — just clean protection.</p>
-    <div id="status">
-      <span id="statusDot"></span>
-      <span id="statusText">Pending...</span>
-    </div>
-  </section>
-
-  <script>
-    // Scroll reveal animation
-    window.addEventListener('scroll', () => {
-      document.querySelectorAll('.scroll-reveal').forEach(el => {
-        const rect = el.getBoundingClientRect();
-        if (rect.top < window.innerHeight - 100) {
-          el.classList.add('visible');
-        }
-      });
-    });
-
-    // Status updater
-    function updateStatus(message, isPending=false) {
-      const statusDot = document.getElementById('statusDot');
-      const statusText = document.getElementById('statusText');
-
-      if (isPending) {
-        statusDot.style.background = "yellow";
-        statusText.textContent = "Pending...";
-      } else {
-        statusDot.style.background = "green";
-        statusText.textContent = message;
-      }
-    }
-
-    // Initialize status
-    window.onload = function() {
-      updateStatus("Ready", false);
-    };
-  </script>
-</body>
-</html>
+      <li>Launch mobile security apps for Android and i
