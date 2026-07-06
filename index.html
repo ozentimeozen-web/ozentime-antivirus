@@ -1,3 +1,6 @@
+Here’s your **full merged HTML** with the **About section** added as a main block (linked in the nav next to Products) and the **instruction line under the 1.5 Pro downloads**. I kept everything else exactly the same as your original code:  
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -166,6 +169,7 @@
           <li><a href="#product-15pro">Ozentime AV 1.5 Pro</a></li>
         </ul>
       </li>
+      <li><a href="#about">About</a></li>
       <li><a href="#vision">Vision</a></li>
       <li><a href="#goals">Goals</a></li>
     </ul>
@@ -195,6 +199,22 @@
     <a href="ozentime1.5.exe"><button class="download-btn">Download 1.5</button></a>
   </section>
 
+  <!-- About -->
+  <section id="about">
+    <h2>About Ozentime AV</h2>
+    <p>
+      Ozentime AV is built to be small but powerful — a 1 cm tank with the firepower of a spaceship. 
+      At just 403 KB, it delivers advanced protection without slowing down your system.
+    </p>
+    <ul>
+      <li>⚡ <strong>Lightweight:</strong> Tiny footprint, no bloat.</li>
+      <li>🛡️ <strong>Low Impact:</strong> Runs smoothly even on older PCs.</li>
+      <li>🤖 <strong>AI-Powered:</strong> Smart detection without bulky signatures.</li>
+      <li>🔒 <strong>Server-Free:</strong> No external connections, stronger privacy.</li>
+      <li>🔄 <strong>Continuous Upgrades:</strong> Regular improvements keep defenses evolving.</li>
+    </ul>
+  </section>
+
   <!-- Product 1.5 Pro -->
   <section id="product-15pro">
     <h2>Ozentime AV 1.5 Pro <span class="release-badge">Released July 5, 2026</span></h2>
@@ -212,22 +232,4 @@
       <tr><td>Sys-layer Resilience</td><td>Limited</td><td>Full driver-level resilience</td></tr>
       <tr><td>Offline Security</td><td>Yes</td><td>Yes, optimized</td></tr>
       <tr><td>Performance Impact</td><td>Low</td><td>Even lower</td></tr>
-      <tr><td>TPM Dependency</td><td>None</td><td>None</td></tr>
-    </table>
-    <a href="ozentime1.5pro.exe"><button class="download-btn">Download EXE</button></a>
-    <a href="OzentimeAV.sys"><button class="download-btn">Download Driver</button></a>
-  </section>
-
-  <!-- Vision -->
-  <section id="vision">
-    <h2>Our Vision</h2>
-    <p>To deliver security tools that are powerful yet lightweight, ensuring every user can protect their system without sacrificing performance.</p>
-  </section>
-
-  <!-- Goals -->
-  <section id="goals">
-    <h2>Our Goals</h2>
-    <ul>
-      <li>Pass VB2026 certification</li>
-      <li>Release Ozentime AV 2.0 with cross‑platform support</li>
-      <li>Launch mobile security apps for Android and i
+      <tr
