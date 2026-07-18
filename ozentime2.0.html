@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Ozentime AV Suite</title>
+  <title>Ozentime AV 2.0</title>
   <style>
     body {
       font-family: 'Segoe UI', Arial, sans-serif;
@@ -10,12 +10,6 @@
       background: #f9fafc;
       color: #333;
       line-height: 1.6;
-
-      background-image: url("assets/ozentime_logo.png");
-      background-repeat: no-repeat;
-      background-position: center center;
-      background-attachment: fixed;
-      background-size: 400px;
     }
 
     header {
@@ -30,9 +24,6 @@
     nav {
       background: #003366;
       padding: 10px;
-      position: sticky;
-      top: 0;
-      z-index: 1000;
     }
     nav ul {
       list-style: none;
@@ -40,158 +31,44 @@
       display: flex;
       gap: 20px;
     }
-    nav li { position: relative; }
     nav a {
       color: #fff;
       text-decoration: none;
       font-weight: bold;
     }
-    nav li ul {
-      display: none;
-      position: absolute;
-      background: #004466;
-      padding: 10px;
-      list-style: none;
-      margin: 0;
-      border-radius: 6px;
-    }
-    nav li:hover ul { display: block; }
-    nav li ul li { margin: 5px 0; }
-
-    html { scroll-behavior: smooth; }
 
     section {
-      padding: 40px;
-      margin: 30px auto;
-      max-width: 900px;
-      background: rgba(255,255,255,0.9);
+      padding: 60px;
+      margin: 40px auto;
+      max-width: 800px;
+      background: rgba(255,255,255,0.95);
       border-radius: 10px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      text-align: center;
     }
-    h2 { color: #004466; margin-bottom: 15px; }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
-    th, td {
-      border: 1px solid #ddd;
-      padding: 12px;
-      text-align: left;
-    }
-    th { background: #f0f4f8; font-weight: bold; }
-
-    /* Comment box styling */
-    #comments form {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    #comments input, #comments textarea {
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-family: inherit;
-    }
-    #comments button {
-      align-self: flex-start;
-      background: #004466;
-      color: #fff;
-      border: none;
-      padding: 10px 16px;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background 0.3s ease, box-shadow 0.3s ease;
-    }
-    #comments button:hover {
-      background: #006699;
-      box-shadow: 0 0 12px #006699;
-    }
+    h2 { color: #004466; margin-bottom: 20px; }
+    p { font-size: 1.2em; }
   </style>
 </head>
 <body>
   <header>
-    <!-- Animated O Logo -->
-    <svg width="80" height="80" viewBox="0 0 100 100">
-      <circle cx="50" cy="50" r="40" 
-              stroke="#00aaff" stroke-width="6" fill="none"
-              stroke-dasharray="251.2" stroke-dashoffset="251.2">
-        <animate attributeName="stroke-dashoffset" 
-                 from="251.2" to="0" dur="2s" fill="freeze" />
-      </circle>
-    </svg>
-    <h1>Ozentime AV Suite</h1>
-    <p>Lightweight • Secure • Professional</p>
+    <h1>Ozentime AV 2.0</h1>
+    <p>Next-generation protection • Coming Soon</p>
   </header>
 
-  <!-- Navigation -->
   <nav>
     <ul>
       <li><a href="index.html">Home</a></li>
-      <li>
-        <a href="#">Products</a>
-        <ul>
-          <li><a href="ozentime1.5pro.html">Ozentime AV 1.5 Pro</a></li>
-          <li><a href="ozentime2.0.html">Ozentime AV 2.0</a></li>
-        </ul>
-      </li>
+      <li><a href="ozentime1.5pro.html">AV 1.5 Pro</a></li>
+      <li><a href="ozentime2.0.html">AV 2.0</a></li>
       <li><a href="about.html">About</a></li>
-      <li><a href="support.html">Support</a></li>
     </ul>
   </nav>
 
-  <!-- Goals -->
-  <section id="goals">
-    <h2>Our Goals</h2>
-    <ul>
-      <li>🚀 Release Ozentime AV 1.5 Pro with sys-layer resilience</li>
-      <li>⚡ Build Ozentime AV 2.0 with heuristic-only detection</li>
-      <li>🛡️ Persistent background protection for continuous safety</li>
-      <li>🤖 AI assistant integration for smarter defense</li>
-    </ul>
-  </section>
-
-  <!-- AV 1.5 Download -->
-  <section id="product-15">
-    <h2>Ozentime AV 1.5</h2>
-    <p>Our foundation build — lightweight and simple, designed for basic protection without complexity.</p>
-    <a href="ozentime1.5.exe"><button class="download-btn">Download 1.5</button></a>
-  </section>
-
-  <!-- AV vs Others Comparison -->
-  <section id="comparison">
-    <h2>Ozentime AV vs Others</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Feature</th>
-          <th>Ozentime AV</th>
-          <th>Traditional AV</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr><td>Updates</td><td>AI auto-redefines daily</td><td>Signature files pushed manually</td></tr>
-        <tr><td>Size</td><td>403 KB EXE-only</td><td>Hundreds of MBs</td></tr>
-        <tr><td>Performance Impact</td><td>Minimal, lightweight</td><td>Often heavy on resources</td></tr>
-        <tr><td>Privacy</td><td>No external servers</td><td>Cloud-dependent</td></tr>
-        <tr><td>Innovation</td><td>Heuristic + AI-driven</td><td>Signature-based</td></tr>
-      </tbody>
-    </table>
-  </section>
-
-  <!-- Comment Box -->
-  <section id="comments">
-    <h2>Leave a Comment</h2>
-    <form action="https://formspree.io/f/yourFormID" method="POST">
-      <label for="name">Name:</label>
-      <input type="text" id="name" name="name" required>
-
-      <label for="comment">Comment:</label>
-      <textarea id="comment" name="comment" rows="5" cols="50" required></textarea>
-
-      <button type="submit">Submit</button>
-    </form>
+  <section>
+    <h2>Ozentime AV 2.0 Status</h2>
+    <p>This antivirus is currently in development and will be released around <strong>April 2026</strong>.</p>
+    <p>We recommend continuing to use Ozentime AV 1.5 Pro until 2.0 is ready.</p>
   </section>
 </body>
 </html>
