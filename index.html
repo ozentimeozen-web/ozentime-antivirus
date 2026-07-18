@@ -82,36 +82,6 @@
     }
     th { background: #f0f4f8; font-weight: bold; }
 
-    .download-btn {
-      background: #004466;
-      color: #fff;
-      border: none;
-      padding: 10px 16px;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background 0.3s ease, box-shadow 0.3s ease;
-      margin-right: 8px;
-    }
-    .download-btn:hover {
-      background: #006699;
-      box-shadow: 0 0 12px #006699;
-    }
-    .download-btn.disabled {
-      background: #aaa;
-      cursor: not-allowed;
-      box-shadow: none;
-    }
-
-    .release-badge {
-      display: inline-block;
-      background: #28a745;
-      color: #fff;
-      font-size: 0.8em;
-      padding: 4px 8px;
-      border-radius: 4px;
-      margin-left: 10px;
-    }
-
     /* Comment box styling */
     #comments form {
       display: flex;
@@ -126,6 +96,17 @@
     }
     #comments button {
       align-self: flex-start;
+      background: #004466;
+      color: #fff;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.3s ease, box-shadow 0.3s ease;
+    }
+    #comments button:hover {
+      background: #006699;
+      box-shadow: 0 0 12px #006699;
     }
   </style>
 </head>
@@ -162,51 +143,43 @@
     </ul>
   </nav>
 
-  <!-- Accomplishments -->
-  <section id="home">
-    <h2>Accomplishments</h2>
+  <!-- Goals -->
+  <section id="goals">
+    <h2>Our Goals</h2>
     <ul>
-      <li>✔ Released Ozentime AV 1.5 Pro with sys-layer resilience</li>
-      <li>✔ Lightweight EXE-only builds, no bloat</li>
-      <li>✔ Preparing roadmap for AV 2.0</li>
+      <li>🚀 Release Ozentime AV 1.5 Pro with sys-layer resilience</li>
+      <li>⚡ Build Ozentime AV 2.0 with heuristic-only detection</li>
+      <li>🛡️ Persistent background protection for continuous safety</li>
+      <li>🤖 AI assistant integration for smarter defense</li>
     </ul>
   </section>
 
-  <!-- Product 1.5 -->
+  <!-- AV 1.5 Download -->
   <section id="product-15">
     <h2>Ozentime AV 1.5</h2>
     <p>Our foundation build — lightweight and simple, designed for basic protection without complexity.</p>
     <a href="ozentime1.5.exe"><button class="download-btn">Download 1.5</button></a>
   </section>
 
-  <!-- Product 1.5 Pro -->
-  <section id="product-15pro">
-    <h2>Ozentime AV 1.5 Pro</h2>
-    <p>Advanced edition with full sys-layer resilience and enhanced heuristics.</p>
-    <a href="ozentime1.5pro.exe"><button class="download-btn">Download 1.5 Pro</button></a>
-  </section>
-
-  <!-- Product 2.0 -->
-  <section id="product-20">
-    <h2>Ozentime AV 2.0</h2>
-    <p>Heuristic-only detection engine with persistent background protection and multi-threaded disinfection.</p>
-    <button id="downloadBtn20" class="download-btn">Go to 2.0 Page</button>
-  </section>
-
-  <!-- About -->
-  <section id="about">
-    <h2>About Ozentime AV</h2>
-    <p>
-      Ozentime AV is built to be small but powerful — a 1 cm tank with the firepower of a spaceship. 
-      At just 403 KB, it delivers advanced protection without slowing down your system.
-    </p>
-    <ul>
-      <li>⚡ <strong>Lightweight:</strong> Tiny footprint, no bloat.</li>
-      <li>🛡️ <strong>Low Impact:</strong> Runs smoothly even on older PCs.</li>
-      <li>🤖 <strong>AI-Powered:</strong> Smart detection without bulky signatures.</li>
-      <li>🔒 <strong>Server-Free:</strong> No external connections, stronger privacy.</li>
-      <li>🔄 <strong>Continuous Upgrades:</strong> Regular improvements keep defenses evolving.</li>
-    </ul>
+  <!-- AV vs Others Comparison -->
+  <section id="comparison">
+    <h2>Ozentime AV vs Others</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th>Ozentime AV</th>
+          <th>Traditional AV</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Updates</td><td>AI auto-redefines daily</td><td>Signature files pushed manually</td></tr>
+        <tr><td>Size</td><td>403 KB EXE-only</td><td>Hundreds of MBs</td></tr>
+        <tr><td>Performance Impact</td><td>Minimal, lightweight</td><td>Often heavy on resources</td></tr>
+        <tr><td>Privacy</td><td>No external servers</td><td>Cloud-dependent</td></tr>
+        <tr><td>Innovation</td><td>Heuristic + AI-driven</td><td>Signature-based</td></tr>
+      </tbody>
+    </table>
   </section>
 
   <!-- Comment Box -->
@@ -219,11 +192,8 @@
       <label for="comment">Comment:</label>
       <textarea id="comment" name="comment" rows="5" cols="50" required></textarea>
 
-      <button type="submit" class="download-btn">Submit</button>
+      <button type="submit">Submit</button>
     </form>
   </section>
-
-  <script>
-    // Check if the 2.0 page exists
-    const fileUrl = "ozentime2.0page.html";
-    const btn = document.getElement
+</body>
+</html>
