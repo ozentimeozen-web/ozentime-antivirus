@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Ozentime AV 2.0</title>
+  <title>Ozentime AV Suite</title>
   <style>
     body {
       font-family: 'Segoe UI', Arial, sans-serif;
@@ -10,6 +10,12 @@
       background: #f9fafc;
       color: #333;
       line-height: 1.6;
+
+      background-image: url("assets/ozentime_logo.png");
+      background-repeat: no-repeat;
+      background-position: center center;
+      background-attachment: fixed;
+      background-size: 400px;
     }
 
     header {
@@ -24,6 +30,9 @@
     nav {
       background: #003366;
       padding: 10px;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
     }
     nav ul {
       list-style: none;
@@ -31,17 +40,31 @@
       display: flex;
       gap: 20px;
     }
+    nav li { position: relative; }
     nav a {
       color: #fff;
       text-decoration: none;
       font-weight: bold;
     }
+    nav li ul {
+      display: none;
+      position: absolute;
+      background: #004466;
+      padding: 10px;
+      list-style: none;
+      margin: 0;
+      border-radius: 6px;
+    }
+    nav li:hover ul { display: block; }
+    nav li ul li { margin: 5px 0; }
+
+    html { scroll-behavior: smooth; }
 
     section {
       padding: 40px;
       margin: 30px auto;
       max-width: 900px;
-      background: rgba(255,255,255,0.95);
+      background: rgba(255,255,255,0.9);
       border-radius: 10px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     }
@@ -57,9 +80,22 @@
       padding: 12px;
       text-align: left;
     }
-    th { background: #004466; color: #fff; font-weight: bold; }
+    th { background: #f0f4f8; font-weight: bold; }
 
-    .download-btn {
+    /* Comment box styling */
+    #comments form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    #comments input, #comments textarea {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-family: inherit;
+    }
+    #comments button {
+      align-self: flex-start;
       background: #004466;
       color: #fff;
       border: none;
@@ -67,107 +103,95 @@
       border-radius: 6px;
       cursor: pointer;
       transition: background 0.3s ease, box-shadow 0.3s ease;
-      margin-right: 8px;
     }
-    .download-btn:hover {
+    #comments button:hover {
       background: #006699;
       box-shadow: 0 0 12px #006699;
-    }
-    .download-btn.disabled {
-      background: #aaa;
-      cursor: not-allowed;
-      box-shadow: none;
-    }
-
-    .release-badge {
-      display: inline-block;
-      background: #28a745;
-      color: #fff;
-      font-size: 0.8em;
-      padding: 4px 8px;
-      border-radius: 4px;
-      margin-left: 10px;
-    }
-
-    .gui-showcase {
-      text-align: center;
-      margin-top: 40px;
-    }
-    .gui-showcase img {
-      max-width: 100%;
-      border-radius: 10px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    }
-    .gui-showcase ul {
-      list-style: none;
-      padding: 0;
-      margin-top: 20px;
-      font-size: 1.1em;
-    }
-    .gui-showcase li {
-      margin: 8px 0;
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>Ozentime AV 2.0</h1>
-    <p>Heuristic-only • Persistent Protection • Released July 2026</p>
+    <!-- Animated O Logo -->
+    <svg width="80" height="80" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="40" 
+              stroke="#00aaff" stroke-width="6" fill="none"
+              stroke-dasharray="251.2" stroke-dashoffset="251.2">
+        <animate attributeName="stroke-dashoffset" 
+                 from="251.2" to="0" dur="2s" fill="freeze" />
+      </circle>
+    </svg>
+    <h1>Ozentime AV Suite</h1>
+    <p>Lightweight • Secure • Professional</p>
   </header>
 
+  <!-- Navigation -->
   <nav>
     <ul>
       <li><a href="index.html">Home</a></li>
-      <li><a href="ozentime1.5.html">AV 1.5</a></li>
-      <li><a href="ozentime1.5pro.html">AV 1.5 Pro</a></li>
-      <li><a href="ozentime2.0page.html">AV 2.0</a></li>
-      <li><a href="ozentime_security.html">Security Lab</a></li>
+      <li>
+        <a href="#">Products</a>
+        <ul>
+          <li><a href="ozentime1.5pro.html">Ozentime AV 1.5 Pro</a></li>
+          <li><a href="ozentime2.0.html">Ozentime AV 2.0</a></li>
+        </ul>
+      </li>
       <li><a href="about.html">About</a></li>
       <li><a href="support.html">Support</a></li>
     </ul>
   </nav>
 
-  <section>
-    <h2>What's New in 2.0 <span class="release-badge">Released July 2026</span></h2>
+  <!-- Goals -->
+  <section id="goals">
+    <h2>Our Goals</h2>
     <ul>
-      <li>✅ Heuristic-only detection engine</li>
-      <li>✅ Persistent background protection</li>
-      <li>✅ Multi-threaded real-time disinfection</li>
-      <li>✅ AI assistant integration</li>
+      <li>🚀 Release Ozentime AV 1.5 Pro with sys-layer resilience</li>
+      <li>⚡ Build Ozentime AV 2.0 with heuristic-only detection</li>
+      <li>🛡️ Persistent background protection for continuous safety</li>
+      <li>🤖 AI assistant integration for smarter defense</li>
     </ul>
+  </section>
 
-    <h3>Comparison with AV 1.5 Pro</h3>
+  <!-- AV 1.5 Download -->
+  <section id="product-15">
+    <h2>Ozentime AV 1.5</h2>
+    <p>Our foundation build — lightweight and simple, designed for basic protection without complexity.</p>
+    <a href="ozentime1.5.exe"><button class="download-btn">Download 1.5</button></a>
+  </section>
+
+  <!-- AV vs Others Comparison -->
+  <section id="comparison">
+    <h2>Ozentime AV vs Others</h2>
     <table>
       <thead>
         <tr>
-          <th scope="col">Feature</th>
-          <th scope="col">Ozentime AV 1.5 Pro</th>
-          <th scope="col">Ozentime AV 2.0</th>
+          <th>Feature</th>
+          <th>Ozentime AV</th>
+          <th>Traditional AV</th>
         </tr>
       </thead>
       <tbody>
-        <tr><td>Detection Method</td><td>Signatures + Heuristics</td><td>Heuristic-only, AI-driven</td></tr>
-        <tr><td>Sys-layer Resilience</td><td>Driver-level resilience</td><td>Persistent background protection</td></tr>
-        <tr><td>Performance Impact</td><td>Very low</td><td>Optimized multi-threaded</td></tr>
-        <tr><td>Updates</td><td>Manual + AI</td><td>Automatic AI redefinition daily</td></tr>
+        <tr><td>Updates</td><td>AI auto-redefines daily</td><td>Signature files pushed manually</td></tr>
+        <tr><td>Size</td><td>403 KB EXE-only</td><td>Hundreds of MBs</td></tr>
+        <tr><td>Performance Impact</td><td>Minimal, lightweight</td><td>Often heavy on resources</td></tr>
+        <tr><td>Privacy</td><td>No external servers</td><td>Cloud-dependent</td></tr>
+        <tr><td>Innovation</td><td>Heuristic + AI-driven</td><td>Signature-based</td></tr>
       </tbody>
     </table>
+  </section>
 
-    <div style="margin-top:20px;">
-      <a href="ozentime2.0.exe"><button class="download-btn">Download EXE</button></a>
-      <p><em>⚡ Ozentime AV 2.0 is designed to run persistently in the background with minimal impact.</em></p>
-    </div>
+  <!-- Comment Box -->
+  <section id="comments">
+    <h2>Leave a Comment</h2>
+    <form action="https://formspree.io/f/yourFormID" method="POST">
+      <label for="name">Name:</label>
+      <input type="text" id="name" name="name" required>
 
-    <!-- GUI Showcase -->
-    <div class="gui-showcase">
-      <img src="assets/ozentime2GUI.png" alt="Ozentime AV 2.0 GUI">
-      <ul>
-        <li>✔ Heuristic-only detection</li>
-        <li>✔ Persistent protection</li>
-        <li>✔ Multi-threaded disinfection</li>
-        <li>✔ AI assistant integration</li>
-      </ul>
-    </div>
+      <label for="comment">Comment:</label>
+      <textarea id="comment" name="comment" rows="5" cols="50" required></textarea>
+
+      <button type="submit">Submit</button>
+    </form>
   </section>
 </body>
 </html>
