@@ -40,9 +40,7 @@
       display: flex;
       gap: 20px;
     }
-    nav li {
-      position: relative;
-    }
+    nav li { position: relative; }
     nav a {
       color: #fff;
       text-decoration: none;
@@ -57,16 +55,10 @@
       margin: 0;
       border-radius: 6px;
     }
-    nav li:hover ul {
-      display: block;
-    }
-    nav li ul li {
-      margin: 5px 0;
-    }
+    nav li:hover ul { display: block; }
+    nav li ul li { margin: 5px 0; }
 
-    html {
-      scroll-behavior: smooth;
-    }
+    html { scroll-behavior: smooth; }
 
     section {
       padding: 40px;
@@ -120,42 +112,39 @@
       margin-left: 10px;
     }
 
-    .lock-icon {
-      display: inline-block;
-      animation: bounce 2s infinite;
-      font-size: 28px;
-      margin-right: 10px;
-    }
-    @keyframes bounce {
-      0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-      40% { transform: translateY(-10px); }
-      60% { transform: translateY(-5px); }
-    }
-
-    #status {
-      margin-top: 20px;
-      font-size: 0.95em;
+    /* Comment box styling */
+    #comments form {
       display: flex;
-      align-items: center;
-      gap: 8px;
+      flex-direction: column;
+      gap: 12px;
     }
-    #statusDot {
-      height: 12px; width: 12px;
-      border-radius: 50%;
-      display: inline-block;
-      background: yellow;
-      transition: background 0.3s ease;
+    #comments input, #comments textarea {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-family: inherit;
+    }
+    #comments button {
+      align-self: flex-start;
     }
   </style>
 </head>
 <body>
   <header>
-    <span class="lock-icon">🔒</span>
+    <!-- Animated O Logo -->
+    <svg width="80" height="80" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="40" 
+              stroke="#00aaff" stroke-width="6" fill="none"
+              stroke-dasharray="251.2" stroke-dashoffset="251.2">
+        <animate attributeName="stroke-dashoffset" 
+                 from="251.2" to="0" dur="2s" fill="freeze" />
+      </circle>
+    </svg>
     <h1>Ozentime AV Suite</h1>
     <p>Lightweight • Secure • Professional</p>
   </header>
 
-  <!-- Updated Navigation -->
+  <!-- Navigation -->
   <nav>
     <ul>
       <li><a href="index.html">Home</a></li>
@@ -164,6 +153,7 @@
         <ul>
           <li><a href="ozentime1.5.html">Ozentime AV 1.5</a></li>
           <li><a href="ozentime1.5pro.html">Ozentime AV 1.5 Pro</a></li>
+          <li><a href="ozentime2.0page.html">Ozentime AV 2.0</a></li>
         </ul>
       </li>
       <li><a href="ozentime_security.html">Ozentime Security Lab</a></li>
@@ -186,14 +176,21 @@
   <section id="product-15">
     <h2>Ozentime AV 1.5</h2>
     <p>Our foundation build — lightweight and simple, designed for basic protection without complexity.</p>
-    <table>
-      <tr><th>Feature</th><th>Coverage</th></tr>
-      <tr><td>Sandbox Protection</td><td>Basic malware isolation</td></tr>
-      <tr><td>Offline Security</td><td>Yes</td></tr>
-      <tr><td>Sys-layer Resilience</td><td>Limited</td></tr>
-      <tr><td>TPM Dependency</td><td>None</td></tr>
-    </table>
     <a href="ozentime1.5.exe"><button class="download-btn">Download 1.5</button></a>
+  </section>
+
+  <!-- Product 1.5 Pro -->
+  <section id="product-15pro">
+    <h2>Ozentime AV 1.5 Pro</h2>
+    <p>Advanced edition with full sys-layer resilience and enhanced heuristics.</p>
+    <a href="ozentime1.5pro.exe"><button class="download-btn">Download 1.5 Pro</button></a>
+  </section>
+
+  <!-- Product 2.0 -->
+  <section id="product-20">
+    <h2>Ozentime AV 2.0</h2>
+    <p>Heuristic-only detection engine with persistent background protection and multi-threaded disinfection.</p>
+    <button id="downloadBtn20" class="download-btn">Go to 2.0 Page</button>
   </section>
 
   <!-- About -->
@@ -211,5 +208,22 @@
       <li>🔄 <strong>Continuous Upgrades:</strong> Regular improvements keep defenses evolving.</li>
     </ul>
   </section>
-</body>
-</html>
+
+  <!-- Comment Box -->
+  <section id="comments">
+    <h2>Leave a Comment</h2>
+    <form action="https://formspree.io/f/yourFormID" method="POST">
+      <label for="name">Name:</label>
+      <input type="text" id="name" name="name" required>
+
+      <label for="comment">Comment:</label>
+      <textarea id="comment" name="comment" rows="5" cols="50" required></textarea>
+
+      <button type="submit" class="download-btn">Submit</button>
+    </form>
+  </section>
+
+  <script>
+    // Check if the 2.0 page exists
+    const fileUrl = "ozentime2.0page.html";
+    const btn = document.getElement
