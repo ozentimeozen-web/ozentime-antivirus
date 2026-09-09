@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Ozentime Antivirus 1.5 Pro</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -11,13 +12,20 @@
       margin: 0;
       padding: 0;
     }
-    header {
+    header, footer {
       background: rgba(0,0,0,0.7);
-      padding: 20px;
+      padding: 10px;
+      font-size: 14px;
+      font-weight: bold;
       text-align: center;
-      font-size: 28px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
+    h1 {
+      margin-top: 20px;
+      font-size: 32px;
       font-weight: bold;
       letter-spacing: 2px;
+      text-align: center;
     }
     .release-date {
       text-align: center;
@@ -26,8 +34,19 @@
       color: #a8e063;
       font-weight: bold;
     }
+    .goal {
+      margin: 30px auto;
+      max-width: 600px;
+      background: rgba(255,255,255,0.1);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+    }
     section {
-      padding: 40px;
+      padding: 40px 20px;
       text-align: center;
     }
     table {
@@ -64,22 +83,28 @@
       cursor: pointer;
       color: #000;
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      transition: transform 0.2s;
+      transition: transform 0.2s, box-shadow 0.2s;
     }
     button:hover {
       transform: scale(1.05);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.4);
     }
-    footer {
-      background: rgba(0,0,0,0.7);
-      padding: 15px;
-      text-align: center;
-      font-size: 14px;
+    /* Responsive tweaks */
+    @media (max-width: 600px) {
+      h1 { font-size: 24px; }
+      .goal { font-size: 16px; }
+      table { width: 95%; }
+      button { font-size: 14px; padding: 10px 18px; }
     }
   </style>
 </head>
 <body>
-  <header>Ozentime Antivirus 1.5 Pro</header>
+  <header>© 2026 Ozentime Antivirus</header>
+  
+  <h1>Ozentime Antivirus 1.5 Pro</h1>
   <div class="release-date">Released on: Early 2026</div>
+  
+  <div class="goal">Goal: Provide safe, efficient security for all</div>
 
   <section id="features">
     <h2>Features of 1.5 Pro</h2>
@@ -102,8 +127,6 @@
     </div>
   </section>
 
-  <footer>
-    © 2026 Ozentime Antivirus | Secure Your World
-  </footer>
+  <footer>© 2026 Ozentime Antivirus | Secure Your World</footer>
 </body>
 </html>
