@@ -13,37 +13,39 @@
       padding: 0;
     }
     header, footer {
-      background: rgba(0,0,0,0.7);
-      padding: 10px;
-      font-size: 14px;
+      background: rgba(0,0,0,0.8);
+      padding: 15px;
+      font-size: 16px;
       font-weight: bold;
       text-align: center;
       box-shadow: 0 4px 12px rgba(0,0,0,0.5);
     }
     h1 {
-      margin-top: 20px;
-      font-size: 32px;
+      margin-top: 40px;
+      font-size: 42px;
       font-weight: bold;
       letter-spacing: 2px;
       text-align: center;
+      text-shadow: 0 4px 10px rgba(0,0,0,0.6);
     }
     .release-date {
       text-align: center;
       font-size: 18px;
       margin-top: 10px;
-      color: #a8e063;
+      color: #56ccf2; /* light blue */
       font-weight: bold;
     }
     .goal {
       margin: 30px auto;
-      max-width: 600px;
+      max-width: 700px;
       background: rgba(255,255,255,0.1);
-      padding: 20px;
+      padding: 25px;
       border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      font-size: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      font-size: 22px;
       font-weight: bold;
       text-align: center;
+      animation: fadeIn 2s ease-in;
     }
     section {
       padding: 40px 20px;
@@ -61,6 +63,7 @@
     th, td {
       padding: 15px;
       border-bottom: 1px solid rgba(255,255,255,0.2);
+      text-align: center;
     }
     th {
       background: rgba(0,0,0,0.6);
@@ -69,15 +72,23 @@
     tr:hover {
       background: rgba(255,255,255,0.1);
     }
+    .tick {
+      color: #56ccf2; /* light blue ticks */
+      font-weight: bold;
+    }
+    .cross {
+      color: #ff4c4c; /* red crosses */
+      font-weight: bold;
+    }
     .button-group {
       margin-top: 20px;
     }
     button {
       background: linear-gradient(to right, #56ab2f, #a8e063);
       border: none;
-      padding: 12px 25px;
+      padding: 14px 28px;
       margin: 15px;
-      font-size: 16px;
+      font-size: 18px;
       font-weight: bold;
       border-radius: 25px;
       cursor: pointer;
@@ -89,10 +100,14 @@
       transform: scale(1.05);
       box-shadow: 0 6px 14px rgba(0,0,0,0.4);
     }
+    @keyframes fadeIn {
+      from {opacity: 0;}
+      to {opacity: 1;}
+    }
     /* Responsive tweaks */
     @media (max-width: 600px) {
-      h1 { font-size: 24px; }
-      .goal { font-size: 16px; }
+      h1 { font-size: 28px; }
+      .goal { font-size: 18px; }
       table { width: 95%; }
       button { font-size: 14px; padding: 10px 18px; }
     }
@@ -110,14 +125,14 @@
     <h2>Features of 1.5 Pro</h2>
     <table>
       <tr><th>Feature</th><th>Status</th></tr>
-      <tr><td>Scanning</td><td>✔️</td></tr>
-      <tr><td>Decent AI Engine</td><td>✔️</td></tr>
-      <tr><td>Disinfection</td><td>✔️</td></tr>
-      <tr><td>Deletion</td><td>✔️</td></tr>
-      <tr><td>Rootkit Defense</td><td>❌</td></tr>
-      <tr><td>Adblocker</td><td>❌</td></tr>
-      <tr><td>VPN Module</td><td>❌</td></tr>
-      <tr><td>Rollback Engine</td><td>❌</td></tr>
+      <tr><td>Scanning</td><td class="tick">✔️</td></tr>
+      <tr><td>Decent AI Engine</td><td class="tick">✔️</td></tr>
+      <tr><td>Disinfection</td><td class="tick">✔️</td></tr>
+      <tr><td>Deletion</td><td class="tick">✔️</td></tr>
+      <tr><td>Rootkit Defense</td><td class="cross">❌</td></tr>
+      <tr><td>Adblocker</td><td class="cross">❌</td></tr>
+      <tr><td>VPN Module</td><td class="cross">❌</td></tr>
+      <tr><td>Rollback Engine</td><td class="cross">❌</td></tr>
     </table>
 
     <div class="button-group">
