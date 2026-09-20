@@ -2,160 +2,448 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Ozentime Antivirus 2.0</title>
+  <title>Ozentime Antivirus 2.0 | Next-Gen Flagship Engine</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
-      color: #fff;
+    :root {
+      --bg-dark: #080b10;
+      --card-bg: rgba(18, 26, 36, 0.7);
+      --accent-green: #00ff88;
+      --accent-glow: rgba(0, 255, 136, 0.25);
+      --accent-blue: #00d2ff;
+      --text-main: #f0f4f8;
+      --text-muted: #8a99ad;
+      --border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
-    header, footer {
-      background: rgba(0,0,0,0.8);
-      padding: 15px;
-      font-size: 16px;
-      font-weight: bold;
-      text-align: center;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(0, 255, 136, 0.15), transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(0, 210, 255, 0.08), transparent 30%);
+      color: var(--text-main);
+      line-height: 1.6;
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
-    h1 {
-      margin-top: 40px;
-      font-size: 42px;
-      font-weight: bold;
-      letter-spacing: 2px;
-      text-align: center;
-      text-shadow: 0 4px 10px rgba(0,0,0,0.6);
+
+    /* Header & Navigation */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 8%;
+      background: rgba(8, 11, 16, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
     }
-    .release-date {
-      text-align: center;
-      font-size: 18px;
-      margin-top: 10px;
-      color: #56ccf2; /* light blue */
-      font-weight: bold;
-    }
-    .goal {
-      margin: 30px auto;
-      max-width: 700px;
-      background: rgba(255,255,255,0.1);
-      padding: 25px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+
+    .logo {
       font-size: 22px;
-      font-weight: bold;
+      font-weight: 800;
+      letter-spacing: 1px;
+      background: linear-gradient(135deg, #fff, var(--accent-green));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .logo-badge {
+      font-size: 10px;
+      background: rgba(0, 255, 136, 0.15);
+      color: var(--accent-green);
+      border: 1px solid var(--accent-green);
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    nav {
+      display: flex;
+      gap: 25px;
+      align-items: center;
+    }
+
+    nav a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      transition: color 0.3s;
+    }
+
+    nav a:hover, nav a.active {
+      color: var(--accent-green);
+    }
+
+    .nav-btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Hero Section */
+    .hero {
       text-align: center;
-      animation: fadeIn 2s ease-in;
+      padding: 80px 20px 40px;
+      max-width: 900px;
+      margin: 0 auto;
     }
-    section {
-      padding: 40px 20px;
-      text-align: center;
+
+    .hero-tag {
+      display: inline-block;
+      padding: 6px 16px;
+      border-radius: 20px;
+      background: rgba(0, 255, 136, 0.1);
+      border: 1px solid rgba(0, 255, 136, 0.3);
+      font-size: 13px;
+      color: var(--accent-green);
+      margin-bottom: 20px;
+      font-weight: 600;
     }
-    table {
-      width: 80%;
-      margin: auto;
-      border-collapse: collapse;
-      background: rgba(255,255,255,0.1);
-      box-shadow: 0 0 15px rgba(0,0,0,0.5);
-      border-radius: 10px;
-      overflow: hidden;
+
+    h1 {
+      font-size: 48px;
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 15px;
+      letter-spacing: -1px;
     }
-    th, td {
-      padding: 15px;
-      border-bottom: 1px solid rgba(255,255,255,0.2);
-      text-align: center;
+
+    h1 span {
+      background: linear-gradient(135deg, var(--accent-green), var(--accent-blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
-    th {
-      background: rgba(0,0,0,0.6);
-      font-size: 20px;
+
+    .release-badge {
+      display: inline-block;
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 25px;
+      font-weight: 600;
     }
-    tr:hover {
-      background: rgba(255,255,255,0.1);
-    }
-    .tick {
-      color: #56ccf2; /* light blue ticks */
-      font-weight: bold;
-    }
-    .cross {
-      color: #ff4c4c; /* red crosses */
-      font-weight: bold;
-    }
-    .button-group {
-      margin-top: 20px;
-    }
-    button {
-      background: linear-gradient(to right, #56ab2f, #a8e063);
-      border: none;
-      padding: 14px 28px;
-      margin: 15px;
+
+    .hero-subtitle {
       font-size: 18px;
-      font-weight: bold;
-      border-radius: 25px;
+      color: var(--text-muted);
+      margin-bottom: 40px;
+      max-width: 650px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* Goal Box */
+    .goal-box {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px 30px;
+      max-width: 700px;
+      margin: 0 auto 50px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    /* Container */
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 20px 80px;
+      flex-grow: 1;
+    }
+
+    /* Feature Table */
+    .table-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      margin-bottom: 40px;
+    }
+
+    .table-header {
+      padding: 25px 30px;
+      border-bottom: 1px solid var(--border-color);
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .table-header h2 {
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    th, td {
+      padding: 18px 30px;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 15px;
+    }
+
+    th {
+      background: rgba(0, 0, 0, 0.4);
+      color: var(--text-muted);
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .status-cell {
+      text-align: right;
+      font-weight: 700;
+    }
+
+    .tick {
+      color: var(--accent-green);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Download Callout & Buttons */
+    .download-section {
+      text-align: center;
+      background: linear-gradient(180deg, rgba(0, 255, 136, 0.05) 0%, var(--card-bg) 100%);
+      border: 1px solid var(--accent-green);
+      border-radius: 16px;
+      padding: 40px 20px;
+      margin-bottom: 30px;
+      box-shadow: 0 10px 30px var(--accent-glow);
+    }
+
+    .download-section h3 {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+
+    .download-section p {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-bottom: 25px;
+    }
+
+    .button-group {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 15px;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 16px 32px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 15px;
+      text-decoration: none;
+      transition: all 0.3s;
       cursor: pointer;
+    }
+
+    .btn-primary {
+      background: var(--accent-green);
       color: #000;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 15px var(--accent-glow);
     }
-    button:hover {
-      transform: scale(1.05);
-      box-shadow: 0 6px 14px rgba(0,0,0,0.4);
+
+    .btn-primary:hover {
+      background: #00e077;
+      box-shadow: 0 6px 20px rgba(0, 255, 136, 0.4);
+      transform: translateY(-2px);
     }
-    .compatibility {
-      margin-top: 25px;
-      font-size: 16px;
-      font-weight: bold;
-      color: #56ccf2; /* light blue for clarity */
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
     }
-    @keyframes fadeIn {
-      from {opacity: 0;}
-      to {opacity: 1;}
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
+      transform: translateY(-2px);
     }
-    /* Responsive tweaks */
-    @media (max-width: 600px) {
-      h1 { font-size: 28px; }
-      .goal { font-size: 18px; }
-      table { width: 95%; }
-      button { font-size: 14px; padding: 10px 18px; }
-      .compatibility { font-size: 14px; }
+
+    /* Compatibility Banner */
+    .compatibility-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .compatibility-card span {
+      color: var(--accent-blue);
+      font-weight: 600;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border-color);
+      padding: 30px 20px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 14px;
+      background: rgba(0, 0, 0, 0.5);
+      margin-top: auto;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      h1 { font-size: 34px; }
+      header { flex-direction: column; gap: 15px; }
+      th, td { padding: 14px 20px; }
+      .button-group { flex-direction: column; }
     }
   </style>
 </head>
 <body>
-  <header>© 2026 Ozentime Antivirus</header>
-  
-  <h1>Ozentime Antivirus 2.0</h1>
-  <div class="release-date">Released on: 29th August 2026</div>
-  
-  <div class="goal">Goal: Provide safe, efficient security for all</div>
 
-  <section id="features">
-    <h2>Power Features of 2.0</h2>
-    <table>
-      <tr><th>Feature</th><th>Status</th></tr>
-      <tr><td>Advanced Scanning</td><td class="tick">✔️</td></tr>
-      <tr><td>Improved AI + Learning</td><td class="tick">✔️</td></tr>
-      <tr><td>Enhanced Disinfection</td><td class="tick">✔️</td></tr>
-      <tr><td>Smarter Deletion</td><td class="tick">✔️</td></tr>
-      <tr><td>Rootkit Defense</td><td class="tick">✔️</td></tr>
-      <tr><td>Adblocker</td><td class="tick">✔️</td></tr>
-      <tr><td>VPN Module</td><td class="tick">✔️</td></tr>
-      <tr><td>Rollback Engine</td><td class="tick">✔️</td></tr>
-    </table>
+  <!-- Navigation -->
+  <header>
+    <a href="index.html" class="logo">
+      OZENTIME <span class="logo-badge">v2.0 FLAGSHIP</span>
+    </a>
+    <nav>
+      <a href="index.html">Main Hub</a>
+      <a href="1.5pro.html" class="nav-btn">Switch to 1.5 Pro</a>
+      <a href="2.0.html" class="active">2.0 Engine</a>
+    </nav>
+  </header>
 
-    <div class="button-group">
-      <a href="ozentime_download/OzentimeAV.exe" download>
-        <button>Download 2.0 Installer</button>
-      </a>
-      <a href="ozentime_download/OzentimeUpdater.exe" download>
-        <button>Download 2.0 Updater</button>
-      </a>
-    </div>
-
-    <div class="compatibility">
-      Compatible with: Windows Server 2012–2025, Windows 8–11, and all Linux versions
-    </div>
+  <!-- Hero Section -->
+  <section class="hero">
+    <span class="hero-tag">Flagship Security Platform</span>
+    <h1>Ozentime Antivirus <span>2.0</span></h1>
+    <div class="release-badge">Released: August 29, 2026</div>
+    <p class="hero-subtitle">
+      Full-spectrum protection featuring our complete security engine, automated rollbacks, network shields, and rootkit defenses.
+    </p>
   </section>
 
-  <footer>© 2026 Ozentime Antivirus | Secure Your World</footer>
+  <!-- Goal Callout -->
+  <div class="goal-box">
+    🎯 Goal: Provide safe, efficient, and comprehensive security for all modern platforms.
+  </div>
+
+  <!-- Content Container -->
+  <div class="container">
+    
+    <!-- Feature Matrix Table -->
+    <div class="table-card">
+      <div class="table-header">
+        <h2>Power Features of 2.0</h2>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Feature Module</th>
+            <th style="text-align: right;">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Advanced High-Speed Scanning</td>
+            <td class="status-cell"><span class="tick">✔ Active</span></td>
+          </tr>
+          <tr>
+            <td>Improved AI & Dynamic Machine Learning</td>
+            <td class="status-cell"><span class="tick">✔ Active</span></td>
+          </tr>
+          <tr>
+            <td>Enhanced Disinfection Protocols</td>
+            <td class="status-cell"><span class="tick">✔ Active</span></td>
+          </tr>
+          <tr>
+            <td>Smarter Automated Deletion</td>
+            <td class="status-cell"><span class="tick">✔ Active</span></td>
+          </tr>
+          <tr>
+            <td>Kernel-Level Rootkit Defense</td>
+            <td class="status-cell"><span class="tick">✔ Active</span></td>
+          </tr>
+          <tr>
+            <td>Adblocker Network Shield</td>
+            <td class="status-cell"><span class="tick">✔ Active</span></td>
+          </tr>
+          <tr>
+            <td>Encrypted VPN Module</td>
+            <td class="status-cell"><span class="tick">✔ Active</span></td>
+          </tr>
+          <tr>
+            <td>System Snapshot Rollback Engine</td>
+            <td class="status-cell"><span class="tick">✔ Active</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Download CTA -->
+    <div class="download-section">
+      <h3>Deploy Ozentime Antivirus 2.0</h3>
+      <p>Download the installer or get the standalone updater utility below.</p>
+      <div class="button-group">
+        <a href="ozentime_download/OzentimeAV.exe" download class="btn btn-primary">
+          Download 2.0 Installer (.exe)
+        </a>
+        <a href="ozentime_download/OzentimeUpdater.exe" download class="btn btn-secondary">
+          Download 2.0 Updater
+        </a>
+      </div>
+    </div>
+
+    <!-- System Compatibility -->
+    <div class="compatibility-card">
+      ⚙️ <strong>Platform Compatibility:</strong> <span>Windows Server 2012–2025</span>, <span>Windows 8–11 (64-bit)</span>, and <span>all modern Linux distributions</span>.
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <p>© 2026 Ozentime Security Systems | Secure Your World</p>
+  </footer>
+
 </body>
 </html>
