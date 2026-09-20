@@ -2,162 +2,441 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Ozentime Antivirus</title>
+  <title>Ozentime Antivirus | Next-Gen Security Engine</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
-      color: #fff;
+    :root {
+      --bg-dark: #080b10;
+      --card-bg: rgba(18, 26, 36, 0.7);
+      --accent-green: #00ff88;
+      --accent-glow: rgba(0, 255, 136, 0.25);
+      --accent-blue: #00d2ff;
+      --text-main: #f0f4f8;
+      --text-muted: #8a99ad;
+      --border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
-    header, footer {
-      background: rgba(0,0,0,0.8);
-      padding: 15px;
-      font-size: 16px;
-      font-weight: bold;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-      text-align: center;
-      position: relative;
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(0, 210, 255, 0.15), transparent 40%),
+        radial-gradient(circle at 80% 60%, rgba(0, 255, 136, 0.08), transparent 30%);
+      color: var(--text-main);
+      line-height: 1.6;
+      overflow-x: hidden;
     }
-    h1 {
-      margin-top: 40px;
-      font-size: 42px;
-      font-weight: bold;
-      letter-spacing: 2px;
-      text-shadow: 0 4px 10px rgba(0,0,0,0.6);
-    }
-    section {
-      padding: 60px 20px;
-      text-align: center;
-    }
-    p {
-      font-size: 18px;
-      margin-bottom: 30px;
-    }
-    .goal {
-      margin: 40px auto;
-      max-width: 700px;
-      background: rgba(255,255,255,0.1);
-      padding: 25px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-      font-size: 22px;
-      font-weight: bold;
-    }
-    .button-group {
+
+    /* Header & Navigation */
+    header {
       display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 20px;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 8%;
+      background: rgba(8, 11, 16, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
     }
-    a button {
-      background: linear-gradient(to right, #56ab2f, #a8e063);
-      border: none;
-      padding: 20px 40px;
-      font-size: 20px;
-      font-weight: bold;
-      border-radius: 30px;
-      cursor: pointer;
-      color: #000;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      transition: transform 0.3s, box-shadow 0.3s;
+
+    .logo {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      background: linear-gradient(135deg, #fff, var(--accent-green));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
-    a button:hover {
-      transform: scale(1.1);
-      box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+
+    .logo-badge {
+      font-size: 10px;
+      background: rgba(0, 255, 136, 0.15);
+      color: var(--accent-green);
+      border: 1px solid var(--accent-green);
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
-    /* Mega menu */
+
     nav {
       display: flex;
-      justify-content: center;
-      gap: 40px;
-      margin-top: 10px;
+      gap: 30px;
     }
-    nav > div {
-      position: relative;
-    }
+
     nav a {
-      color: #fff;
+      color: var(--text-muted);
       text-decoration: none;
-      font-size: 16px;
-      font-weight: bold;
-      padding: 8px;
-    }
-    .dropdown {
-      display: none;
-      position: absolute;
-      top: 35px;
-      left: 0;
-      background: rgba(0,0,0,0.9);
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-      min-width: 200px;
-    }
-    .dropdown a {
-      display: block;
-      padding: 8px 0;
-      color: #a8e063;
       font-size: 14px;
+      font-weight: 600;
+      transition: color 0.3s;
     }
-    nav > div:hover .dropdown {
+
+    nav a:hover {
+      color: var(--accent-green);
+    }
+
+    /* Hero Section */
+    .hero {
+      text-align: center;
+      padding: 100px 20px 60px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .hero-tag {
+      display: inline-block;
+      padding: 6px 16px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      font-size: 13px;
+      color: var(--accent-blue);
+      margin-bottom: 20px;
+      font-weight: 600;
+    }
+
+    h1 {
+      font-size: 56px;
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 20px;
+      letter-spacing: -1px;
+    }
+
+    h1 span {
+      background: linear-gradient(135deg, var(--accent-green), var(--accent-blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-subtitle {
+      font-size: 18px;
+      color: var(--text-muted);
+      margin-bottom: 40px;
+      max-width: 650px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* Version Selector Cards */
+    .downloads-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 25px;
+      max-width: 900px;
+      margin: 0 auto 80px;
+      padding: 0 20px;
+    }
+
+    .version-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 35px;
+      text-align: left;
+      position: relative;
+      backdrop-filter: blur(10px);
+      transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .version-card:hover {
+      transform: translateY(-5px);
+      border-color: rgba(0, 255, 136, 0.4);
+      box-shadow: 0 10px 30px var(--accent-glow);
+    }
+
+    .version-card.featured {
+      border-color: var(--accent-green);
+      background: linear-gradient(180deg, rgba(0,255,136,0.05) 0%, var(--card-bg) 100%);
+    }
+
+    .card-badge {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: var(--accent-green);
+      color: #000;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 12px;
+      text-transform: uppercase;
+    }
+
+    .version-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .version-desc {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 25px;
+    }
+
+    .btn {
       display: block;
+      width: 100%;
+      padding: 14px;
+      text-align: center;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 15px;
+      text-decoration: none;
+      transition: all 0.3s;
+      cursor: pointer;
     }
-    /* Responsive tweaks */
-    @media (max-width: 600px) {
-      h1 { font-size: 28px; }
-      .goal { font-size: 18px; }
-      a button { font-size: 16px; padding: 12px 20px; }
-      nav { flex-direction: column; gap: 10px; }
+
+    .btn-primary {
+      background: var(--accent-green);
+      color: #000;
+      box-shadow: 0 4px 15px var(--accent-glow);
+    }
+
+    .btn-primary:hover {
+      background: #00e077;
+      box-shadow: 0 6px 20px rgba(0, 255, 136, 0.4);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    /* Content Containers */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 60px 20px;
+    }
+
+    .section-title {
+      text-align: center;
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 40px;
+    }
+
+    /* Grid Layout for Documentation & Features */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .feature-box {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 25px;
+    }
+
+    .feature-icon {
+      font-size: 28px;
+      margin-bottom: 15px;
+      display: inline-block;
+    }
+
+    .feature-box h3 {
+      font-size: 18px;
+      margin-bottom: 10px;
+      color: var(--text-main);
+    }
+
+    .feature-box p {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Tech Spec & System Requirements Section */
+    .specs-section {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 40px;
+      margin-top: 40px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 30px;
+    }
+
+    .spec-group h4 {
+      color: var(--accent-blue);
+      margin-bottom: 15px;
+      font-size: 16px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .spec-group ul {
+      list-style: none;
+    }
+
+    .spec-group li {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .spec-group li::before {
+      content: "•";
+      color: var(--accent-green);
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border-color);
+      padding: 40px 20px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 14px;
+      background: rgba(0,0,0,0.5);
+    }
+
+    footer a {
+      color: var(--accent-green);
+      text-decoration: none;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      h1 { font-size: 36px; }
+      header { flex-direction: column; gap: 15px; }
+      .hero { padding-top: 60px; }
     }
   </style>
 </head>
 <body>
+
+  <!-- Navigation -->
   <header>
-    © 2026 Ozentime Antivirus | Secure Your World
+    <div class="logo">
+      OZENTIME <span class="logo-badge">ENGINE v2.0</span>
+    </div>
     <nav>
-      <div>
-        <a href="#">Products</a>
-        <div class="dropdown">
-          <a href="1.5pro.html">Ozentime AV 1.5 Pro</a>
-          <a href="2.0.html">Ozentime AV 2.0</a>
-          <a href="#">Upcoming AV 2.5</a>
-          <a href="#">Ozentime OS</a>
-        </div>
-      </div>
-      <div>
-        <a href="#">Support</a>
-        <div class="dropdown">
-          <a href="#">Documentation</a>
-          <a href="#">Community Forum</a>
-          <a href="#">Contact Us</a>
-        </div>
-      </div>
-      <div>
-        <a href="#">About</a>
-        <div class="dropdown">
-          <a href="#">Our Story</a>
-          <a href="#">Team</a>
-          <a href="#">Careers</a>
-        </div>
-      </div>
+      <a href="#downloads">Versions</a>
+      <a href="#features">Architecture</a>
+      <a href="#docs">Documentation</a>
+      <a href="#support">Support</a>
     </nav>
   </header>
-  
-  <h1>Welcome to Ozentime Antivirus</h1>
-  
-  <div class="goal">Goal: Provide safe, efficient security for all</div>
-  
-  <section>
-    <p>Select your version:</p>
-    <div class="button-group">
-      <a href="1.5pro.html"><button>Go to 1.5 Pro</button></a>
-      <a href="2.0.html"><button>Go to 2.0</button></a>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <span class="hero-tag">High-Performance System Protection</span>
+    <h1>Low-Latency Threat Mitigation For <span>Modern Systems</span>.</h1>
+    <p class="hero-subtitle">
+      Powered by C++ direct Win32 execution, PE header verification, and dynamic entropy calculations. Maximum performance, zero system lag.
+    </p>
+  </section>
+
+  <!-- Product Options (1.5 Pro & 2.0 Links Preserved) -->
+  <section id="downloads" class="downloads-grid">
+    <div class="version-card">
+      <div class="version-title">Ozentime AV 1.5 Pro</div>
+      <p class="version-desc">Lightweight legacy engine focused on core file scanning, registry monitoring, and minimal RAM footprint.</p>
+      <a href="1.5pro.html" class="btn btn-secondary">Launch 1.5 Pro Page</a>
+    </div>
+
+    <div class="version-card featured">
+      <span class="card-badge">RECOMMENDED</span>
+      <div class="version-title">Ozentime AV 2.0</div>
+      <p class="version-desc">Next-gen engine with ImGui visual interface, real-time thread inspection, DISM/SFC auto-repair, and dynamic throttling.</p>
+      <a href="2.0.html" class="btn btn-primary">Launch 2.0 Page</a>
     </div>
   </section>
-  
-  <footer>© 2026 Ozentime Antivirus | Built for the Future</footer>
+
+  <!-- Consolidated Main Page Sections -->
+  <div class="container">
+    
+    <!-- Engine Core Documentation -->
+    <h2 id="docs" class="section-title">Engine Documentation & Features</h2>
+    <div class="features-grid">
+      <div class="feature-box">
+        <div class="feature-icon">⚡</div>
+        <h3>Adaptive System Throttling</h3>
+        <p>Monitors background CPU load using performance counters to scale down scan intensity automatically during heavy workloads.</p>
+      </div>
+      <div class="feature-box">
+        <div class="feature-icon">🛡️</div>
+        <h3>Entropy & Threat Heuristics</h3>
+        <p>Performs streaming chunk inspection on executables to detect obfuscated, packed, or encrypted payloads with entropy levels above 7.92.</p>
+      </div>
+      <div class="feature-box">
+        <div class="feature-icon">⚙️</div>
+        <h3>Async Quarantine Isolation</h3>
+        <p>Isolates suspect binaries into thread-safe condition queues, moving threats into quarantine without locking your UI or desktop environment.</p>
+      </div>
+      <div class="feature-box">
+        <div class="feature-icon">🔧</div>
+        <h3>Integrated System Repair</h3>
+        <p>Direct integration with Windows DISM and System File Checker (SFC) routines to remediate compromised system files on demand.</p>
+      </div>
+    </div>
+
+    <!-- Technical Specifications -->
+    <div class="specs-section">
+      <div class="spec-group">
+        <h4>System Compatibility</h4>
+        <ul>
+          <li>Windows 10 / 11 (64-bit)</li>
+          <li>Linux Kernel 5.4+ (CLI tools)</li>
+          <li>Minimal 512 MB RAM footprint</li>
+          <li>Native Win32 / Direct3D execution</li>
+        </ul>
+      </div>
+      <div class="spec-group">
+        <h4>Core Modules Included</h4>
+        <ul>
+          <li>Registry Startup Monitor</li>
+          <li>Scheduled Tasks Heuristic Scanner</li>
+          <li>Process & Thread Suspicion Engine</li>
+          <li>Direct PE Header Validator</li>
+        </ul>
+      </div>
+      <div class="spec-group" id="support">
+        <h4>Support & Community</h4>
+        <ul>
+          <li>Documentation built into engine UI</li>
+          <li>Community Issue Tracker</li>
+          <li>Open Kernel Security Framework</li>
+          <li>Automated Emergency Recovery</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <p>© 2026 Ozentime Security Systems. All rights reserved. | Built for the Future.</p>
+  </footer>
+
 </body>
 </html>
