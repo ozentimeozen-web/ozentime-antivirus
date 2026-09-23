@@ -1,442 +1,352 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Ozentime Antivirus | Next-Gen Security Engine</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ozentime Antivirus | Stay Safe. Stay Secure.</title>
   
-  <style>
-    :root {
-      --bg-dark: #080b10;
-      --card-bg: rgba(18, 26, 36, 0.7);
-      --accent-green: #00ff88;
-      --accent-glow: rgba(0, 255, 136, 0.25);
-      --accent-blue: #00d2ff;
-      --text-main: #f0f4f8;
-      --text-muted: #8a99ad;
-      --border-color: rgba(255, 255, 255, 0.08);
-    }
+  <!-- Supabase JS Client for Realtime Threaded Comments -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
+  <style>
+    /* Global Styles */
+    :root {
+      --bg-dark: #030b15;
+      --card-bg: #0b192c;
+      --card-inner: #061325;
+      --blue-accent: #0b56c3;
+      --cyan-accent: #18bdf2;
+      --text-main: #e0e6ed;
+      --text-muted: #6c8ea4;
+      --border-color: #1e3a5f;
     }
 
     body {
-      font-family: 'Inter', sans-serif;
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: var(--bg-dark);
-      background-image: 
-        radial-gradient(circle at 50% 0%, rgba(0, 210, 255, 0.15), transparent 40%),
-        radial-gradient(circle at 80% 60%, rgba(0, 255, 136, 0.08), transparent 30%);
       color: var(--text-main);
-      line-height: 1.6;
-      overflow-x: hidden;
+      padding: 20px;
     }
 
-    /* Header & Navigation */
-    header {
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    h1, h2, h3 {
+      color: #ffffff;
+    }
+
+    /* 1. Comparison Table Styling */
+    .comparison-section {
+      margin-bottom: 60px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--card-bg);
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+    }
+
+    th, td {
+      padding: 16px 20px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #071220;
+      color: var(--cyan-accent);
+      font-size: 1.05rem;
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    tr:nth-child(even) {
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    tr:not(:last-child) td {
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .badge-included {
+      color: #2ed573;
+      font-weight: bold;
+    }
+
+    .badge-neutral {
+      color: var(--text-muted);
+      font-weight: normal;
+    }
+
+    /* 2. YouTube-style Discussion / Comments Styling */
+    .discussion-section {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 24px;
+    }
+
+    .comment-input-box {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 30px;
+    }
+
+    input[type="text"], textarea {
+      width: 100%;
+      background: var(--card-inner);
+      border: 1px solid var(--border-color);
+      color: #fff;
+      padding: 12px;
+      border-radius: 6px;
+      box-sizing: border-box;
+      font-family: inherit;
+    }
+
+    input[type="text"]:focus, textarea:focus {
+      outline: 1px solid var(--cyan-accent);
+    }
+
+    .btn-submit {
+      align-self: flex-end;
+      background: var(--blue-accent);
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+
+    .btn-submit:hover {
+      background: var(--cyan-accent);
+    }
+
+    .comment-card {
+      background: var(--card-inner);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .comment-header {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      padding: 20px 8%;
-      background: rgba(8, 11, 16, 0.85);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border-color);
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-    }
-
-    .logo {
-      font-size: 22px;
-      font-weight: 800;
-      letter-spacing: 1px;
-      background: linear-gradient(135deg, #fff, var(--accent-green));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .logo-badge {
-      font-size: 10px;
-      background: rgba(0, 255, 136, 0.15);
-      color: var(--accent-green);
-      border: 1px solid var(--accent-green);
-      padding: 2px 6px;
-      border-radius: 4px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    nav {
-      display: flex;
-      gap: 30px;
-    }
-
-    nav a {
-      color: var(--text-muted);
-      text-decoration: none;
-      font-size: 14px;
-      font-weight: 600;
-      transition: color 0.3s;
-    }
-
-    nav a:hover {
-      color: var(--accent-green);
-    }
-
-    /* Hero Section */
-    .hero {
-      text-align: center;
-      padding: 100px 20px 60px;
-      max-width: 900px;
-      margin: 0 auto;
-    }
-
-    .hero-tag {
-      display: inline-block;
-      padding: 6px 16px;
-      border-radius: 20px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--border-color);
-      font-size: 13px;
-      color: var(--accent-blue);
-      margin-bottom: 20px;
-      font-weight: 600;
-    }
-
-    h1 {
-      font-size: 56px;
-      font-weight: 800;
-      line-height: 1.15;
-      margin-bottom: 20px;
-      letter-spacing: -1px;
-    }
-
-    h1 span {
-      background: linear-gradient(135deg, var(--accent-green), var(--accent-blue));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .hero-subtitle {
-      font-size: 18px;
-      color: var(--text-muted);
-      margin-bottom: 40px;
-      max-width: 650px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    /* Version Selector Cards */
-    .downloads-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 25px;
-      max-width: 900px;
-      margin: 0 auto 80px;
-      padding: 0 20px;
-    }
-
-    .version-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 16px;
-      padding: 35px;
-      text-align: left;
-      position: relative;
-      backdrop-filter: blur(10px);
-      transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
-    }
-
-    .version-card:hover {
-      transform: translateY(-5px);
-      border-color: rgba(0, 255, 136, 0.4);
-      box-shadow: 0 10px 30px var(--accent-glow);
-    }
-
-    .version-card.featured {
-      border-color: var(--accent-green);
-      background: linear-gradient(180deg, rgba(0,255,136,0.05) 0%, var(--card-bg) 100%);
-    }
-
-    .card-badge {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background: var(--accent-green);
-      color: #000;
-      font-size: 11px;
-      font-weight: 800;
-      padding: 4px 10px;
-      border-radius: 12px;
-      text-transform: uppercase;
-    }
-
-    .version-title {
-      font-size: 24px;
-      font-weight: 700;
-      margin-bottom: 10px;
-    }
-
-    .version-desc {
-      font-size: 14px;
-      color: var(--text-muted);
-      margin-bottom: 25px;
-    }
-
-    .btn {
-      display: block;
-      width: 100%;
-      padding: 14px;
-      text-align: center;
-      border-radius: 8px;
-      font-weight: 700;
-      font-size: 15px;
-      text-decoration: none;
-      transition: all 0.3s;
-      cursor: pointer;
-    }
-
-    .btn-primary {
-      background: var(--accent-green);
-      color: #000;
-      box-shadow: 0 4px 15px var(--accent-glow);
-    }
-
-    .btn-primary:hover {
-      background: #00e077;
-      box-shadow: 0 6px 20px rgba(0, 255, 136, 0.4);
-    }
-
-    .btn-secondary {
-      background: rgba(255, 255, 255, 0.08);
-      color: var(--text-main);
-      border: 1px solid var(--border-color);
-    }
-
-    .btn-secondary:hover {
-      background: rgba(255, 255, 255, 0.15);
-    }
-
-    /* Content Containers */
-    .container {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 60px 20px;
-    }
-
-    .section-title {
-      text-align: center;
-      font-size: 32px;
-      font-weight: 700;
-      margin-bottom: 40px;
-    }
-
-    /* Grid Layout for Documentation & Features */
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 20px;
-    }
-
-    .feature-box {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 25px;
-    }
-
-    .feature-icon {
-      font-size: 28px;
-      margin-bottom: 15px;
-      display: inline-block;
-    }
-
-    .feature-box h3 {
-      font-size: 18px;
-      margin-bottom: 10px;
-      color: var(--text-main);
-    }
-
-    .feature-box p {
-      font-size: 14px;
-      color: var(--text-muted);
-      line-height: 1.5;
-    }
-
-    /* Tech Spec & System Requirements Section */
-    .specs-section {
-      background: rgba(0, 0, 0, 0.3);
-      border: 1px solid var(--border-color);
-      border-radius: 16px;
-      padding: 40px;
-      margin-top: 40px;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 30px;
-    }
-
-    .spec-group h4 {
-      color: var(--accent-blue);
-      margin-bottom: 15px;
-      font-size: 16px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .spec-group ul {
-      list-style: none;
-    }
-
-    .spec-group li {
-      font-size: 14px;
-      color: var(--text-muted);
       margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
     }
 
-    .spec-group li::before {
-      content: "•";
-      color: var(--accent-green);
+    .comment-author {
+      font-weight: bold;
+      color: var(--cyan-accent);
     }
 
-    /* Footer */
-    footer {
-      border-top: 1px solid var(--border-color);
-      padding: 40px 20px;
-      text-align: center;
+    .comment-date {
+      font-size: 0.8rem;
       color: var(--text-muted);
-      font-size: 14px;
-      background: rgba(0,0,0,0.5);
     }
 
-    footer a {
-      color: var(--accent-green);
-      text-decoration: none;
+    .comment-body {
+      margin: 8px 0;
+      line-height: 1.4;
     }
 
-    /* Responsive Design */
-    @media (max-width: 768px) {
-      h1 { font-size: 36px; }
-      header { flex-direction: column; gap: 15px; }
-      .hero { padding-top: 60px; }
+    .btn-reply {
+      background: none;
+      border: none;
+      color: var(--cyan-accent);
+      cursor: pointer;
+      font-size: 0.85rem;
+      padding: 0;
+      margin-top: 4px;
+    }
+
+    .reply-card {
+      background: rgba(255, 255, 255, 0.03);
+      border-left: 3px solid var(--blue-accent);
+      margin-left: 20px;
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 4px;
+    }
+
+    .reply-input-box {
+      margin-top: 12px;
+      padding-left: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
   </style>
 </head>
 <body>
 
-  <!-- Navigation -->
-  <header>
-    <div class="logo">
-      OZENTIME <span class="logo-badge">ENGINE v2.0</span>
-    </div>
-    <nav>
-      <a href="#downloads">Versions</a>
-      <a href="#features">Architecture</a>
-      <a href="#docs">Documentation</a>
-      <a href="#support">Support</a>
-    </nav>
-  </header>
-
-  <!-- Hero Section -->
-  <section class="hero">
-    <span class="hero-tag">High-Performance System Protection</span>
-    <h1>Low-Latency Threat Mitigation For <span>Modern Systems</span>.</h1>
-    <p class="hero-subtitle">
-      Powered by C++ direct Win32 execution, PE header verification, and dynamic entropy calculations. Maximum performance, zero system lag.
-    </p>
-  </section>
-
-  <!-- Product Options (1.5 Pro & 2.0 Links Preserved) -->
-  <section id="downloads" class="downloads-grid">
-    <div class="version-card">
-      <div class="version-title">Ozentime AV 1.5 Pro</div>
-      <p class="version-desc">Lightweight legacy engine focused on core file scanning, registry monitoring, and minimal RAM footprint.</p>
-      <a href="1.5pro.html" class="btn btn-secondary">Launch 1.5 Pro Page</a>
-    </div>
-
-    <div class="version-card featured">
-      <span class="card-badge">RECOMMENDED</span>
-      <div class="version-title">Ozentime AV 2.0</div>
-      <p class="version-desc">Next-gen engine with ImGui visual interface, real-time thread inspection, DISM/SFC auto-repair, and dynamic throttling.</p>
-      <a href="2.0.html" class="btn btn-primary">Launch 2.0 Page</a>
-    </div>
-  </section>
-
-  <!-- Consolidated Main Page Sections -->
   <div class="container">
     
-    <!-- Engine Core Documentation -->
-    <h2 id="docs" class="section-title">Engine Documentation & Features</h2>
-    <div class="features-grid">
-      <div class="feature-box">
-        <div class="feature-icon">⚡</div>
-        <h3>Adaptive System Throttling</h3>
-        <p>Monitors background CPU load using performance counters to scale down scan intensity automatically during heavy workloads.</p>
-      </div>
-      <div class="feature-box">
-        <div class="feature-icon">🛡️</div>
-        <h3>Entropy & Threat Heuristics</h3>
-        <p>Performs streaming chunk inspection on executables to detect obfuscated, packed, or encrypted payloads with entropy levels above 7.92.</p>
-      </div>
-      <div class="feature-box">
-        <div class="feature-icon">⚙️</div>
-        <h3>Async Quarantine Isolation</h3>
-        <p>Isolates suspect binaries into thread-safe condition queues, moving threats into quarantine without locking your UI or desktop environment.</p>
-      </div>
-      <div class="feature-box">
-        <div class="feature-icon">🔧</div>
-        <h3>Integrated System Repair</h3>
-        <p>Direct integration with Windows DISM and System File Checker (SFC) routines to remediate compromised system files on demand.</p>
-      </div>
-    </div>
+    <!-- Product Comparison Section -->
+    <section class="comparison-section">
+      <h2>Ozentime Edition Feature Matrix</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Security Capability</th>
+            <th>Ozentime 1.5 Pro</th>
+            <th>Ozentime 2.0 (Flagship)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>C++ Core Engine Architecture</td>
+            <td><span class="badge-included">✓ Standard Engine</span></td>
+            <td><span class="badge-included">✓ Next-Gen Core</span></td>
+          </tr>
+          <tr>
+            <td>Low Resource Memory Footprint</td>
+            <td><span class="badge-included">✓ Included</span></td>
+            <td><span class="badge-included">✓ Included</span></td>
+          </tr>
+          <tr>
+            <td>Dynamic Heuristic Behavior Analysis</td>
+            <td><span class="badge-neutral">—</span></td>
+            <td><span class="badge-included">✓ Included</span></td>
+          </tr>
+          <tr>
+            <td>Automated Quarantine & Rollback</td>
+            <td><span class="badge-neutral">—</span></td>
+            <td><span class="badge-included">✓ Included</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
 
-    <!-- Technical Specifications -->
-    <div class="specs-section">
-      <div class="spec-group">
-        <h4>System Compatibility</h4>
-        <ul>
-          <li>Windows 10 / 11 (64-bit)</li>
-          <li>Linux Kernel 5.4+ (CLI tools)</li>
-          <li>Minimal 512 MB RAM footprint</li>
-          <li>Native Win32 / Direct3D execution</li>
-        </ul>
+    <!-- Public Discussion & Reviews Section -->
+    <section class="discussion-section">
+      <h3>Community Discussion & User Feedback</h3>
+      
+      <!-- Primary Post Box -->
+      <div class="comment-input-box">
+        <input type="text" id="usernameInput" placeholder="Your Name or Alias" required />
+        <textarea id="commentInput" placeholder="Write a review or question about Ozentime..." rows="3" required></textarea>
+        <button onclick="postComment()" class="btn-submit">Post Comment</button>
       </div>
-      <div class="spec-group">
-        <h4>Core Modules Included</h4>
-        <ul>
-          <li>Registry Startup Monitor</li>
-          <li>Scheduled Tasks Heuristic Scanner</li>
-          <li>Process & Thread Suspicion Engine</li>
-          <li>Direct PE Header Validator</li>
-        </ul>
-      </div>
-      <div class="spec-group" id="support">
-        <h4>Support & Community</h4>
-        <ul>
-          <li>Documentation built into engine UI</li>
-          <li>Community Issue Tracker</li>
-          <li>Open Kernel Security Framework</li>
-          <li>Automated Emergency Recovery</li>
-        </ul>
-      </div>
-    </div>
+
+      <!-- Container where threaded comments appear -->
+      <div id="commentsContainer"></div>
+    </section>
 
   </div>
 
-  <!-- Footer -->
-  <footer>
-    <p>© 2026 Ozentime Security Systems. All rights reserved. | Built for the Future.</p>
-  </footer>
+  <script>
+    // Initialize Supabase Client
+    // Replace these placeholder strings with your actual Supabase credentials:
+    const SUPABASE_URL = 'https://YOUR_SUPABASE_PROJECT_ID.supabase.co';
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+    const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    // Fetch and render all comments and nested replies
+    async function loadComments() {
+      const { data: comments, error } = await db
+        .from('comments')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching comments:', error);
+        return;
+      }
+
+      const container = document.getElementById('commentsContainer');
+      container.innerHTML = '';
+
+      // Separate parent comments and replies
+      const parents = comments.filter(c => c.parent_id === null);
+      const replies = comments.filter(c => c.parent_id !== null);
+
+      parents.forEach(parent => {
+        const parentReplies = replies.filter(r => r.parent_id === parent.id);
+        container.appendChild(renderCommentElement(parent, parentReplies));
+      });
+    }
+
+    // Generate HTML for individual comments & reply threads
+    function renderCommentElement(comment, replies = []) {
+      const card = document.createElement('div');
+      card.className = 'comment-card';
+      
+      let repliesHTML = replies.map(r => `
+        <div class="reply-card">
+          <div class="comment-header">
+            <span class="comment-author">${escapeHTML(r.username)}</span>
+            <span class="comment-date">${new Date(r.created_at).toLocaleDateString()}</span>
+          </div>
+          <p class="comment-body">${escapeHTML(r.content)}</p>
+        </div>
+      `).join('');
+
+      card.innerHTML = `
+        <div class="comment-header">
+          <span class="comment-author">${escapeHTML(comment.username)}</span>
+          <span class="comment-date">${new Date(comment.created_at).toLocaleDateString()}</span>
+        </div>
+        <p class="comment-body">${escapeHTML(comment.content)}</p>
+        <button class="btn-reply" onclick="toggleReplyBox(${comment.id})">Reply</button>
+        
+        <div id="replyBox-${comment.id}" class="reply-input-box" style="display:none;">
+          <input type="text" id="replyName-${comment.id}" placeholder="Your Name" />
+          <textarea id="replyText-${comment.id}" placeholder="Write a reply..." rows="2"></textarea>
+          <button onclick="postComment(${comment.id})" class="btn-submit" style="padding:6px 12px; font-size:0.85rem;">Submit Reply</button>
+        </div>
+
+        <div class="replies-list">${repliesHTML}</div>
+      `;
+
+      return card;
+    }
+
+    // Insert comment or inline reply into Supabase
+    async function postComment(parentId = null) {
+      const nameInput = parentId ? document.getElementById(`replyName-${parentId}`) : document.getElementById('usernameInput');
+      const textInput = parentId ? document.getElementById(`replyText-${parentId}`) : document.getElementById('commentInput');
+
+      const username = nameInput.value.trim();
+      const content = textInput.value.trim();
+
+      if (!username || !content) {
+        alert('Please enter your name and message.');
+        return;
+      }
+
+      const { error } = await db.from('comments').insert([
+        { username, content, parent_id: parentId }
+      ]);
+
+      if (error) {
+        console.error('Error posting comment:', error);
+      } else {
+        nameInput.value = '';
+        textInput.value = '';
+        loadComments();
+      }
+    }
+
+    function toggleReplyBox(id) {
+      const box = document.getElementById(`replyBox-${id}`);
+      box.style.display = box.style.display === 'none' ? 'flex' : 'none';
+    }
+
+    function escapeHTML(str) {
+      return str.replace(/[&<>'"]/g, 
+        tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+      );
+    }
+
+    document.addEventListener('DOMContentLoaded', loadComments);
+  </script>
 </body>
 </html>
