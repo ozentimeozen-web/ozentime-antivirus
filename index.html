@@ -144,6 +144,7 @@
     .why-item h3 { font-size: 17px; margin-bottom: 2px; }
     .why-item p { color: var(--muted); font-size: 14px; }
     footer { text-align: center; color: var(--muted); font-size: 13px; padding: 10px 20px 30px; }
+    footer a { color: var(--blue); }
     @media (max-width: 720px) {
       .hero h1 { font-size: 30px; }
       nav { display: none; }
@@ -176,13 +177,13 @@
             <th class="product-head">
               <span class="badge alt">Lightweight</span>
               <h2>1.5 Pro</h2>
-              <p>Legacy engine for low resource use and older hardware.</p>
+              <p>User-mode heuristic scanner for older hardware.</p>
               <div class="price">Free <small>/ core protection</small></div>
             </th>
             <th class="product-head">
               <span class="badge">Recommended</span>
               <h2>2.0 Flagship</h2>
-              <p>Full engine. Windows 7–11 only.</p>
+              <p>User-mode heuristic scanner. Windows 7–11 only.</p>
               <div class="price">Free <small>/ full protection</small></div>
             </th>
           </tr>
@@ -198,50 +199,40 @@
             <td>Lightweight and legacy hardware</td>
             <td>Windows 7, 8, 8.1, 10, and 11 only</td>
           </tr>
-          <tr class="group"><td colspan="3">Protection</td></tr>
+          <tr class="group"><td colspan="3">What this build does</td></tr>
           <tr>
-            <td>Core file and process scanning</td>
+            <td>User-mode file and process scanning</td>
             <td class="yes">✓</td>
             <td class="yes">✓</td>
           </tr>
           <tr>
-            <td>AI security engine</td>
-            <td>Decent</td>
-            <td>Improved</td>
-          </tr>
-          <tr>
-            <td>Automatic disinfection</td>
+            <td>Heuristic checks</td>
             <td class="yes">✓</td>
-            <td>Enhanced</td>
+            <td class="yes">✓</td>
           </tr>
           <tr>
             <td>Threat file deletion</td>
             <td class="yes">✓</td>
-            <td>Smarter</td>
-          </tr>
-          <tr>
-            <td>Rootkit and kernel defense</td>
-            <td class="no">—</td>
             <td class="yes">✓</td>
           </tr>
           <tr>
-            <td>Adblocker network shield</td>
-            <td class="no">—</td>
-            <td class="yes">✓</td>
+            <td>Kernel or rootkit defense</td>
+            <td class="no">Not in this build</td>
+            <td class="no">Not in this build</td>
           </tr>
           <tr>
-            <td>Encrypted VPN module</td>
-            <td class="no">—</td>
-            <td class="yes">✓</td>
+            <td>AI engine</td>
+            <td class="no">Not in this build</td>
+            <td class="no">Not in this build</td>
           </tr>
           <tr>
-            <td>System snapshot rollback</td>
-            <td class="no">—</td>
-            <td class="yes">✓</td>
+            <td>Encrypted VPN</td>
+            <td class="no">Not in this build</td>
+            <td class="no">Not in this build</td>
           </tr>
           <tr id="downloads">
             <td>Get the app</td>
-            <td><a class="btn" href="ozentime_download/ozentime1.5pro(1).exe" download>Download 1.5 Pro</a></td>
+            <td><a class="btn" href="ozentime_download/ozentime1.5pro.exe" download>Download 1.5 Pro</a></td>
             <td>
               <a class="btn" href="ozentime_download/OzentimeAV.exe" download>Download 2.0</a>
               <a class="btn ghost" href="ozentime_download/OzentimeUpdater.exe" download>Updater</a>
@@ -253,33 +244,37 @@
 
     <section class="why" id="why">
       <h2>Why only OzentimeAV</h2>
-      <p class="lead">Three reasons to pick OzentimeAV for your PC.</p>
+      <p class="lead">What this build actually is.</p>
       <div class="why-list">
         <article class="why-item">
           <div class="num">1</div>
           <div>
-            <h3>Free, with AI and heuristic intelligence</h3>
-            <p>OzentimeAV is a free source with AI and heuristic intelligence.</p>
+            <h3>Free heuristic scanner</h3>
+            <p>OzentimeAV is free. This build is a user-mode heuristic scanner. It does not include an AI engine, kernel defense, or a VPN.</p>
           </div>
         </article>
         <article class="why-item">
           <div class="num">2</div>
           <div>
-            <h3>Lowest GPU and RAM usage</h3>
-            <p>Lowest GPU and RAM usage of any antivirus in the industry.</p>
+            <h3>Meant to stay light</h3>
+            <p>It runs in user mode and is built to use little of the PC. Usage has not been measured against other antivirus products.</p>
           </div>
         </article>
         <article class="why-item">
           <div class="num">3</div>
           <div>
             <h3>Easy to use</h3>
-            <p>Simple controls, so protection is easy to start and easy to understand.</p>
+            <p>Simple controls, so scanning is easy to start and easy to understand.</p>
           </div>
         </article>
       </div>
     </section>
   </main>
 
-  <footer>© 2026 Ozentime Security Systems · Goal: free and affordable security for all</footer>
+  <footer>
+    <p>© 2026 Ozentime · Ozentime Security Systems</p>
+    <p>Contact: <a href="mailto:ozentimeozen@gmail.com">ozentimeozen@gmail.com</a></p>
+    <p>Privacy: this page does not collect accounts or sell personal data. Email us only if you want a reply.</p>
+  </footer>
 </body>
 </html>
