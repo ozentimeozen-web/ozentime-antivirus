@@ -10,15 +10,14 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
-      --green: #00a651;
-      --green-dark: #008744;
-      --green-soft: #e8f7ee;
+      --blue: #0b56c3;
+      --blue-dark: #083e8f;
+      --cyan: #18bdf2;
       --ink: #1b1f23;
       --muted: #5d6770;
       --line: #e3e7eb;
       --bg: #f4f6f8;
       --card: #ffffff;
-      --blue: #1a73b8;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -45,14 +44,14 @@
     .logo {
       font-weight: 800;
       letter-spacing: 0.4px;
-      color: var(--green);
+      color: var(--blue);
       text-decoration: none;
       font-size: 22px;
     }
     .logo span { color: var(--ink); font-weight: 700; }
     nav { display: flex; gap: 22px; }
     nav a { color: var(--ink); text-decoration: none; font-weight: 600; font-size: 14px; }
-    nav a:hover { color: var(--green); }
+    nav a:hover { color: var(--blue); }
     .hero {
       background: linear-gradient(180deg, #fff 0%, #f4f6f8 100%);
       text-align: center;
@@ -75,7 +74,7 @@
     .product-head { padding: 26px 18px 20px; }
     .badge {
       display: inline-block;
-      background: var(--green);
+      background: var(--blue);
       color: #fff;
       font-size: 11px;
       font-weight: 700;
@@ -92,7 +91,7 @@
     .btn {
       display: inline-block;
       margin-top: 12px;
-      background: var(--green);
+      background: var(--blue);
       color: #fff;
       text-decoration: none;
       font-weight: 700;
@@ -101,19 +100,24 @@
       border: none;
       cursor: pointer;
     }
-    .btn:hover { background: var(--green-dark); }
-    .btn.ghost { background: #fff; color: var(--green); border: 1px solid var(--green); margin-left: 8px; }
+    .btn:hover { background: var(--blue-dark); }
+    .btn.ghost { background: #fff; color: var(--blue); border: 1px solid var(--blue); margin-left: 8px; }
     .group td {
-      background: #f7faf8;
-      color: var(--green-dark);
+      background: #f4f8fc;
+      color: var(--blue-dark);
       font-size: 13px;
       letter-spacing: 0.6px;
       text-transform: uppercase;
       text-align: left;
       font-weight: 800;
     }
-    .yes { color: var(--green); font-weight: 800; font-size: 18px; }
+    .yes { color: var(--blue); font-weight: 800; font-size: 18px; }
     .no { color: #b7c0c7; font-weight: 700; }
+    .note { color: var(--muted); font-size: 13px; font-weight: 600; }
+    tr:hover td { background: #f7fbff; }
+    tr.group:hover td, thead tr:hover th { background: inherit; }
+    .file-row td { font-size: 13px; color: var(--muted); font-weight: 500; }
+    code { color: var(--blue); font-size: 12px; }
     .chat {
       margin-top: 28px;
       background: #fff;
@@ -132,7 +136,7 @@
       font-family: inherit;
       font-size: 14px;
     }
-    input:focus, textarea:focus { outline: 2px solid #b7ebc9; border-color: var(--green); }
+    input:focus, textarea:focus { outline: 2px solid #b9d7ff; border-color: var(--blue); }
     .btn-submit { align-self: flex-end; }
     .comment-card, .reply-card {
       border: 1px solid var(--line);
@@ -140,9 +144,9 @@
       padding: 14px;
       margin-bottom: 12px;
     }
-    .reply-card { margin-left: 24px; background: #f8fbf9; }
+    .reply-card { margin-left: 24px; background: #f5f9fd; }
     .comment-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
-    .comment-author { color: var(--green-dark); font-weight: 700; }
+    .comment-author { color: var(--blue-dark); font-weight: 700; }
     .comment-date { color: var(--muted); font-size: 12px; }
     .btn-reply { background: none; border: none; color: var(--blue); cursor: pointer; padding: 0; font-weight: 600; }
     footer { text-align: center; color: var(--muted); font-size: 13px; padding: 10px 20px 30px; }
@@ -166,7 +170,7 @@
   </header>
 
   <section class="hero">
-    <h1>Choose the protection that fits your PC</h1>
+    <h1>Options for your PC</h1>
     <p>Free and affordable security. Compare the lightweight 1.5 Pro engine with the 2.0 flagship, then download the edition you need.</p>
   </section>
 
@@ -181,15 +185,12 @@
               <h2>1.5 Pro</h2>
               <p>Legacy engine for low resource use and older hardware.</p>
               <div class="price">Free <small>/ core protection</small></div>
-              <a class="btn" href="ozentime_download/ozentime1.5pro(1).exe" download>Download</a>
             </th>
             <th class="product-head">
               <span class="badge">Recommended</span>
               <h2>2.0 Flagship</h2>
               <p>Full engine. Windows 7–11 only.</p>
               <div class="price">Free <small>/ full protection</small></div>
-              <a class="btn" href="ozentime_download/OzentimeAV.exe" download>Download</a>
-              <a class="btn ghost" href="ozentime_download/OzentimeUpdater.exe" download>Updater</a>
             </th>
           </tr>
         </thead>
