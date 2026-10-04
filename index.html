@@ -69,8 +69,8 @@
     table { width: 100%; border-collapse: collapse; min-width: 760px; }
     th, td { padding: 16px 22px; text-align: center; border-bottom: 1px solid var(--line); vertical-align: middle; }
     td:first-child, th:first-child { text-align: left; width: 42%; font-weight: 600; }
-    thead th { background: #fff; position: sticky; top: 69px; }
-    .product-head { padding: 26px 18px 20px; }
+    thead th { background: #fff; vertical-align: bottom; }
+    .product-head { padding: 26px 18px 18px; }
     .badge {
       display: inline-block;
       background: var(--blue);
@@ -87,7 +87,7 @@
     .product-head p { color: var(--muted); font-size: 13px; font-weight: 500; min-height: 40px; }
     .price { font-size: 28px; font-weight: 800; margin: 8px 0 4px; }
     .price small { font-size: 14px; color: var(--muted); font-weight: 600; }
-    .release { margin-top: 8px; color: var(--blue); font-size: 13px; font-weight: 700; }
+    .release-row td { color: var(--blue); font-weight: 700; background: #f7fbff; }
     .btn {
       display: inline-block;
       margin-top: 12px;
@@ -147,7 +147,6 @@
     @media (max-width: 720px) {
       .hero h1 { font-size: 30px; }
       nav { display: none; }
-      thead th { top: 0; }
     }
   </style>
 </head>
@@ -179,18 +178,21 @@
               <h2>1.5 Pro</h2>
               <p>Legacy engine for low resource use and older hardware.</p>
               <div class="price">Free <small>/ core protection</small></div>
-              <div class="release">Released: Early 2026</div>
             </th>
             <th class="product-head">
               <span class="badge">Recommended</span>
               <h2>2.0 Flagship</h2>
               <p>Full engine. Windows 7–11 only.</p>
               <div class="price">Free <small>/ full protection</small></div>
-              <div class="release">Released: August 29, 2026</div>
             </th>
           </tr>
         </thead>
         <tbody>
+          <tr class="release-row">
+            <td>Release date</td>
+            <td>Early 2026</td>
+            <td>August 29, 2026</td>
+          </tr>
           <tr>
             <td>Supported systems</td>
             <td>Lightweight and legacy hardware</td>
