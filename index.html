@@ -7,7 +7,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
       --blue: #0b56c3;
@@ -60,13 +59,13 @@
     .hero h1 { font-size: 40px; letter-spacing: -0.6px; margin-bottom: 10px; }
     .hero p { color: var(--muted); max-width: 680px; margin: 0 auto; font-size: 17px; }
     .wrap { max-width: 1100px; margin: 0 auto; padding: 10px 20px 70px; }
-    .compare-card {
+    .compare-card, .why {
       background: var(--card);
       border: 1px solid var(--line);
       border-radius: 16px;
-      overflow: auto;
       box-shadow: 0 10px 30px rgba(16, 24, 32, 0.06);
     }
+    .compare-card { overflow: auto; }
     table { width: 100%; border-collapse: collapse; min-width: 760px; }
     th, td { padding: 16px 22px; text-align: center; border-bottom: 1px solid var(--line); vertical-align: middle; }
     td:first-child, th:first-child { text-align: left; width: 42%; font-weight: 600; }
@@ -113,42 +112,36 @@
     }
     .yes { color: var(--blue); font-weight: 800; font-size: 18px; }
     .no { color: #b7c0c7; font-weight: 700; }
-    .note { color: var(--muted); font-size: 13px; font-weight: 600; }
     tr:hover td { background: #f7fbff; }
     tr.group:hover td, thead tr:hover th { background: inherit; }
-    .file-row td { font-size: 13px; color: var(--muted); font-weight: 500; }
-    code { color: var(--blue); font-size: 12px; }
-    .chat {
-      margin-top: 28px;
-      background: #fff;
+    .why { margin-top: 28px; padding: 28px; }
+    .why h2 { font-size: 28px; margin-bottom: 6px; }
+    .why .lead { color: var(--muted); margin-bottom: 18px; }
+    .why-list { display: grid; gap: 14px; }
+    .why-item {
+      display: grid;
+      grid-template-columns: 52px 1fr;
+      gap: 14px;
+      align-items: center;
       border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 24px;
+      border-radius: 12px;
+      padding: 16px 18px;
+      background: #f7fbff;
     }
-    .chat h2 { margin-bottom: 6px; }
-    .chat .hint { color: var(--muted); font-size: 13px; margin-bottom: 14px; }
-    .comment-input-box, .reply-input-box { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
-    input, textarea {
-      width: 100%;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 12px;
-      font-family: inherit;
-      font-size: 14px;
+    .num {
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      background: var(--blue);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 18px;
     }
-    input:focus, textarea:focus { outline: 2px solid #b9d7ff; border-color: var(--blue); }
-    .btn-submit { align-self: flex-end; }
-    .comment-card, .reply-card {
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      padding: 14px;
-      margin-bottom: 12px;
-    }
-    .reply-card { margin-left: 24px; background: #f5f9fd; }
-    .comment-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
-    .comment-author { color: var(--blue-dark); font-weight: 700; }
-    .comment-date { color: var(--muted); font-size: 12px; }
-    .btn-reply { background: none; border: none; color: var(--blue); cursor: pointer; padding: 0; font-weight: 600; }
+    .why-item h3 { font-size: 17px; margin-bottom: 2px; }
+    .why-item p { color: var(--muted); font-size: 14px; }
     footer { text-align: center; color: var(--muted); font-size: 13px; padding: 10px 20px 30px; }
     @media (max-width: 720px) {
       .hero h1 { font-size: 30px; }
@@ -164,7 +157,7 @@
       <nav>
         <a href="#compare">Compare</a>
         <a href="#downloads">Downloads</a>
-        <a href="#chat">Community</a>
+        <a href="#why">Why OzentimeAV</a>
       </nav>
     </div>
   </header>
@@ -258,85 +251,35 @@
       </table>
     </section>
 
-    <section class="chat" id="chat">
-      <h2>Community chat and reviews</h2>
-      <p class="hint">Replace the Supabase URL and anon key before messages can be saved.</p>
-      <div class="comment-input-box">
-        <input type="text" id="usernameInput" placeholder="Your name or alias" />
-        <textarea id="commentInput" rows="3" placeholder="Leave a review or ask a question..."></textarea>
-        <button class="btn btn-submit" onclick="postComment()">Post message</button>
+    <section class="why" id="why">
+      <h2>Why only OzentimeAV</h2>
+      <p class="lead">Three reasons to pick OzentimeAV for your PC.</p>
+      <div class="why-list">
+        <article class="why-item">
+          <div class="num">1</div>
+          <div>
+            <h3>Free, with AI and heuristic intelligence</h3>
+            <p>OzentimeAV is a free source with AI and heuristic intelligence.</p>
+          </div>
+        </article>
+        <article class="why-item">
+          <div class="num">2</div>
+          <div>
+            <h3>Lowest GPU and RAM usage</h3>
+            <p>Lowest GPU and RAM usage of any antivirus in the industry.</p>
+          </div>
+        </article>
+        <article class="why-item">
+          <div class="num">3</div>
+          <div>
+            <h3>Easy to use</h3>
+            <p>Simple controls, so protection is easy to start and easy to understand.</p>
+          </div>
+        </article>
       </div>
-      <div id="commentsContainer"></div>
     </section>
   </main>
 
   <footer>© 2026 Ozentime Security Systems · Goal: free and affordable security for all</footer>
-
-  <script>
-    const SUPABASE_URL = 'https://YOUR_SUPABASE_PROJECT_ID.supabase.co';
-    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
-    const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    async function loadComments() {
-      const container = document.getElementById('commentsContainer');
-      const { data: comments, error } = await db.from('comments').select('*').order('created_at', { ascending: true });
-      if (error) {
-        container.innerHTML = '<p class="hint">Chat is not connected yet. Add your Supabase project URL and anon key.</p>';
-        return;
-      }
-      container.innerHTML = '';
-      const parents = comments.filter(c => c.parent_id === null);
-      const replies = comments.filter(c => c.parent_id !== null);
-      parents.forEach(parent => container.appendChild(renderCommentElement(parent, replies.filter(r => r.parent_id === parent.id))));
-    }
-
-    function renderCommentElement(comment, replies) {
-      const card = document.createElement('div');
-      card.className = 'comment-card';
-      card.innerHTML = `
-        <div class="comment-header">
-          <span class="comment-author">${escapeHTML(comment.username)}</span>
-          <span class="comment-date">${new Date(comment.created_at).toLocaleDateString()}</span>
-        </div>
-        <p>${escapeHTML(comment.content)}</p>
-        <button class="btn-reply" onclick="toggleReplyBox(${comment.id})">Reply</button>
-        <div id="replyBox-${comment.id}" class="reply-input-box" style="display:none;">
-          <input type="text" id="replyName-${comment.id}" placeholder="Your name" />
-          <textarea id="replyText-${comment.id}" rows="2" placeholder="Write a reply..."></textarea>
-          <button class="btn btn-submit" onclick="postComment(${comment.id})">Submit reply</button>
-        </div>
-        ${replies.map(r => `
-          <div class="reply-card">
-            <div class="comment-header">
-              <span class="comment-author">${escapeHTML(r.username)}</span>
-              <span class="comment-date">${new Date(r.created_at).toLocaleDateString()}</span>
-            </div>
-            <p>${escapeHTML(r.content)}</p>
-          </div>`).join('')}`;
-      return card;
-    }
-
-    async function postComment(parentId = null) {
-      const nameInput = parentId ? document.getElementById('replyName-' + parentId) : document.getElementById('usernameInput');
-      const textInput = parentId ? document.getElementById('replyText-' + parentId) : document.getElementById('commentInput');
-      const username = nameInput.value.trim();
-      const content = textInput.value.trim();
-      if (!username || !content) { alert('Please enter your name and message.'); return; }
-      const { error } = await db.from('comments').insert([{ username, content, parent_id: parentId }]);
-      if (error) alert('Could not post. Check your Supabase setup.');
-      else { nameInput.value = ''; textInput.value = ''; loadComments(); }
-    }
-
-    function toggleReplyBox(id) {
-      const box = document.getElementById('replyBox-' + id);
-      box.style.display = box.style.display === 'none' ? 'flex' : 'none';
-    }
-
-    function escapeHTML(str) {
-      return String(str).replace(/[&<>'"]/g, tag => ({ '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;' }[tag]));
-    }
-
-    document.addEventListener('DOMContentLoaded', loadComments);
-  </script>
 </body>
 </html>
