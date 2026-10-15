@@ -145,6 +145,70 @@
     .why-item p { color: var(--muted); font-size: 14px; }
     footer { text-align: center; color: var(--muted); font-size: 13px; padding: 10px 20px 30px; }
     footer a { color: var(--blue); }
+    .stage {
+      position: relative;
+      height: 520px;
+      margin: 10px 0 36px;
+      perspective: 1400px;
+      background:
+        radial-gradient(circle at 50% 70%, rgba(11,86,195,0.18), transparent 42%),
+        linear-gradient(180deg, #0b1220, #101826);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+    .stage-title {
+      position: absolute;
+      top: 18px;
+      left: 22px;
+      color: #d7e6ff;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+    }
+    .laptop, .tablet {
+      position: absolute;
+      transform-style: preserve-3d;
+      animation: floaty 7s ease-in-out infinite;
+    }
+    .laptop { left: 6%; top: 90px; width: 560px; }
+    .tablet { right: 7%; top: 120px; width: 250px; animation-delay: -2s; }
+    .lid, .base, .tab-body { transform-style: preserve-3d; }
+    .lid {
+      height: 320px;
+      background: #1b2230;
+      border: 8px solid #2a3344;
+      border-radius: 14px 14px 6px 6px;
+      transform: rotateX(-12deg) rotateY(18deg);
+      box-shadow: 0 30px 60px rgba(0,0,0,0.45);
+    }
+    .base {
+      height: 16px;
+      margin: 6px 18px 0;
+      background: linear-gradient(#3a4458, #232b3a);
+      border-radius: 0 0 16px 16px;
+      transform: rotateX(62deg) rotateY(18deg);
+      transform-origin: top;
+    }
+    .tab-body {
+      height: 330px;
+      background: #1b2230;
+      border: 10px solid #2a3344;
+      border-radius: 22px;
+      transform: rotateX(8deg) rotateY(-22deg);
+      box-shadow: 0 28px 50px rgba(0,0,0,0.4);
+    }
+    .screen { height: 100%; overflow: hidden; background: #0f1520; border-radius: 6px; }
+    .tab-body .screen { border-radius: 12px; }
+    .screen img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    @keyframes floaty {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-14px); }
+    }
+    @media (max-width: 900px) {
+      .stage { height: 760px; }
+      .laptop, .tablet { position: relative; left: auto; right: auto; top: auto; margin: 30px auto; }
+      .tablet { width: 220px; }
+    }
     @media (max-width: 720px) {
       .hero h1 { font-size: 30px; }
       nav { display: none; }
@@ -156,6 +220,7 @@
     <div class="nav">
       <a class="logo" href="#compare">OZENTIME <span>Antivirus</span></a>
       <nav>
+        <a href="#devices">Devices</a>
         <a href="#compare">Compare</a>
         <a href="#downloads">Downloads</a>
         <a href="#why">Why OzentimeAV</a>
@@ -169,6 +234,17 @@
   </section>
 
   <main class="wrap">
+    <section class="stage" id="devices">
+      <div class="stage-title">Ozentime on laptop and tablet</div>
+      <div class="laptop">
+        <div class="lid"><div class="screen"><img src="ozentimegui.png" alt="Ozentime antivirus GUI on a laptop"></div></div>
+        <div class="base"></div>
+      </div>
+      <div class="tablet">
+        <div class="tab-body"><div class="screen"><img src="ozentimegui.png" alt="Ozentime antivirus GUI on a tablet"></div></div>
+      </div>
+    </section>
+
     <section class="compare-card" id="compare">
       <table>
         <thead>
