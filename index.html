@@ -162,11 +162,8 @@
       font-weight: 700;
       z-index: 5;
     }
-    .device {
-      position: absolute;
-      filter: drop-shadow(0 28px 40px rgba(16, 36, 64, 0.18));
-    }
-    .laptop { width: 720px; left: 50%; top: 70px; transform: translateX(-58%); z-index: 1; }
+    .device { position: absolute; filter: drop-shadow(0 28px 40px rgba(16, 36, 64, 0.18)); }
+    .laptop { width: 760px; left: 50%; top: 70px; transform: translateX(-50%); z-index: 1; }
     .laptop .bezel {
       background: #f4f6f8;
       border: 10px solid #eceff3;
@@ -192,30 +189,11 @@
       border-radius: 8px;
       background: #d5dbe3;
     }
-    .tablet { width: 340px; left: 50%; top: 150px; transform: translateX(-8%); z-index: 2; }
-    .tablet .bezel {
-      background: #111;
-      border: 12px solid #1a1a1a;
-      border-radius: 28px;
-      box-shadow: inset 0 0 0 1px #333;
-    }
-    .tablet .screen { height: 250px; border-radius: 10px; overflow: hidden; background: #111827; }
-    .phone { width: 170px; right: 7%; top: 120px; z-index: 3; }
-    .phone .bezel {
-      background: #111;
-      border: 9px solid #1c1c1c;
-      border-radius: 28px;
-      box-shadow: inset 0 0 0 1px #333;
-    }
-    .phone .screen { height: 330px; border-radius: 18px; overflow: hidden; background: #111827; }
     .device img { width: 100%; height: 100%; object-fit: cover; display: block; }
     @media (max-width: 900px) {
       .stage { height: auto; padding: 70px 20px 30px; }
-      .laptop, .tablet, .phone { position: relative; left: auto; right: auto; top: auto; transform: none; width: 100%; max-width: 520px; margin: 18px auto; }
+      .laptop { position: relative; left: auto; right: auto; top: auto; transform: none; width: 100%; max-width: 520px; margin: 18px auto; }
       .laptop .screen { height: 240px; }
-      .tablet .screen { height: 200px; }
-      .phone { max-width: 220px; }
-      .phone .screen { height: 360px; }
     }
     @media (max-width: 720px) {
       .hero h1 { font-size: 30px; }
@@ -243,16 +221,10 @@
 
   <main class="wrap">
     <section class="stage" id="devices">
-      <div class="stage-title">Ozentime on your devices</div>
+      <div class="stage-title">Ozentime on your laptop</div>
       <div class="device laptop">
         <div class="bezel"><div class="screen"><img src="ozentimegui.png" alt="Ozentime antivirus on a laptop"></div></div>
         <div class="chin"></div>
-      </div>
-      <div class="device tablet">
-        <div class="bezel"><div class="screen"><img src="ozentimegui.png" alt="Ozentime antivirus on a tablet"></div></div>
-      </div>
-      <div class="device phone">
-        <div class="bezel"><div class="screen"><img src="ozentimegui.png" alt="Ozentime antivirus on a phone"></div></div>
       </div>
     </section>
 
