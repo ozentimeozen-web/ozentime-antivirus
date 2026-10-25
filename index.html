@@ -353,9 +353,8 @@
 
     <section class="source" id="source">
       <h2>Open source: Ozentime 2.0</h2>
-      <p class="lead">This is the full C++ source for Ozentime 2.0. It is a user-mode heuristic scanner with an AI engine and a non-encrypted VPN. It does not include kernel or rootkit defense.</p>
-      <p><a class="btn" href="ozentime2.0.cpp" download>Download ozentime2.0.cpp</a></p>
-      <pre id="source-box"><code>Loading ozentime2.0.cpp...</code></pre>
+      <p class="lead">Read the full C++ source here. It is a user-mode heuristic scanner with an AI engine and a non-encrypted VPN. It does not include kernel or rootkit defense.</p>
+      <pre><code>PASTE THE 2.0 C++ SOURCE HERE</code></pre>
     </section>
   </main>
 
@@ -364,15 +363,5 @@
     <p>Contact: <a href="mailto:ozentimeozen@gmail.com">ozentimeozen@gmail.com</a></p>
     <p>Privacy: this page does not collect accounts or sell personal data. Email us only if you want a reply.</p>
   </footer>
-
-  <script>
-    fetch("ozentime2.0.cpp")
-      .then(function (r) { if (!r.ok) throw new Error("missing"); return r.text(); })
-      .then(function (t) { document.querySelector("#source-box code").textContent = t; })
-      .catch(function () {
-        document.querySelector("#source-box code").textContent =
-          "Put ozentime2.0.cpp in the same folder as this page to show the full source.";
-      });
-  </script>
 </body>
 </html>
