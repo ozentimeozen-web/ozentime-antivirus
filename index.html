@@ -163,7 +163,7 @@
       z-index: 5;
     }
     .device { position: absolute; filter: drop-shadow(0 28px 40px rgba(16, 36, 64, 0.18)); }
-    .laptop { width: 760px; left: 50%; top: 70px; transform: translateX(-50%); z-index: 1; }
+    .laptop { width: 720px; left: 50%; top: 70px; transform: translateX(-58%); z-index: 1; }
     .laptop .bezel {
       background: #f4f6f8;
       border: 10px solid #eceff3;
@@ -199,6 +199,22 @@
       .hero h1 { font-size: 30px; }
       nav { display: none; }
     }
+    .source { margin-top: 28px; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 28px; box-shadow: 0 10px 30px rgba(16, 24, 32, 0.06); }
+    .source h2 { font-size: 28px; margin-bottom: 6px; }
+    .source .lead { color: var(--muted); margin-bottom: 16px; }
+    .source pre {
+      margin-top: 18px;
+      background: #0f1724;
+      color: #d7e6ff;
+      border-radius: 12px;
+      padding: 18px;
+      overflow: auto;
+      max-height: 640px;
+      font-size: 12px;
+      line-height: 1.45;
+      white-space: pre;
+    }
+    .source code { font-family: Consolas, "Courier New", monospace; }
   </style>
 </head>
 <body>
@@ -210,6 +226,7 @@
         <a href="#compare">Compare</a>
         <a href="#downloads">Downloads</a>
         <a href="#why">Why OzentimeAV</a>
+        <a href="#source">Source</a>
       </nav>
     </div>
   </header>
@@ -333,6 +350,13 @@
         </article>
       </div>
     </section>
+
+    <section class="source" id="source">
+      <h2>Open source: Ozentime 2.0</h2>
+      <p class="lead">This is the full C++ source for Ozentime 2.0. It is a user-mode heuristic scanner with an AI engine and a non-encrypted VPN. It does not include kernel or rootkit defense.</p>
+      <p><a class="btn" href="ozentime2.0.cpp" download>Download ozentime2.0.cpp</a></p>
+      <pre id="source-box"><code>Loading ozentime2.0.cpp...</code></pre>
+    </section>
   </main>
 
   <footer>
@@ -340,5 +364,15 @@
     <p>Contact: <a href="mailto:ozentimeozen@gmail.com">ozentimeozen@gmail.com</a></p>
     <p>Privacy: this page does not collect accounts or sell personal data. Email us only if you want a reply.</p>
   </footer>
+
+  <script>
+    fetch("ozentime2.0.cpp")
+      .then(function (r) { if (!r.ok) throw new Error("missing"); return r.text(); })
+      .then(function (t) { document.querySelector("#source-box code").textContent = t; })
+      .catch(function () {
+        document.querySelector("#source-box code").textContent =
+          "Put ozentime2.0.cpp in the same folder as this page to show the full source.";
+      });
+  </script>
 </body>
 </html>
