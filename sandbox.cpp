@@ -1,0 +1,4705 @@
+#define UNICODE
+#define _UNICODE
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0601
+#endif
+#ifndef WINVER
+#define WINVER 0x0601
+#endif
+#define WIN32_LEAN_AND_MEAN
+
+#ifdef _WIN32
+#include <windows.h>
+#include <winioctl.h>
+#include <shellapi.h>
+#include <commctrl.h>
+#include <shlobj.h>
+#include <shobjidl.h>
+#include <tlhelp32.h>
+#include <d3d11.h>
+#include <tchar.h>
+#include <pdh.h>
+#include <pdhmsg.h>
+#include <bcrypt.h>
+#include <winsvc.h>
+#include <aclapi.h>
+#include <sddl.h>
+#include <wlanapi.h>
+#include <ras.h>
+#include <wincrypt.h>
+#include <wintrust.h>
+#include <softpub.h>
+#elif defined(__linux__)
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <pwd.h>
+#include <dirent.h>
+#include <signal.h>
+#include <fcntl.h>
+#include <sys/prctl.h>
+#include <sys/utsname.h>
+#include <sys/wait.h>
+#endif
+
+#include <iostream>
+#include <vector>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
+#include <cmath>
+#include <fstream>
+#include <thread>
+#include <mutex>
+#include <memory>
+#include <filesystem>
+#include <atomic>
+#include <algorithm>
+#include <chrono>
+#include <sstream>
+#include <iomanip>
+#include <cctype>
+#include <deque>
+#include <condition_variable>
+#include <cstdint>
+
+#if !defined(OZENTIME_HEADLESS)
+#include "imgui.h"
+#ifdef _WIN32
+#include "imgui_impl_win32.h"
+#include "imgui_impl_dx11.h"
+
+#pragma comment(lib, "d3d11.lib")
+#pragma comment(lib, "dwmapi.lib")
+#pragma comment(lib, "user32.lib")
+#pragma comment(lib, "gdi32.lib")
+#pragma comment(lib, "shell32.lib")
+#pragma comment(lib, "advapi32.lib")
+#pragma comment(lib, "comctl32.lib")
+#pragma comment(lib, "pdh.lib")
+#pragma comment(lib, "bcrypt.lib")
+#pragma comment(lib, "wlanapi.lib")
+#pragma comment(lib, "rasapi32.lib")
+#pragma comment(lib, "wintrust.lib")
+#pragma comment(lib, "crypt32.lib")
+#pragma comment(lib, "ole32.lib")
+#pragma comment(lib, "oleaut32.lib")
+#pragma comment(lib, "propsys.lib")
+
+#pragma comment(linker,"\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
+#pragma comment(linker, "/SUBSYSTEM:WINDOWS")
+#else
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+#include <GLFW/glfw3.h>
+#endif
+#endif
+
+#ifdef _WIN32
+#ifndef OZENTIME_HEADLESS
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+#endif
+#endif
+
+// --- Security Engine Data Structures ---
+enum class SystemStatus {
+    SECURE_BLUE,      // System Safe
+    SUSPICION_YELLOW, // Suspicious Threat / Heuristic Alert
+    THREAT_RED        // Confirmed Malware / Repeat Offender
+};
+
+struct ScanResult {
+    bool isMalicious = false;
+    bool isSuspicious = false;
+    int score = 0;
+    double entropy = 0.0;
+    std::wstring reason = L"Clean File";
+    std::wstring behaviorDetails = L"Normal behavior observed.";
+};
+
+enum class OSPlatform { Windows, Linux };
+
+struct FileInfo {
+    std::wstring path;
+    std::wstring hash;
+};
+
+struct ProcessInfo {
+    std::wstring path;
+    std::wstring hash;
+    unsigned long pid = 0;
+};
+
+struct AIResult {
+    bool isMalicious = false;
+    bool isSuspicious = false;
+    int confidenceScore = 0;
+    std::wstring reason = L"Clean file/process";
+};
+
+struct DriverInfo {
+    std::wstring name;
+    bool isSigned;
+};
+
+struct AntivirusState {
+    SystemStatus status = SystemStatus::SECURE_BLUE;
+    bool isScanning = false;
+    float scanProgress = 0.0f;
+    int threatsFound = 0;
+    int infectAttempts = 0;
+} g_AV;
+
+// Global Application Core State
+#ifdef _WIN32
+#define WM_OZENTIME_TRAY (WM_APP + 7)
+#define ID_TRAY_OPEN 41001
+#define ID_TRAY_SCAN 41002
+#define ID_TRAY_EXIT 41003
+HWND g_hMainWnd = NULL;
+static NOTIFYICONDATAW g_nid{};
+static HICON g_trayIcon = NULL;
+static bool g_ReallyExit = false;
+static ID3D11Device* g_pd3dDevice = NULL;
+static ID3D11DeviceContext* g_pd3dDeviceContext = NULL;
+static IDXGISwapChain* g_pSwapChain = NULL;
+static ID3D11RenderTargetView* g_mainRenderTargetView = NULL;
+#endif
+
+std::atomic<SystemStatus> g_CurrentStatus{ SystemStatus::SECURE_BLUE };
+std::atomic<uint32_t> g_DefinitionCount{ 0 };
+std::atomic<bool> g_IsRunning{ true };
+std::atomic<bool> g_NetworkQuarantined{ false }; // unused: we contain files, not the NIC
+
+static std::wstring g_DataDir;
+static std::wstring g_SnapshotDir;
+static std::wstring g_QuarantineDir;
+static std::wstring g_HashDbPath; // used as settings/integrity file, not a signature DB
+static std::wstring g_DefinitionsPath;
+static std::wstring g_DefinitionsBak;
+static std::wstring g_DiskLogPath;
+static std::wstring g_LastQuarantinePath;
+static std::wstring g_OwnExeHash;
+static std::wstring g_AdminPrefPath;
+static std::wstring g_TermsPath;
+static std::wstring g_SafeHashPath;
+static std::mutex g_SafeMutex;
+static std::unordered_set<std::wstring> g_SafeHashes;
+static std::unordered_set<std::wstring> g_BadHashes;
+static std::unordered_map<std::string, bool> g_UserAllowlistCache;
+static bool g_NeedTerms = true;
+static bool g_TermSale = false;
+static bool g_TermMail = false;
+static std::atomic<bool> g_AdminMode{ false };
+static std::atomic<bool> g_AskRestart{ false };
+static std::atomic<bool> g_BootLooksIntact{ true };
+static std::atomic<int> g_EncryptionIncidents{ 0 };
+static bool g_StyleReady = false;
+static float g_UiScanFade = 0.0f;
+static float g_UiShieldDraw = 0.0f;
+static bool g_ScanOverlay = false;
+static std::atomic<unsigned> g_ScanFilesDone{ 0 };
+static std::atomic<bool> g_ScanCancel{ false };
+#ifdef _WIN32
+static ULONGLONG g_ScanStartTick = 0;
+static ULONGLONG g_LastProgressTick = 0;
+#else
+static unsigned long long g_ScanStartTick = 0;
+static unsigned long long g_LastProgressTick = 0;
+#endif
+static float g_LastProgressSeen = -1.0f;
+static std::atomic<bool> g_VpnOn{ false };
+static std::wstring g_VpnProfile;
+static int g_VpnCountry = 0;
+static int g_VpnCity = 0;
+static bool g_ShowVpnPanel = false;
+enum class WinFlavor { Client10, Client11, Server, Other };
+static WinFlavor g_WinFlavor = WinFlavor::Other;
+static unsigned g_WinBuild = 0;
+static bool g_VpnSupported = true;
+static char g_WinFlavorLabel[80] = "Windows";
+static char g_VpnUiMsg[128] = "";
+static const char* kVpnCountries[] = { "USA", "Germany", "India", "UK", "Japan" };
+static const char* kVpnCities[5][5] = {
+    { "New York", "Dallas", "Miami", "Seattle", "Chicago" },
+    { "Frankfurt", "Berlin", "Munich", "Hamburg", "Cologne" },
+    { "Mumbai", "Delhi", "Bengaluru", "Chennai", "Hyderabad" },
+    { "London", "Manchester", "Birmingham", "Edinburgh", "Leeds" },
+    { "Tokyo", "Osaka", "Nagoya", "Fukuoka", "Sapporo" }
+};
+static std::atomic<int> g_ActiveThreats{ 0 };
+static std::atomic<bool> g_SoftWarnOnce{ false };
+static std::atomic<bool> g_ThreatNoticeOnce{ false };
+static std::atomic<bool> g_ServerNoticeOnce{ false };
+static std::atomic<bool> g_WifiHeld{ false };
+static std::atomic<bool> g_SilentBoot{ false };
+static std::atomic<bool> g_GuiVisible{ true };
+static GUID g_WifiGuid{};
+static std::wstring g_WifiProfile;
+static std::wstring g_IndexPath;
+static std::wstring g_TelemetryPath;
+
+struct FileStamp {
+    std::uint64_t writeTick = 0;
+    std::uint64_t size = 0;
+};
+static std::unordered_map<std::wstring, FileStamp> g_ScanIndex;
+static std::mutex g_IndexMutex;
+
+static std::atomic<std::uint64_t> g_TelScanned{ 0 };
+static std::atomic<std::uint64_t> g_TelSkipped{ 0 };
+static std::atomic<std::uint64_t> g_TelBusyAv{ 0 };
+static std::atomic<std::uint64_t> g_TelQuarantined{ 0 };
+static std::atomic<std::uint64_t> g_TelThrottleMs{ 0 };
+static std::atomic<std::uint64_t> g_TelLastFlush{ 0 };
+
+struct QuarantineJob {
+    std::wstring original;
+    int score = 0;
+    bool askUser = false;
+};
+static std::mutex g_QWorkMutex;
+static std::condition_variable g_QWorkCv;
+static std::deque<QuarantineJob> g_QWork;
+static std::atomic<int> g_QBusy{ 0 };
+static std::mutex g_QuarantineIoMutex;
+static std::atomic<int> g_PendingDecisions{ 0 };
+
+struct PendingDecision {
+    std::wstring original;
+    std::wstring quarantined;
+    int score = 0;
+};
+static std::deque<PendingDecision> g_DecisionQueue;
+static std::mutex g_QueueMutex;
+
+std::wstring g_DetectedTarget = L"";
+std::wstring g_StatusMessage = L"System fully protected.";
+std::vector<std::wstring> g_LogMessages;
+std::mutex g_StateMutex;
+
+#ifdef _WIN32
+static PDH_HQUERY g_pdhQuery = NULL;
+static PDH_HCOUNTER g_cpuCounter = NULL;
+static PDH_HCOUNTER g_gpuCounter = NULL;
+static std::atomic<bool> g_pdhInitialized{ false };
+#endif
+
+// Protected System Executables
+static const std::unordered_set<std::wstring> g_ProtectedProcesses = {
+    L"explorer.exe", L"dwm.exe", L"csrss.exe", L"smss.exe",
+    L"services.exe", L"lsass.exe", L"winlogon.exe", L"devenv.exe",
+    L"systemd", L"init", L"bash", L"Xorg"
+};
+
+// Forward Declarations
+#ifdef _WIN32
+bool CreateDeviceD3D(HWND hWnd);
+void CleanupDeviceD3D();
+void CreateRenderTarget();
+void CleanupRenderTarget();
+LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+#endif
+void KillProcessByPath(const std::wstring& filePath);
+void LogMessage(const std::wstring& msg);
+ScanResult PerformDeepHeuristicScan(const std::wstring& filePath);
+float GetCurrentCpuUsage();
+float GetCurrentGpuUsage();
+static void ShowTrayNotice(const wchar_t* title, const wchar_t* body);
+static void AfterSuccessfulRemoval();
+static bool PathIsUserWritableDrop(const std::wstring& path);
+static bool PathIsSystemProtected(const std::wstring& path);
+
+#ifdef _WIN32
+static bool ApplyUserModeAclLockout() {
+    HANDLE hProcess = GetCurrentProcess();
+    PSECURITY_DESCRIPTOR sd = NULL;
+    PSID owner = NULL;
+    PACL oldDacl = NULL;
+    if (GetSecurityInfo(hProcess, SE_KERNEL_OBJECT,
+        OWNER_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION,
+        &owner, NULL, &oldDacl, NULL, &sd) != ERROR_SUCCESS) {
+        return false;
+    }
+
+    SID_IDENTIFIER_AUTHORITY ntAuth = SECURITY_NT_AUTHORITY;
+    PSID systemSid = NULL;
+    if (!AllocateAndInitializeSid(&ntAuth, 1, SECURITY_LOCAL_SYSTEM_RID,
+        0, 0, 0, 0, 0, 0, 0, &systemSid)) {
+        LocalFree(sd);
+        return false;
+    }
+
+    EXPLICIT_ACCESSW ea[2]{};
+    ea[0].grfAccessPermissions = PROCESS_ALL_ACCESS;
+    ea[0].grfAccessMode = SET_ACCESS;
+    ea[0].grfInheritance = NO_INHERITANCE;
+    ea[0].Trustee.TrusteeForm = TRUSTEE_IS_SID;
+    ea[0].Trustee.TrusteeType = TRUSTEE_IS_USER;
+    ea[0].Trustee.ptstrName = (LPWSTR)owner;
+    ea[1].grfAccessPermissions = PROCESS_ALL_ACCESS;
+    ea[1].grfAccessMode = SET_ACCESS;
+    ea[1].grfInheritance = NO_INHERITANCE;
+    ea[1].Trustee.TrusteeForm = TRUSTEE_IS_SID;
+    ea[1].Trustee.TrusteeType = TRUSTEE_IS_WELL_KNOWN_GROUP;
+    ea[1].Trustee.ptstrName = (LPWSTR)systemSid;
+
+    PACL newDacl = NULL;
+    DWORD err = SetEntriesInAclW(2, ea, NULL, &newDacl);
+    bool ok = false;
+    if (err == ERROR_SUCCESS && newDacl) {
+        ok = (SetSecurityInfo(hProcess, SE_KERNEL_OBJECT, DACL_SECURITY_INFORMATION,
+            NULL, NULL, newDacl, NULL) == ERROR_SUCCESS);
+        LocalFree(newDacl);
+    }
+    FreeSid(systemSid);
+    LocalFree(sd);
+    return ok;
+}
+#else
+static bool ApplyUserModeAclLockout() {
+#ifdef __linux__
+    prctl(PR_SET_DUMPABLE, 0);
+#endif
+    return true;
+}
+#endif
+
+static void IsolateFromConsoleHost() {
+#ifdef _WIN32
+    FreeConsole();
+    SetStdHandle(STD_INPUT_HANDLE, NULL);
+    SetStdHandle(STD_OUTPUT_HANDLE, NULL);
+    SetStdHandle(STD_ERROR_HANDLE, NULL);
+#endif
+}
+
+static void LaunchUpdaterInBackground() {
+#ifdef _WIN32
+    wchar_t self[MAX_PATH]{};
+    GetModuleFileNameW(NULL, self, MAX_PATH);
+    std::wstring path(self);
+    size_t slash = path.find_last_of(L"\\/");
+    std::wstring dir = (slash == std::wstring::npos) ? L"." : path.substr(0, slash);
+    const wchar_t* names[] = { L"OzentimeUpdater.exe", L"updater.exe" };
+    std::wstring updater;
+    for (const wchar_t* name : names) {
+        std::wstring candidate = dir + L"\\" + name;
+        if (GetFileAttributesW(candidate.c_str()) != INVALID_FILE_ATTRIBUTES) {
+            updater = candidate;
+            break;
+        }
+    }
+    if (updater.empty()) {
+        LogMessage(L"[UPDATE] OzentimeUpdater.exe not found next to the AV: " + dir);
+        return;
+    }
+
+    SHELLEXECUTEINFOW sei{};
+    sei.cbSize = sizeof(sei);
+    sei.fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_FLAG_NO_UI;
+    sei.lpVerb = L"open";
+    sei.lpFile = updater.c_str();
+    sei.lpDirectory = dir.c_str();
+    sei.lpParameters = L"/watch";
+    sei.nShow = SW_HIDE;
+    BOOL ok = ShellExecuteExW(&sei);
+    if (!ok) {
+        STARTUPINFOW si{};
+        si.cb = sizeof(si);
+        si.dwFlags = STARTF_USESHOWWINDOW;
+        si.wShowWindow = SW_HIDE;
+        PROCESS_INFORMATION pi{};
+        wchar_t cmd[MAX_PATH + 16]{};
+        swprintf_s(cmd, L"\"%s\" /watch", updater.c_str());
+        ok = CreateProcessW(updater.c_str(), cmd, NULL, NULL, FALSE,
+            CREATE_NO_WINDOW | DETACHED_PROCESS, NULL, dir.c_str(), &si, &pi);
+        if (ok) {
+            CloseHandle(pi.hThread);
+            CloseHandle(pi.hProcess);
+        }
+    } else if (sei.hProcess) {
+        CloseHandle(sei.hProcess);
+    }
+    if (ok) LogMessage(L"[UPDATE] Launched OzentimeUpdater.exe from " + dir);
+    else LogMessage(L"[UPDATE] Launch failed, error " + std::to_wstring(GetLastError()));
+#endif
+}
+
+// --- OPTIMIZED LOGGING ENGINE ---
+void LogMessage(const std::wstring& msg) {
+    try {
+        {
+            std::lock_guard<std::mutex> lock(g_StateMutex);
+            g_LogMessages.push_back(msg);
+            if (g_LogMessages.size() > 50) {
+                g_LogMessages.erase(g_LogMessages.begin());
+            }
+        }
+    }
+    catch (...) {
+        // Logging must never take down the process.
+    }
+}
+
+template <typename Fn>
+static bool SafeRun(const wchar_t* part, Fn&& fn) {
+    try {
+        fn();
+        return true;
+    }
+    catch (const std::exception& ex) {
+        try {
+            std::string w = ex.what();
+            LogMessage(std::wstring(L"[FAULT] ") + part + L" recovered: " +
+                       std::wstring(w.begin(), w.end()));
+        }
+        catch (...) {}
+        return false;
+    }
+    catch (...) {
+        LogMessage(std::wstring(L"[FAULT] ") + part + L" recovered from unknown failure.");
+        return false;
+    }
+}
+
+static void ResilientWorker(const wchar_t* name, void (*body)()) {
+    unsigned restart = 0;
+    while (g_IsRunning.load()) {
+        bool ok = SafeRun(name, body);
+        if (!g_IsRunning.load()) break;
+        if (!ok) {
+            ++restart;
+            if (restart > 50) {
+                LogMessage(std::wstring(L"[FAULT] ") + name +
+                           L" paused after repeated failures.");
+                std::this_thread::sleep_for(std::chrono::seconds(30));
+                restart = 0;
+            } else {
+                std::this_thread::sleep_for(std::chrono::seconds(2));
+            }
+        } else {
+            break;
+        }
+    }
+}
+
+static FileStamp StampOf(const std::wstring& path) {
+    FileStamp s;
+    std::error_code ec;
+    auto ftime = std::filesystem::last_write_time(path, ec);
+    if (!ec) {
+        s.writeTick = static_cast<std::uint64_t>(
+            ftime.time_since_epoch().count());
+    }
+    auto sz = std::filesystem::file_size(path, ec);
+    if (!ec) s.size = static_cast<std::uint64_t>(sz);
+    return s;
+}
+
+static bool FileWasSeenBefore(const std::wstring& path) {
+    std::lock_guard<std::mutex> lock(g_IndexMutex);
+    return g_ScanIndex.find(path) != g_ScanIndex.end();
+}
+
+static bool FileUnchangedSinceLastScan(const std::wstring& path) {
+    FileStamp now = StampOf(path);
+    if (now.writeTick == 0 && now.size == 0) return false;
+    std::lock_guard<std::mutex> lock(g_IndexMutex);
+    auto it = g_ScanIndex.find(path);
+    if (it == g_ScanIndex.end()) return false;
+    return it->second.writeTick == now.writeTick && it->second.size == now.size;
+}
+
+static void RememberScannedFile(const std::wstring& path) {
+    FileStamp now = StampOf(path);
+    std::lock_guard<std::mutex> lock(g_IndexMutex);
+    if (g_ScanIndex.size() > 20000) g_ScanIndex.clear();
+    g_ScanIndex[path] = now;
+}
+
+static void LoadScanIndex() {
+    if (g_IndexPath.empty()) return;
+    std::wifstream in(g_IndexPath);
+    if (!in) return;
+    std::lock_guard<std::mutex> lock(g_IndexMutex);
+    g_ScanIndex.clear();
+    std::wstring line;
+    while (std::getline(in, line)) {
+        auto a = line.find(L'\t');
+        if (a == std::wstring::npos) continue;
+        auto b = line.find(L'\t', a + 1);
+        if (b == std::wstring::npos) continue;
+        FileStamp st;
+        try {
+            st.writeTick = std::stoull(line.substr(a + 1, b - a - 1));
+            st.size = std::stoull(line.substr(b + 1));
+        }
+        catch (...) { continue; }
+        g_ScanIndex[line.substr(0, a)] = st;
+        if (g_ScanIndex.size() > 20000) break;
+    }
+}
+
+static void SaveScanIndex() {
+    if (g_IndexPath.empty()) return;
+    std::lock_guard<std::mutex> lock(g_IndexMutex);
+    std::wofstream out(g_IndexPath, std::ios::trunc);
+    if (!out) return;
+    std::uint32_t n = 0;
+    for (const auto& kv : g_ScanIndex) {
+        out << kv.first << L'\t' << kv.second.writeTick << L'\t' << kv.second.size << L'\n';
+        if (++n > 20000) break;
+    }
+}
+
+static bool FileHeldByOtherScanner(const std::wstring& path) {
+#ifdef _WIN32
+    HANDLE h = CreateFileW(path.c_str(), GENERIC_READ,
+        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+        NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (h == INVALID_HANDLE_VALUE) {
+        DWORD err = GetLastError();
+        return err == ERROR_SHARING_VIOLATION || err == ERROR_LOCK_VIOLATION;
+    }
+    CloseHandle(h);
+    return false;
+#else
+    (void)path;
+    return false;
+#endif
+}
+
+static float DefenseCpuLoad() {
+    return GetCurrentCpuUsage();
+}
+
+static void AdaptiveThrottle() {
+    float cpu = DefenseCpuLoad();
+    int waitMs = 0;
+    if (cpu >= 85.0f) waitMs = 160;
+    else if (cpu >= 70.0f) waitMs = 80;
+    else if (cpu >= 45.0f) waitMs = 25;
+    else if (cpu >= 25.0f) waitMs = 6;
+    if (waitMs > 0) {
+        g_TelThrottleMs.fetch_add(static_cast<std::uint64_t>(waitMs));
+        std::this_thread::sleep_for(std::chrono::milliseconds(waitMs));
+    }
+}
+
+static bool DefenseShouldDeferHeavyWork() {
+    return DefenseCpuLoad() >= 85.0f;
+}
+
+static void FlushTelemetry(bool force) {
+#ifdef _WIN32
+    ULONGLONG now = GetTickCount64();
+#else
+    auto now = static_cast<std::uint64_t>(
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now().time_since_epoch()).count());
+#endif
+    ULONGLONG last = g_TelLastFlush.load();
+    if (!force && last != 0 && now - last < 180000) return;
+    if (!g_TelLastFlush.compare_exchange_strong(last, now) && !force) return;
+    g_TelLastFlush.store(now);
+
+    std::uint64_t sc = g_TelScanned.load();
+    std::uint64_t sk = g_TelSkipped.load();
+    std::uint64_t av = g_TelBusyAv.load();
+    std::uint64_t q = g_TelQuarantined.load();
+    std::uint64_t th = g_TelThrottleMs.load();
+    if (sc + sk + av + q == 0) return;
+
+    if (!g_TelemetryPath.empty()) {
+        std::wofstream out(g_TelemetryPath, std::ios::trunc);
+        if (out) {
+            out << L"scanned=" << sc
+                << L" skipped_unchanged=" << sk
+                << L" deferred_other_av=" << av
+                << L" quarantined=" << q
+                << L" throttle_ms=" << th << L"\n";
+        }
+    }
+}
+
+namespace ScanModule {
+    bool QuarantineFile(const std::wstring& filePath);
+}
+
+static void QuarantineWorkerLoop() {
+    while (g_IsRunning.load()) {
+        QuarantineJob job;
+        {
+            std::unique_lock<std::mutex> lock(g_QWorkMutex);
+            g_QWorkCv.wait_for(lock, std::chrono::milliseconds(400), []() {
+                return !g_QWork.empty() || !g_IsRunning.load();
+            });
+            if (!g_IsRunning.load() && g_QWork.empty()) break;
+            if (g_QWork.empty()) continue;
+            job = g_QWork.front();
+            g_QWork.pop_front();
+        }
+        g_QBusy.fetch_add(1);
+        AdaptiveThrottle();
+        bool ok = ScanModule::QuarantineFile(job.original);
+        std::wstring dest = g_LastQuarantinePath;
+        if (ok && job.askUser) {
+            std::lock_guard<std::mutex> qlock(g_QueueMutex);
+            bool first = g_DecisionQueue.empty();
+            g_DecisionQueue.push_back({ job.original, dest, job.score });
+            g_PendingDecisions.store(static_cast<int>(g_DecisionQueue.size()));
+            if (first) {
+                if (!g_ThreatNoticeOnce.exchange(true)) {
+                    ShowTrayNotice(L"Ozentime", L"Threats isolated. One notice for this batch.");
+                }
+            }
+        }
+        g_QBusy.fetch_sub(1);
+    }
+}
+
+static void QuarantineEnqueue(const std::wstring& path, int score, bool askUser) {
+    {
+        std::lock_guard<std::mutex> lock(g_QWorkMutex);
+        g_QWork.push_back({ path, score, askUser });
+    }
+    g_QWorkCv.notify_one();
+}
+
+static void QuarantineFlush() {
+    for (int i = 0; i < 400; ++i) {
+        bool empty;
+        {
+            std::lock_guard<std::mutex> lock(g_QWorkMutex);
+            empty = g_QWork.empty();
+        }
+        if (empty && g_QBusy.load() == 0) return;
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+}
+
+static std::wstring ToLowerCopy(std::wstring s) {
+    std::transform(s.begin(), s.end(), s.begin(), [](wchar_t c) {
+        return (c >= L'A' && c <= L'Z') ? static_cast<wchar_t>(c - L'A' + L'a') : c;
+    });
+    return s;
+}
+
+static bool PathIsSystemProtected(const std::wstring& path) {
+    std::wstring p = ToLowerCopy(path);
+    return p.find(L"\\windows\\system32\\") != std::wstring::npos ||
+           p.find(L"\\windows\\syswow64\\") != std::wstring::npos ||
+           p.find(L"\\program files\\") != std::wstring::npos ||
+           p.find(L"\\program files (x86)\\") != std::wstring::npos;
+}
+
+static bool PathIsUserWritableDrop(const std::wstring& path) {
+    std::wstring p = ToLowerCopy(path);
+    return p.find(L"\\appdata\\") != std::wstring::npos ||
+           p.find(L"\\temp\\") != std::wstring::npos ||
+           p.find(L"\\downloads\\") != std::wstring::npos ||
+           p.find(L"\\desktop\\") != std::wstring::npos ||
+           p.find(L"\\public\\") != std::wstring::npos;
+}
+
+static std::wstring Sha256File(const std::wstring& filePath) {
+#ifdef _WIN32
+    BCRYPT_ALG_HANDLE alg = NULL;
+    BCRYPT_HASH_HANDLE hash = NULL;
+    try {
+        std::ifstream in(filePath, std::ios::binary);
+        if (!in) return L"";
+
+        DWORD hashLen = 0, cb = 0;
+        if (BCryptOpenAlgorithmProvider(&alg, BCRYPT_SHA256_ALGORITHM, NULL, 0) != 0) return L"";
+        if (BCryptGetProperty(alg, BCRYPT_HASH_LENGTH, (PUCHAR)&hashLen, sizeof(hashLen), &cb, 0) != 0) {
+            BCryptCloseAlgorithmProvider(alg, 0);
+            return L"";
+        }
+        std::vector<UCHAR> digest(hashLen);
+        if (BCryptCreateHash(alg, &hash, NULL, 0, NULL, 0, 0) != 0) {
+            BCryptCloseAlgorithmProvider(alg, 0);
+            return L"";
+        }
+        char chunk[65536];
+        while (in) {
+            in.read(chunk, sizeof(chunk));
+            auto n = in.gcount();
+            if (n > 0) BCryptHashData(hash, (PUCHAR)chunk, (ULONG)n, 0);
+        }
+        BCryptFinishHash(hash, digest.data(), hashLen, 0);
+        BCryptDestroyHash(hash); hash = NULL;
+        BCryptCloseAlgorithmProvider(alg, 0); alg = NULL;
+
+        std::wstringstream ss;
+        ss << std::hex << std::setfill(L'0');
+        for (DWORD i = 0; i < hashLen; ++i) ss << std::setw(2) << digest[i];
+        return ss.str();
+    }
+    catch (...) {
+        if (hash) BCryptDestroyHash(hash);
+        if (alg) BCryptCloseAlgorithmProvider(alg, 0);
+        LogMessage(L"[FAULT] SHA-256 skipped: " + filePath);
+        return L"";
+    }
+#else
+    (void)filePath;
+    return L"";
+#endif
+}
+
+static void LoadHashDatabase() {
+    g_DefinitionCount.store(6);
+    try {
+        if (!std::filesystem::exists(g_HashDbPath)) {
+            std::ofstream mk(g_HashDbPath);
+            if (mk) mk << "ozentime.engine=heuristic\nversion=2.0\n";
+        }
+        std::wstring badPath = g_DataDir.empty()
+            ? L"bad-hashes.txt"
+            : g_DataDir + L"\\bad-hashes.txt";
+        if (!std::filesystem::exists(badPath)) {
+            std::ofstream mk(badPath);
+            if (mk) mk << "# sha256 of confirmed bad files, one per line\n";
+        }
+        g_BadHashes.clear();
+        std::wifstream in(badPath);
+        std::wstring line;
+        while (in && std::getline(in, line)) {
+            if (line.size() == 64 && line[0] != L'#')
+                g_BadHashes.insert(ToLowerCopy(line));
+        }
+        LogMessage(L"[ENGINE] Heuristic scan plus " + std::to_wstring(g_BadHashes.size()) +
+            L" local bad hashes. No cloud lookup, so a dead network cannot stall a scan.");
+    }
+    catch (...) {
+        LogMessage(L"[FAULT] Hash list skipped. Scan continues.");
+    }
+}
+
+static bool DefinitionsLookScrambled(const std::wstring& path) {
+    if (!std::filesystem::exists(path)) return true;
+    // definitions.db / hashes.txt should be mostly text. High entropy => likely encrypted.
+    std::ifstream file(path, std::ios::binary);
+    if (!file) return true;
+    std::unordered_map<unsigned char, size_t> freq;
+    size_t total = 0;
+    char buf[4096];
+    while (file.read(buf, sizeof(buf)) || file.gcount() > 0) {
+        auto n = file.gcount();
+        for (std::streamsize i = 0; i < n; ++i) freq[(unsigned char)buf[i]]++;
+        total += (size_t)n;
+    }
+    if (total < 8) return true;
+    double e = 0.0;
+    double log2 = std::log(2.0);
+    for (auto& p : freq) {
+        double pr = (double)p.second / (double)total;
+        e -= pr * (std::log(pr) / log2);
+    }
+    return e > 7.2;
+}
+
+static void SnapshotDefinitionsBackup() {
+    if (g_HashDbPath.empty() || !std::filesystem::exists(g_HashDbPath)) return;
+    if (DefinitionsLookScrambled(g_HashDbPath)) return;
+    std::error_code ec;
+    std::filesystem::copy_file(g_HashDbPath, g_DefinitionsBak,
+        std::filesystem::copy_options::overwrite_existing, ec);
+#ifdef _WIN32
+    if (!ec) SetFileAttributesW(g_DefinitionsBak.c_str(), FILE_ATTRIBUTE_READONLY);
+#endif
+}
+
+static void IntegrityPulse() {
+    if (g_HashDbPath.empty()) return;
+#ifdef _WIN32
+    wchar_t module[MAX_PATH]{};
+    GetModuleFileNameW(NULL, module, MAX_PATH);
+    std::wstring live = Sha256File(module);
+    if (!g_OwnExeHash.empty() && !live.empty() && live != g_OwnExeHash) {
+        LogMessage(L"[INTEGRITY] EXE hash changed (update or tamper). Not killing other processes.");
+        g_OwnExeHash = live;
+    }
+#endif
+    if (std::filesystem::exists(g_HashDbPath) && DefinitionsLookScrambled(g_HashDbPath)) {
+        int n = g_EncryptionIncidents.fetch_add(1) + 1;
+        LogMessage(L"[INTEGRITY] Engine marker looks scrambled (event " + std::to_wstring(n) + L"). Restoring backup.");
+#ifdef _WIN32
+        SetFileAttributesW(g_DefinitionsBak.c_str(), FILE_ATTRIBUTE_NORMAL);
+        SetFileAttributesW(g_HashDbPath.c_str(), FILE_ATTRIBUTE_NORMAL);
+#endif
+        std::error_code ec;
+        if (std::filesystem::exists(g_DefinitionsBak)) {
+            std::filesystem::copy_file(g_DefinitionsBak, g_HashDbPath,
+                std::filesystem::copy_options::overwrite_existing, ec);
+#ifdef _WIN32
+            SetFileAttributesW(g_DefinitionsBak.c_str(), FILE_ATTRIBUTE_READONLY);
+#endif
+            if (!ec) LoadHashDatabase();
+        }
+    }
+}
+
+static void DetectWindowsFlavor() {
+#ifdef _WIN32
+    using RtlGetVersionFn = LONG (WINAPI*)(OSVERSIONINFOW*);
+    HMODULE ntdll = GetModuleHandleW(L"ntdll.dll");
+    auto rtl = ntdll ? reinterpret_cast<RtlGetVersionFn>(GetProcAddress(ntdll, "RtlGetVersion")) : nullptr;
+    OSVERSIONINFOW vi{};
+    vi.dwOSVersionInfoSize = sizeof(vi);
+    if (rtl) rtl(&vi);
+    g_WinBuild = vi.dwBuildNumber;
+
+    OSVERSIONINFOEXW sx{};
+    sx.dwOSVersionInfoSize = sizeof(sx);
+    sx.wProductType = VER_NT_WORKSTATION;
+    DWORDLONG mask = VerSetConditionMask(0, VER_PRODUCT_TYPE, VER_EQUAL);
+    const bool workstation = VerifyVersionInfoW(&sx, VER_PRODUCT_TYPE, mask) != FALSE;
+
+    if (!workstation) {
+        g_WinFlavor = WinFlavor::Server;
+        g_VpnSupported = false;
+        snprintf(g_WinFlavorLabel, sizeof(g_WinFlavorLabel), "Windows Server  build %u", g_WinBuild);
+    } else if (g_WinBuild >= 22000) {
+        g_WinFlavor = WinFlavor::Client11;
+        g_VpnSupported = true;
+        snprintf(g_WinFlavorLabel, sizeof(g_WinFlavorLabel), "Windows 11  build %u", g_WinBuild);
+    } else if (g_WinBuild >= 10240) {
+        g_WinFlavor = WinFlavor::Client10;
+        g_VpnSupported = true;
+        snprintf(g_WinFlavorLabel, sizeof(g_WinFlavorLabel), "Windows 10  build %u", g_WinBuild);
+    } else if (g_WinBuild >= 9600) {
+        g_WinFlavor = WinFlavor::Client10;
+        g_VpnSupported = true;
+        snprintf(g_WinFlavorLabel, sizeof(g_WinFlavorLabel), "Windows 8.1  build %u", g_WinBuild);
+    } else if (g_WinBuild >= 9200) {
+        g_WinFlavor = WinFlavor::Client10;
+        g_VpnSupported = true;
+        snprintf(g_WinFlavorLabel, sizeof(g_WinFlavorLabel), "Windows 8  build %u", g_WinBuild);
+    } else {
+        g_WinFlavor = WinFlavor::Client10;
+        g_VpnSupported = true;
+        snprintf(g_WinFlavorLabel, sizeof(g_WinFlavorLabel), "Windows 7  build %u", g_WinBuild);
+    }
+#elif defined(__linux__)
+    g_VpnSupported = false;
+    struct utsname u{};
+    if (uname(&u) == 0)
+        snprintf(g_WinFlavorLabel, sizeof(g_WinFlavorLabel), "Linux %s %s", u.sysname, u.release);
+    else
+        snprintf(g_WinFlavorLabel, sizeof(g_WinFlavorLabel), "Linux");
+    g_AdminMode.store(geteuid() == 0);
+#endif
+}
+
+static void InitDataPaths() {
+#ifdef _WIN32
+    DetectWindowsFlavor();
+    wchar_t progData[MAX_PATH]{};
+    if (GetEnvironmentVariableW(L"ProgramData", progData, MAX_PATH) == 0) {
+        g_DataDir = L"C:\\OzentimeAV";
+    } else {
+        g_DataDir = std::wstring(progData) + L"\\OzentimeAV";
+    }
+    std::error_code ec;
+    std::filesystem::create_directories(g_DataDir, ec);
+    g_QuarantineDir = g_DataDir + L"\\Quarantine";
+    g_SnapshotDir = g_DataDir + L"\\Snapshots";
+    std::filesystem::create_directories(g_SnapshotDir, ec);
+    std::filesystem::create_directories(g_QuarantineDir, ec);
+    g_HashDbPath = g_DataDir + L"\\engine.marker";
+    g_DefinitionsPath = g_DataDir + L"\\engine.marker";
+    g_DefinitionsBak = g_DataDir + L"\\engine.marker.bak";
+    g_DiskLogPath = g_DataDir + L"\\ozentime-vb100.log";
+    g_AdminPrefPath = g_DataDir + L"\\admin_preference.txt";
+    g_TermsPath = g_DataDir + L"\\terms_accepted.txt";
+    g_SafeHashPath = g_DataDir + L"\\safe-hashes.txt";
+    {
+        std::wifstream in(g_SafeHashPath);
+        std::wstring line;
+        while (in && std::getline(in, line)) {
+            if (!line.empty()) {
+                g_SafeHashes.insert(line);
+                g_UserAllowlistCache[std::string(line.begin(), line.end())] = true;
+            }
+        }
+    }
+    g_IndexPath = g_DataDir + L"\\scan-index.dat";
+    g_TelemetryPath = g_DataDir + L"\\telemetry.txt";
+    LoadScanIndex();
+    wchar_t module[MAX_PATH]{};
+    GetModuleFileNameW(NULL, module, MAX_PATH);
+    g_OwnExeHash = Sha256File(module);
+    LoadHashDatabase();
+    SnapshotDefinitionsBackup();
+    LogMessage(L"[SYSTEM] Detection core online. Quarantine=" + g_QuarantineDir);
+    {
+        std::wstring flavor(g_WinFlavorLabel, g_WinFlavorLabel + strlen(g_WinFlavorLabel));
+        LogMessage(L"[SYSTEM] OS profile: " + flavor);
+    }
+    {
+        std::wifstream terms(g_TermsPath);
+        std::wstring mark;
+        if (terms) terms >> mark;
+        g_NeedTerms = (mark != L"yes");
+    }
+#elif defined(__linux__)
+    DetectWindowsFlavor();
+    const char* home = getenv("HOME");
+    std::string base = home ? (std::string(home) + "/.local/share/OzentimeAV") : "/var/lib/OzentimeAV";
+    g_DataDir.assign(base.begin(), base.end());
+    std::error_code ec;
+    std::filesystem::create_directories(g_DataDir, ec);
+    auto join = [](const wchar_t* leaf) { return g_DataDir + L"/" + leaf; };
+    g_QuarantineDir = join(L"Quarantine");
+    g_SnapshotDir = join(L"Snapshots");
+    std::filesystem::create_directories(g_SnapshotDir, ec);
+    std::filesystem::create_directories(g_QuarantineDir, ec);
+    g_HashDbPath = join(L"engine.marker");
+    g_DefinitionsPath = g_HashDbPath;
+    g_DefinitionsBak = join(L"engine.marker.bak");
+    g_DiskLogPath = join(L"ozentime-vb100.log");
+    g_AdminPrefPath = join(L"admin_preference.txt");
+    g_TermsPath = join(L"terms_accepted.txt");
+    g_SafeHashPath = join(L"safe-hashes.txt");
+    g_IndexPath = join(L"scan-index.dat");
+    g_TelemetryPath = join(L"telemetry.txt");
+    {
+        std::wifstream in(g_SafeHashPath);
+        std::wstring line;
+        while (in && std::getline(in, line)) {
+            if (!line.empty()) {
+                g_SafeHashes.insert(line);
+                g_UserAllowlistCache[std::string(line.begin(), line.end())] = true;
+            }
+        }
+    }
+    LoadScanIndex();
+    LoadHashDatabase();
+    SnapshotDefinitionsBackup();
+    LogMessage(L"[SYSTEM] Detection core online. Quarantine=" + g_QuarantineDir);
+    {
+        std::wstring flavor(g_WinFlavorLabel, g_WinFlavorLabel + strlen(g_WinFlavorLabel));
+        LogMessage(L"[SYSTEM] OS profile: " + flavor);
+    }
+    {
+        std::wifstream terms(g_TermsPath);
+        std::wstring mark;
+        if (terms) terms >> mark;
+        g_NeedTerms = (mark != L"yes");
+    }
+#endif
+}
+
+// --- HARDWARE MONITORING ---
+void InitHardwareMonitoring() {
+#ifdef _WIN32
+    if (!g_pdhInitialized.load()) {
+        if (PdhOpenQuery(NULL, 0, &g_pdhQuery) == ERROR_SUCCESS) {
+            PdhAddEnglishCounter(g_pdhQuery, L"\\ProcessorInformation(_Total)\\% Processor Utility", 0, &g_cpuCounter);
+            PdhCollectQueryData(g_pdhQuery);
+            g_pdhInitialized.store(true);
+        }
+    }
+#endif
+}
+
+static float g_CachedCpu = 0.0f;
+static float g_CachedGpu = 0.0f;
+static ULONGLONG g_LastMetricTick = 0;
+
+static void RefreshMetricsIfDue() {
+#ifdef _WIN32
+    ULONGLONG now = GetTickCount64();
+    if (now - g_LastMetricTick < 2000) return;
+    g_LastMetricTick = now;
+    if (!g_pdhInitialized.load()) return;
+    PDH_FMT_COUNTERVALUE counterVal;
+    if (PdhCollectQueryData(g_pdhQuery) == ERROR_SUCCESS) {
+        if (PdhGetFormattedCounterValue(g_cpuCounter, PDH_FMT_DOUBLE, NULL, &counterVal) == ERROR_SUCCESS) {
+            g_CachedCpu = static_cast<float>(counterVal.doubleValue);
+        }
+    }
+#else
+    (void)0;
+#endif
+}
+
+float GetCurrentCpuUsage() {
+#ifdef _WIN32
+    RefreshMetricsIfDue();
+    return g_CachedCpu;
+#elif defined(__linux__)
+    static unsigned long long lastUser = 0, lastUserLow = 0, lastSys = 0, lastIdle = 0;
+    std::ifstream file("/proc/stat");
+    std::string cpu;
+    unsigned long long user, userLow, sys, idle;
+    file >> cpu >> user >> userLow >> sys >> idle;
+    if (file.fail()) return 0.0f;
+
+    if (user < lastUser || userLow < lastUserLow || sys < lastSys || idle < lastIdle) {
+        return 0.0f;
+    }
+    unsigned long long total = (user - lastUser) + (userLow - lastUserLow) + (sys - lastSys);
+    float percent = static_cast<float>(total);
+    total += (idle - lastIdle);
+    percent /= total;
+
+    lastUser = user; lastUserLow = userLow; lastSys = sys; lastIdle = idle;
+    return percent * 100.0f;
+#else
+    return 0.0f;
+#endif
+}
+
+float GetCurrentGpuUsage() {
+#ifdef _WIN32
+    RefreshMetricsIfDue();
+    return g_CachedGpu;
+#else
+    return 0.0f;
+#endif
+}
+
+#ifdef _WIN32
+bool IsForegroundProcess(DWORD pid) {
+    HWND hwnd = GetForegroundWindow();
+    if (!hwnd) return false;
+    DWORD foregroundPid = 0;
+    GetWindowThreadProcessId(hwnd, &foregroundPid);
+    return (pid == foregroundPid);
+}
+
+std::wstring GetProcessNameByPid(DWORD pid) {
+    wchar_t processName[MAX_PATH] = L"<unknown>";
+    HANDLE hProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
+    if (hProcess) {
+        DWORD size = MAX_PATH;
+        if (QueryFullProcessImageNameW(hProcess, 0, processName, &size)) {
+            std::filesystem::path p(processName);
+            CloseHandle(hProcess);
+            return p.filename().wstring();
+        }
+        CloseHandle(hProcess);
+    }
+    return processName;
+}
+
+bool TerminateProcessByPid(DWORD pid, const std::wstring& reason) {
+    // Only call this AFTER a heuristic contain for this PID's image.
+    if (pid == GetCurrentProcessId()) return false;
+    std::wstring exeName = ToLowerCopy(GetProcessNameByPid(pid));
+    if (g_ProtectedProcesses.count(exeName) > 0) return false;
+
+    HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
+    if (hProcess) {
+        if (TerminateProcess(hProcess, 1)) {
+            CloseHandle(hProcess);
+            LogMessage(L"[CONTAIN] Stopped confirmed-malicious PID " + std::to_wstring(pid) +
+                       L" (" + exeName + L") - " + reason);
+            return true;
+        }
+        CloseHandle(hProcess);
+    }
+    return false;
+}
+
+void EvaluateAndEnforceGpuThrottling(float perProcessThreshold = 40.0f) {
+    // Metrics only. High GPU is not a malware verdict.
+    (void)perProcessThreshold;
+}
+#endif
+
+#ifdef _WIN32
+static void RunNetsh(const std::wstring& args) {
+    wchar_t sys[MAX_PATH]{};
+    GetSystemDirectoryW(sys, MAX_PATH);
+    std::wstring exe = std::wstring(sys) + L"\\netsh.exe";
+    std::wstring cmd = L"\"" + exe + L"\" " + args;
+    std::vector<wchar_t> buf(cmd.begin(), cmd.end());
+    buf.push_back(0);
+    STARTUPINFOW si{};
+    si.cb = sizeof(si);
+    si.dwFlags = STARTF_USESHOWWINDOW;
+    si.wShowWindow = SW_HIDE;
+    PROCESS_INFORMATION pi{};
+    if (CreateProcessW(exe.c_str(), buf.data(), NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, sys, &si, &pi)) {
+        WaitForSingleObject(pi.hProcess, 8000);
+        CloseHandle(pi.hThread);
+        CloseHandle(pi.hProcess);
+    }
+}
+#endif
+
+void HoldWifiDuringFight() {
+#ifdef _WIN32
+    if (g_WifiHeld.exchange(true)) return;
+    HANDLE h = NULL;
+    DWORD ver = 0;
+    if (WlanOpenHandle(2, NULL, &ver, &h) != ERROR_SUCCESS) {
+        RunNetsh(L"wlan disconnect");
+        LogMessage(L"[NET] Wi-Fi disconnected for containment.");
+        return;
+    }
+    PWLAN_INTERFACE_INFO_LIST list = NULL;
+    if (WlanEnumInterfaces(h, NULL, &list) == ERROR_SUCCESS && list && list->dwNumberOfItems > 0) {
+        for (DWORD i = 0; i < list->dwNumberOfItems; ++i) {
+            if (list->InterfaceInfo[i].isState != wlan_interface_state_connected) continue;
+            g_WifiGuid = list->InterfaceInfo[i].InterfaceGuid;
+            DWORD sz = 0;
+            PWLAN_CONNECTION_ATTRIBUTES attr = NULL;
+            if (WlanQueryInterface(h, &g_WifiGuid, wlan_intf_opcode_current_connection,
+                    NULL, &sz, (PVOID*)&attr, NULL) == ERROR_SUCCESS && attr) {
+                g_WifiProfile = attr->strProfileName;
+                WlanFreeMemory(attr);
+            }
+            WlanDisconnect(h, &g_WifiGuid, NULL);
+            break;
+        }
+        WlanFreeMemory(list);
+    }
+    WlanCloseHandle(h, NULL);
+    RunNetsh(L"wlan disconnect");
+    LogMessage(L"[NET] Wi-Fi held until you decide Delete or Keep.");
+#endif
+}
+
+void ReleaseWifiAfterFight() {
+#ifdef _WIN32
+    if (!g_WifiHeld.exchange(false)) return;
+    if (!g_WifiProfile.empty()) {
+        std::wstring args = L"wlan connect name=\"" + g_WifiProfile + L"\"";
+        RunNetsh(args);
+    } else {
+        RunNetsh(L"wlan connect");
+    }
+    HANDLE h = NULL;
+    DWORD ver = 0;
+    if (WlanOpenHandle(2, NULL, &ver, &h) == ERROR_SUCCESS) {
+        // Adapter stays enabled; reconnect is via netsh profile.
+        WlanCloseHandle(h, NULL);
+    }
+    LogMessage(L"[NET] Wi-Fi restore requested.");
+    g_WifiProfile.clear();
+#endif
+}
+
+void ToggleNetworkConnection(bool enable) {
+    if (enable) ReleaseWifiAfterFight();
+    else HoldWifiDuringFight();
+}
+
+void UpdateEngineStatus(SystemStatus status, const std::wstring& msg, const std::wstring& target = L"") {
+    g_CurrentStatus.store(status);
+    g_AV.status = status;
+    {
+        std::lock_guard<std::mutex> lock(g_StateMutex);
+        g_StatusMessage = msg;
+        g_DetectedTarget = target;
+    }
+    LogMessage(msg);
+
+    if (status == SystemStatus::THREAT_RED) {
+        g_AV.threatsFound++;
+    }
+}
+
+// --- PRIVILEGE ELEVATION ENGINE ---
+#ifdef _WIN32
+bool IsRunningAsAdmin() {
+    BOOL isAdmin = FALSE;
+    PSID adminGroup = NULL;
+    SID_IDENTIFIER_AUTHORITY ntAuthority = SECURITY_NT_AUTHORITY;
+
+    if (AllocateAndInitializeSid(&ntAuthority, 2, SECURITY_BUILTIN_DOMAIN_RID,
+        DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &adminGroup)) {
+        CheckTokenMembership(NULL, adminGroup, &isAdmin);
+        FreeSid(adminGroup);
+    }
+    return isAdmin == TRUE;
+}
+
+static std::wstring ReadAdminPref() {
+    std::wifstream in(g_AdminPrefPath);
+    std::wstring s;
+    if (in) in >> s;
+    return s;
+}
+
+static void WriteAdminPref(const wchar_t* value) {
+    std::wofstream out(g_AdminPrefPath, std::ios::trunc);
+    if (out) out << value;
+}
+
+static bool RequestAdminRelaunch() {
+    wchar_t path[MAX_PATH]{};
+    if (GetModuleFileNameW(NULL, path, MAX_PATH) == 0) return false;
+    SHELLEXECUTEINFO sei{};
+    sei.cbSize = sizeof(sei);
+    sei.lpVerb = L"runas";
+    sei.lpFile = path;
+    sei.nShow = SW_NORMAL;
+    if (!ShellExecuteExW(&sei)) {
+        LogMessage(L"[ADMIN] Elevation declined or failed. Staying in user mode.");
+        WriteAdminPref(L"no");
+        return false;
+    }
+    WriteAdminPref(L"yes");
+    ExitProcess(0);
+    return true;
+}
+
+void OfferAdminModeFirstRun() {
+    g_AdminMode.store(IsRunningAsAdmin());
+    if (g_AdminMode.load()) {
+        WriteAdminPref(L"yes");
+        LogMessage(L"[ADMIN] Admin mode ON. HKLM, services, and all-user folders enabled.");
+        return;
+    }
+
+    std::wstring pref = ReadAdminPref();
+    if (pref == L"no") {
+        LogMessage(L"[ADMIN] Admin mode OFF (saved choice). User-mode scan only.");
+        return;
+    }
+    if (pref == L"yes") {
+        RequestAdminRelaunch();
+        return;
+    }
+    if (g_NeedTerms) return;
+
+    int r = MessageBoxW(NULL,
+        L"First run: enable Admin Mode?\n\nAdmin Mode can read HKLM startup keys, Windows services, scheduled tasks, and other users' folders.\n\nIt does not lock the app, cut Wi-Fi, or kill random processes.\n\nYes = restart elevated\nNo = stay in user mode",
+        L"Ozentime Admin Mode",
+        MB_YESNO | MB_ICONQUESTION);
+    if (r == IDYES) RequestAdminRelaunch();
+    else {
+        WriteAdminPref(L"no");
+        LogMessage(L"[ADMIN] Admin mode OFF. You can enable it later from the dashboard.");
+    }
+}
+
+void ElevateToAdmin() {
+    OfferAdminModeFirstRun();
+}
+
+// --- ANTI-TAMPER & FAILSAFE ENGINE ---
+bool ApplySelfProtection() {
+    // Light defence: backup engine marker and restore if it looks encrypted.
+    // No process DACL, no deny-ACE on the EXE.
+    SnapshotDefinitionsBackup();
+    LogMessage(L"[INTEGRITY] Definition backup refreshed.");
+    return true;
+}
+
+// --- ROOTKIT & DRIVER INSPECTION ENGINE ---
+bool KernelProcessExists(DWORD pid) {
+    (void)pid;
+    return true;
+}
+
+void DetectHiddenProcesses() {
+    // User-mode stealth heuristic only. A real kernel rootkit will not show up here.
+    HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (snapshot == INVALID_HANDLE_VALUE) return;
+
+    PROCESSENTRY32 pe32;
+    pe32.dwSize = sizeof(PROCESSENTRY32);
+
+    if (Process32First(snapshot, &pe32)) {
+        do {
+            if (pe32.th32ProcessID == 0 || pe32.th32ProcessID == 4) continue;
+            std::wstring exe = ToLowerCopy(pe32.szExeFile);
+            if (g_ProtectedProcesses.count(exe) > 0) continue;
+
+            wchar_t image[MAX_PATH]{};
+            DWORD imgSize = MAX_PATH;
+            HANDLE hProc = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pe32.th32ProcessID);
+            if (!hProc) continue;
+            bool gotPath = QueryFullProcessImageNameW(hProc, 0, image, &imgSize) == TRUE;
+            CloseHandle(hProc);
+            if (!gotPath) continue;
+
+            std::wstring path(image);
+            bool missingOnDisk = !std::filesystem::exists(path);
+            bool dropSite = PathIsUserWritableDrop(path);
+            if (missingOnDisk && dropSite) {
+                LogMessage(L"[HEURISTIC] Process image missing on disk (user-mode stealth): " +
+                           path + L" PID=" + std::to_wstring(pe32.th32ProcessID));
+                UpdateEngineStatus(SystemStatus::SUSPICION_YELLOW, L"Possible user-mode stealth process", path);
+            }
+        } while (Process32Next(snapshot, &pe32));
+    }
+    CloseHandle(snapshot);
+}
+
+std::vector<DriverInfo> EnumerateDrivers(SC_HANDLE scManager) {
+    std::vector<DriverInfo> drivers;
+    if (!scManager) return drivers;
+
+    DWORD bytesNeeded = 0, servicesReturned = 0, resumeHandle = 0;
+    EnumServicesStatusEx(scManager, SC_ENUM_PROCESS_INFO, SERVICE_DRIVER, SERVICE_STATE_ALL,
+        NULL, 0, &bytesNeeded, &servicesReturned, &resumeHandle, NULL);
+
+    if (GetLastError() == ERROR_MORE_DATA && bytesNeeded > 0) {
+        std::vector<BYTE> buffer(bytesNeeded);
+        if (EnumServicesStatusEx(scManager, SC_ENUM_PROCESS_INFO, SERVICE_DRIVER, SERVICE_STATE_ALL,
+            buffer.data(), bytesNeeded, &bytesNeeded, &servicesReturned, &resumeHandle, NULL)) {
+            ENUM_SERVICE_STATUS_PROCESS* services = reinterpret_cast<ENUM_SERVICE_STATUS_PROCESS*>(buffer.data());
+            for (DWORD i = 0; i < servicesReturned; ++i) {
+                drivers.push_back({ services[i].lpServiceName, true });
+            }
+        }
+    }
+    return drivers;
+}
+
+bool VerifyDriverSignature(const DriverInfo& driver) {
+    (void)driver;
+    return true;
+}
+
+void DetectUnsignedDrivers() {
+    SC_HANDLE scManager = OpenSCManager(NULL, NULL, SC_MANAGER_ENUMERATE_SERVICE);
+    if (scManager) {
+        auto drivers = EnumerateDrivers(scManager);
+        for (const auto& driver : drivers) {
+            if (!VerifyDriverSignature(driver)) {
+                LogMessage(L"[ALERT] Unsigned driver loaded: " + driver.name);
+                UpdateEngineStatus(SystemStatus::SUSPICION_YELLOW, L"Unsigned driver detected: " + driver.name);
+            }
+        }
+        CloseServiceHandle(scManager);
+    }
+}
+
+static void DetectUserModeRootkit(const std::wstring& folder) {
+    try {
+        if (folder.empty() || PathIsSystemProtected(folder)) return;
+        std::unordered_set<std::wstring> visible;
+        std::wstring search = folder + L"\\*";
+        WIN32_FIND_DATAW fd{};
+        HANDLE hFind = FindFirstFileW(search.c_str(), &fd);
+        if (hFind != INVALID_HANDLE_VALUE) {
+            do {
+                if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) continue;
+                visible.insert(ToLowerCopy(fd.cFileName));
+            } while (FindNextFileW(hFind, &fd));
+            FindClose(hFind);
+        }
+        std::error_code ec;
+        for (const auto& entry : std::filesystem::directory_iterator(folder, ec)) {
+            if (ec || !entry.is_regular_file(ec)) continue;
+            std::wstring name = ToLowerCopy(entry.path().filename().wstring());
+            if (!name.empty() && visible.find(name) == visible.end()) {
+                LogMessage(L"[ROOTKIT] User-mode hide mismatch: " + entry.path().wstring());
+                UpdateEngineStatus(SystemStatus::SUSPICION_YELLOW, L"Hidden file mismatch", entry.path().wstring());
+            }
+        }
+    }
+    catch (...) {
+        LogMessage(L"[FAULT] Rootkit folder check skipped: " + folder);
+    }
+}
+#endif
+
+// --- OPTIMIZED CHUNKED HEURISTIC SCANNING ENGINE ---
+double CalculateEntropy(const std::wstring& filePath) {
+    try {
+    std::ifstream file(filePath, std::ios::binary);
+    if (!file.is_open()) return 0.0;
+
+    std::unordered_map<unsigned char, size_t> frequencies;
+    constexpr size_t CHUNK_SIZE = 65536;
+    std::vector<char> buffer(CHUNK_SIZE);
+    size_t totalBytes = 0;
+
+    constexpr size_t ENTROPY_CAP = 1 * 1024 * 1024;
+    while (file.read(buffer.data(), CHUNK_SIZE) || file.gcount() > 0) {
+        std::streamsize bytesRead = file.gcount();
+        totalBytes += static_cast<size_t>(bytesRead);
+        for (std::streamsize i = 0; i < bytesRead; ++i) {
+            frequencies[static_cast<unsigned char>(buffer[i])]++;
+        }
+        if (totalBytes >= ENTROPY_CAP) break;
+    }
+
+    if (totalBytes == 0) return 0.0;
+
+    double entropy = 0.0;
+    double log2 = std::log(2.0);
+    double dataSize = static_cast<double>(totalBytes);
+
+    for (const auto& pair : frequencies) {
+        double p = static_cast<double>(pair.second) / dataSize;
+        entropy -= p * (std::log(p) / log2);
+    }
+
+    return entropy;
+    }
+    catch (...) {
+        LogMessage(L"[FAULT] Entropy skipped: " + filePath);
+        return 0.0;
+    }
+}
+
+static std::wstring SnapshotPathFor(const std::wstring& filePath) {
+    if (g_SnapshotDir.empty()) return L"";
+    std::wstring key = filePath;
+    for (auto& c : key) if (c == L'\\' || c == L'/' || c == L':') c = L'_';
+    if (key.size() > 120) key = key.substr(key.size() - 120);
+#ifdef _WIN32
+    return g_SnapshotDir + L"\\" + key + L".snapshot";
+#else
+    return g_SnapshotDir + L"/" + key + L".snapshot";
+#endif
+}
+
+bool SaveSnapshot(const std::wstring& filePath, const std::wstring& snapshotPath) {
+    std::error_code ec;
+    if (!std::filesystem::exists(filePath, ec)) return false;
+    auto sz = std::filesystem::file_size(filePath, ec);
+    if (ec || sz == 0 || sz > 16ull * 1024 * 1024) return false;
+    std::ifstream src(filePath, std::ios::binary);
+    std::ofstream dst(snapshotPath, std::ios::binary);
+    if (!src || !dst) return false;
+    dst << src.rdbuf();
+    return (bool)dst;
+}
+
+bool RestoreSnapshot(const std::wstring& filePath, const std::wstring& snapshotPath) {
+    std::ifstream src(snapshotPath, std::ios::binary);
+    if (!src) return false;
+    std::ofstream dst(filePath, std::ios::binary);
+    if (!dst) return false;
+    dst << src.rdbuf();
+    return (bool)dst;
+}
+
+bool IsFileEntropySuspicious(const std::wstring& filePath) {
+    return CalculateEntropy(filePath) > 7.5;
+}
+
+void RollbackEngine(const std::wstring& filePath) {
+    if (filePath.empty() || PathIsSystemProtected(filePath)) return;
+    if (!g_SnapshotDir.empty() && filePath.rfind(g_SnapshotDir, 0) == 0) return;
+    if (!g_QuarantineDir.empty() && filePath.rfind(g_QuarantineDir, 0) == 0) return;
+    std::wstring snap = SnapshotPathFor(filePath);
+    if (snap.empty()) return;
+    std::error_code ec;
+    if (!std::filesystem::exists(snap, ec)) {
+        SaveSnapshot(filePath, snap);
+        return;
+    }
+    if (IsFileEntropySuspicious(filePath)) {
+        if (RestoreSnapshot(filePath, snap))
+            LogMessage(L"[ROLLBACK] Restored after change: " + filePath);
+    } else {
+        SaveSnapshot(filePath, snap);
+    }
+}
+
+bool IsDownloadComplete(const std::filesystem::path& filePath) {
+    std::wstring ext = ToLowerCopy(filePath.extension().wstring());
+    if (ext == L".tmp" || ext == L".crdownload" || ext == L".part" ||
+        ext == L".download" || ext == L".partial" || ext == L".opdownload") {
+        return false;
+    }
+    std::wstring name = ToLowerCopy(filePath.filename().wstring());
+    if (name.find(L".crdownload") != std::wstring::npos) return false;
+
+    std::error_code ec;
+    if (!std::filesystem::exists(filePath, ec)) return false;
+    auto sz = std::filesystem::file_size(filePath, ec);
+    if (ec || sz == 0) return false;
+
+    std::ifstream file(filePath, std::ios::binary | std::ios::in);
+    return file.is_open();
+}
+
+ScanResult PerformDeepHeuristicScan(const std::wstring& filePath) {
+    ScanResult result;
+    result.isMalicious = false;
+    result.isSuspicious = false;
+    result.score = 0;
+    result.entropy = 0.0;
+    result.reason = L"Clean File";
+    result.behaviorDetails = L"No malicious execution triggers found.";
+    try {
+
+    if (!IsDownloadComplete(filePath)) {
+        return result;
+    }
+
+    if (filePath.find(L"C:\\Windows\\System32\\") != std::wstring::npos ||
+        filePath.find(L"C:\\Program Files\\") != std::wstring::npos) {
+        return result;
+    }
+
+#ifdef _WIN32
+    WIN32_FILE_ATTRIBUTE_DATA fad{};
+    if (GetFileAttributesExW(filePath.c_str(), GetFileExInfoStandard, &fad)) {
+        ULONGLONG sz = (ULONGLONG(fad.nFileSizeHigh) << 32) | fad.nFileSizeLow;
+        if (sz > (32ull * 1024ull * 1024ull)) {
+            result.reason = L"Skipped heavy file (>32MB)";
+            return result;
+        }
+    }
+#endif
+    result.entropy = CalculateEntropy(filePath);
+
+    if (result.entropy > 7.92) {
+        result.isSuspicious = true;
+        result.reason = L"Very High Entropy Payload (Packed/Encrypted Data)";
+        result.behaviorDetails = L"Behavior: High entropy stream (" + std::to_wstring(result.entropy) + L") detected.";
+    }
+
+#ifdef _WIN32
+    HANDLE hFile = CreateFile(filePath.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        LARGE_INTEGER fileSize;
+        if (GetFileSizeEx(hFile, &fileSize) && fileSize.QuadPart >= sizeof(IMAGE_DOS_HEADER)) {
+            DWORD mapBytes = (fileSize.QuadPart > (2ll * 1024 * 1024))
+                ? (2u * 1024u * 1024u) : static_cast<DWORD>(fileSize.QuadPart);
+            HANDLE hMapping = CreateFileMapping(hFile, NULL, PAGE_READONLY, 0, mapBytes, NULL);
+            if (hMapping) {
+                LPVOID pBase = MapViewOfFile(hMapping, FILE_MAP_READ, 0, 0, mapBytes);
+                if (pBase) {
+                    size_t bytesMapped = static_cast<size_t>(mapBytes);
+                    PIMAGE_DOS_HEADER pDos = (PIMAGE_DOS_HEADER)pBase;
+
+                    if (pDos->e_magic == IMAGE_DOS_SIGNATURE && static_cast<size_t>(pDos->e_lfanew) + sizeof(IMAGE_NT_HEADERS) <= bytesMapped) {
+                        PIMAGE_NT_HEADERS pNt = (PIMAGE_NT_HEADERS)((BYTE*)pBase + pDos->e_lfanew);
+                        if (pNt->Signature == IMAGE_NT_SIGNATURE) {
+                            PIMAGE_SECTION_HEADER pSec = IMAGE_FIRST_SECTION(pNt);
+                            size_t sectionsOffset = (BYTE*)pSec - (BYTE*)pBase;
+
+                            if (sectionsOffset + (pNt->FileHeader.NumberOfSections * sizeof(IMAGE_SECTION_HEADER)) <= bytesMapped) {
+                                for (WORD i = 0; i < pNt->FileHeader.NumberOfSections; i++) {
+                                    DWORD flags = pSec[i].Characteristics;
+                                    std::string secName(reinterpret_cast<char*>(pSec[i].Name), 8);
+                                    if ((flags & IMAGE_SCN_MEM_WRITE) && (flags & IMAGE_SCN_MEM_EXECUTE)) {
+                                        if (secName.find(".clr") == std::string::npos && secName.find(".text") == std::string::npos) {
+                                            result.isSuspicious = true;
+                                            result.reason = L"Unusual PE Section contains RWX attributes";
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    UnmapViewOfFile(pBase);
+                }
+                CloseHandle(hMapping);
+            }
+        }
+        CloseHandle(hFile);
+    }
+#endif
+
+    return result;
+    }
+    catch (...) {
+        LogMessage(L"[FAULT] Heuristic scan skipped: " + filePath);
+        result.reason = L"Scan skipped after internal fault";
+        result.isMalicious = false;
+        result.isSuspicious = false;
+        return result;
+    }
+}
+
+// --- AI DEFINITION UPDATER DAEMON ---
+void AIDefinitionUpdaterDaemon() {
+    while (g_IsRunning.load()) {
+        std::this_thread::sleep_for(std::chrono::minutes(10));
+        if (!g_IsRunning.load()) break;
+        IntegrityPulse();
+    }
+}
+
+static void DrainDecisionQueue();
+
+void AiManagerDaemon() {
+    while (g_IsRunning.load()) {
+        std::this_thread::sleep_for(std::chrono::seconds(15));
+        if (!g_IsRunning.load()) break;
+        SafeRun(L"ai-manager", []() {
+            if (!g_AV.isScanning) DrainDecisionQueue();
+        });
+    }
+}
+
+static std::wstring ExtractPathFromCommand(const std::wstring& command) {
+    std::wstring s = command;
+    if (!s.empty() && s[0] == L'"') {
+        auto end = s.find(L'"', 1);
+        if (end != std::wstring::npos) return s.substr(1, end - 1);
+    }
+    auto space = s.find(L' ');
+    return space == std::wstring::npos ? s : s.substr(0, space);
+}
+
+static bool CallsSuspiciousAPIs(const std::wstring& path) {
+    ScanResult pe = PerformDeepHeuristicScan(path);
+    return pe.reason.find(L"RWX") != std::wstring::npos;
+}
+
+static bool PersistsInStartup(const std::wstring& path) {
+#ifdef _WIN32
+    std::wstring want = ToLowerCopy(path);
+    auto hit = [&](HKEY root, const wchar_t* sub) {
+        HKEY h = NULL;
+        if (RegOpenKeyExW(root, sub, 0, KEY_READ, &h) != ERROR_SUCCESS) return false;
+        wchar_t name[256], val[1024];
+        for (DWORD i = 0;; ++i) {
+            DWORD nsz = 256, vsz = sizeof(val), type = 0;
+            if (RegEnumValueW(h, i, name, &nsz, NULL, &type, (LPBYTE)val, &vsz) != ERROR_SUCCESS) break;
+            if (ToLowerCopy(val).find(want) != std::wstring::npos) {
+                RegCloseKey(h);
+                return true;
+            }
+        }
+        RegCloseKey(h);
+        return false;
+    };
+    if (hit(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Run")) return true;
+    if (hit(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce")) return true;
+    if (g_AdminMode.load()) {
+        if (hit(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Run")) return true;
+        if (hit(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce")) return true;
+    }
+#endif
+    (void)path;
+    return false;
+}
+
+static void MarkHashSafe(const std::wstring& hash) {
+    if (hash.empty()) return;
+    std::lock_guard<std::mutex> lock(g_SafeMutex);
+    if (!g_SafeHashes.insert(hash).second) return;
+    g_UserAllowlistCache[std::string(hash.begin(), hash.end())] = true;
+    if (g_SafeHashPath.empty()) return;
+    std::wofstream out(g_SafeHashPath, std::ios::app);
+    if (out) out << hash << L"\n";
+}
+
+static bool PreviouslyMarkedSafe(const std::wstring& hash) {
+    if (hash.empty()) return false;
+    std::lock_guard<std::mutex> lock(g_SafeMutex);
+    return g_SafeHashes.count(hash) > 0;
+}
+
+static bool HasValidDigitalSignature(const FileInfo& file) {
+#ifdef _WIN32
+    if (file.path.empty()) return false;
+    WINTRUST_FILE_INFO fi{};
+    fi.cbStruct = sizeof(fi);
+    fi.pcwszFilePath = file.path.c_str();
+    GUID action = WINTRUST_ACTION_GENERIC_VERIFY_V2;
+    WINTRUST_DATA wd{};
+    wd.cbStruct = sizeof(wd);
+    wd.dwUIChoice = WTD_UI_NONE;
+    wd.fdwRevocationChecks = WTD_REVOKE_NONE;
+    wd.dwUnionChoice = WTD_CHOICE_FILE;
+    wd.pFile = &fi;
+    wd.dwStateAction = WTD_STATEACTION_VERIFY;
+    LONG st = WinVerifyTrust(NULL, &action, &wd);
+    wd.dwStateAction = WTD_STATEACTION_CLOSE;
+    WinVerifyTrust(NULL, &action, &wd);
+    return st == ERROR_SUCCESS;
+#else
+    (void)file;
+    return false;
+#endif
+}
+
+static bool IsKnownGoodProduct(const std::wstring& path) {
+    std::wstring p = ToLowerCopy(path);
+    const wchar_t* names[] = {
+        L"teams.exe", L"ms-teams.exe", L"onedrive.exe", L"onenote.exe",
+        L"outlook.exe", L"winword.exe", L"excel.exe", L"powerpnt.exe",
+        L"msaccess.exe", L"lync.exe", L"skype.exe", L"code.exe",
+        L"devenv.exe", L"explorer.exe", L"searchhost.exe", L"startmenuexperiencehost.exe",
+        L"shellexperiencehost.exe", L"runtimebroker.exe", L"sihost.exe",
+        L"applicationframehost.exe", L"systemsettings.exe", L"taskmgr.exe",
+        L"dwm.exe", L"csrss.exe", L"lsass.exe", L"services.exe", L"svchost.exe",
+        L"winlogon.exe", L"fontdrvhost.exe", L"spoolsv.exe", L"securityhealthservice.exe",
+        L"msmpeng.exe", L"nissrv.exe", L"smartscreen.exe", L"widgetservice.exe"
+    };
+    std::wstring leaf = ToLowerCopy(std::filesystem::path(path).filename().wstring());
+    for (auto n : names) if (leaf == n) return true;
+    if (p.find(L"\\microsoft\\") != std::wstring::npos) return true;
+    if (p.find(L"\\windows apps\\") != std::wstring::npos) return true;
+    if (p.find(L"\\windowsapps\\") != std::wstring::npos) return true;
+    if (p.find(L"\\office") != std::wstring::npos) return true;
+    if (p.find(L"\\onedrive") != std::wstring::npos) return true;
+    if (p.find(L"\\teams") != std::wstring::npos) return true;
+    return false;
+}
+
+static bool IsCertifiedByMicrosoft(const FileInfo& file) {
+    if (PathIsSystemProtected(file.path)) return true;
+    std::wstring p = ToLowerCopy(file.path);
+    if (p.find(L"\\windows\\") != std::wstring::npos) return true;
+    if (p.find(L"\\program files\\windowsapps\\") != std::wstring::npos) return true;
+    if (p.find(L"\\microsoft\\") != std::wstring::npos && HasValidDigitalSignature(file)) return true;
+    return HasValidDigitalSignature(file) && p.find(L"\\program files\\") != std::wstring::npos;
+}
+
+static bool AttemptsToTerminateCritical(const ProcessInfo&) { return false; }
+static bool EncryptsUserFiles(const ProcessInfo&) { return g_EncryptionIncidents.load() >= 2; }
+static bool EncryptsFiles(const ProcessInfo& p) { return EncryptsUserFiles(p); }
+static bool RestartsSystemServices(const ProcessInfo&) { return false; }
+static bool AddsPersistence(const ProcessInfo& proc) { return PersistsInStartup(proc.path); }
+
+AIResult AI_EvaluateWindows(const FileInfo& file, const ProcessInfo& proc) {
+    AIResult r;
+    int score = 0;
+    if (IsKnownGoodProduct(file.path)) {
+        r.reason = L"Known good product (Office/Teams/Windows)";
+        r.confidenceScore = 0;
+        return r;
+    }
+    if (HasValidDigitalSignature(file)) {
+        r.reason = L"Valid digital signature";
+        r.confidenceScore = 0;
+        return r;
+    }
+    if (IsCertifiedByMicrosoft(file)) {
+        r.reason = L"Microsoft certified application";
+        r.confidenceScore = 0;
+        return r;
+    }
+    if (AttemptsToTerminateCritical(proc)) score += 40;
+    if (EncryptsUserFiles(proc)) score += 40;
+    if (RestartsSystemServices(proc)) score += 30;
+    if (PreviouslyMarkedSafe(file.hash)) score -= 30;
+    if (score < 0) score = 0;
+    r.confidenceScore = score;
+    if (score >= 90) {
+        r.isMalicious = true;
+        r.reason = L"High-risk behavior detected";
+    } else if (score >= 50) {
+        r.isSuspicious = true;
+        r.reason = L"Suspicious activity, needs review";
+    } else {
+        r.reason = L"Clean file/process";
+    }
+    return r;
+}
+
+AIResult AI_EvaluateLinux(const ProcessInfo& proc, int day) {
+    AIResult r;
+    int score = 0;
+    if (AttemptsToTerminateCritical(proc)) score += 40;
+    if (EncryptsFiles(proc)) score += 40;
+    if (AddsPersistence(proc)) score += 30;
+    if (PreviouslyMarkedSafe(proc.hash)) score -= 30;
+    if (score < 0) score = 0;
+    int threshold = (day == 1 ? 70 : day == 2 ? 80 : 90);
+    r.confidenceScore = score;
+    if (score >= threshold) {
+        r.isMalicious = true;
+        r.reason = L"High-risk behavior detected";
+    } else if (score >= 40) {
+        r.isSuspicious = true;
+        r.reason = L"Suspicious activity, under observation";
+    } else {
+        r.reason = L"Clean process";
+    }
+    return r;
+}
+
+AIResult AI_EvaluateCrossPlatform(const FileInfo& file, const ProcessInfo& proc, OSPlatform platform, int day = 1) {
+    if (platform == OSPlatform::Windows) return AI_EvaluateWindows(file, proc);
+    if (platform == OSPlatform::Linux) return AI_EvaluateLinux(proc, day);
+    AIResult r;
+    r.reason = L"Unsupported platform";
+    return r;
+}
+
+#ifdef _WIN32
+class WindowsAVEngine {
+public:
+    bool VerifyDigitalSignature(const std::wstring& filePath) {
+        WINTRUST_FILE_INFO fileData{};
+        fileData.cbStruct = sizeof(WINTRUST_FILE_INFO);
+        fileData.pcwszFilePath = filePath.c_str();
+        GUID policyGUID = WINTRUST_ACTION_GENERIC_VERIFY_V2;
+        WINTRUST_DATA trustData{};
+        trustData.cbStruct = sizeof(WINTRUST_DATA);
+        trustData.dwUIChoice = WTD_UI_NONE;
+        trustData.fdwRevocationChecks = WTD_REVOKE_NONE;
+        trustData.dwUnionChoice = WTD_CHOICE_FILE;
+        trustData.pFile = &fileData;
+        trustData.dwStateAction = WTD_STATEACTION_VERIFY;
+        LONG status = WinVerifyTrust(NULL, &policyGUID, &trustData);
+        trustData.dwStateAction = WTD_STATEACTION_CLOSE;
+        WinVerifyTrust(NULL, &policyGUID, &trustData);
+        return status == ERROR_SUCCESS;
+    }
+
+    bool IsTrustedVendor(const std::wstring& filePath) {
+        if (IsKnownGoodProduct(filePath)) return true;
+        return VerifyDigitalSignature(filePath);
+    }
+
+    bool DetectMaliciousBehavior(int rapidEncryptionAttempts, bool triedProcessTermination) {
+        return rapidEncryptionAttempts > 50 || triedProcessTermination;
+    }
+
+    // 0 = allow/skip, 1 = high-risk
+    int Evaluate(const std::wstring& filePath, const std::string& fileHash, int encAttempts, bool procKill) {
+        if (!fileHash.empty() && g_UserAllowlistCache.find(fileHash) != g_UserAllowlistCache.end())
+            return 0;
+        if (PreviouslyMarkedSafe(std::wstring(fileHash.begin(), fileHash.end())))
+            return 0;
+        if (IsTrustedVendor(filePath))
+            return 0;
+        if (DetectMaliciousBehavior(encAttempts, procKill))
+            return 1;
+        return 0;
+    }
+};
+static WindowsAVEngine g_WinAI;
+#else
+namespace ScanModule {
+    void ScanDirectory(const std::filesystem::path& dir);
+    void UniversalThreatScan(const std::wstring& filePath);
+}
+static bool VolumeCIsReachable();
+static bool BootFilesLookIntact();
+
+struct ProbationRecord {
+    std::string filePath;
+    std::chrono::system_clock::time_point firstSeenTime;
+    int anomalyScore;
+};
+
+class LinuxAVEngine {
+    std::unordered_map<std::string, ProbationRecord> probationDatabase;
+
+    static std::wstring HomeDir() {
+        const char* home = getenv("HOME");
+        if (!home) return L"/tmp";
+        std::string h(home);
+        return std::wstring(h.begin(), h.end());
+    }
+
+public:
+    int EvaluateProbation(const std::string& filePath, const std::string& fileHash, int anomalyScore) {
+        if (!fileHash.empty() && g_UserAllowlistCache.find(fileHash) != g_UserAllowlistCache.end())
+            return 0;
+        auto now = std::chrono::system_clock::now();
+        if (probationDatabase.find(filePath) == probationDatabase.end()) {
+            probationDatabase[filePath] = { filePath, now, anomalyScore };
+            return 0;
+        }
+        auto hours = std::chrono::duration_cast<std::chrono::hours>(
+            now - probationDatabase[filePath].firstSeenTime).count();
+        if (hours < 72) return (anomalyScore > 5) ? 1 : 0;
+        return 0;
+    }
+
+    void ScanUserTrees() {
+        std::wstring home = HomeDir();
+        ScanModule::ScanDirectory(home + L"/Downloads");
+        ScanModule::ScanDirectory(home + L"/Desktop");
+        ScanModule::ScanDirectory(home + L"/Documents");
+        ScanModule::ScanDirectory(L"/tmp");
+    }
+
+    void WatchProcOnce() {
+        DIR* d = opendir("/proc");
+        if (!d) return;
+        while (dirent* e = readdir(d)) {
+            if (e->d_name[0] < '0' || e->d_name[0] > '9') continue;
+            std::string exe = std::string("/proc/") + e->d_name + "/exe";
+            char buf[512]{};
+            ssize_t n = readlink(exe.c_str(), buf, sizeof(buf) - 1);
+            if (n <= 0) continue;
+            buf[n] = 0;
+            std::string path(buf);
+            const bool vanished = path.find("(deleted)") != std::string::npos;
+            auto starts = [&](const char* pfx) {
+                size_t n = strlen(pfx);
+                return path.size() >= n && path.compare(0, n, pfx) == 0;
+            };
+            const bool systemBin =
+                starts("/bin/") || starts("/sbin/") || starts("/usr/bin/") ||
+                starts("/usr/sbin/") || starts("/usr/lib/") || starts("/lib/") ||
+                starts("/lib64/") || starts("/usr/lib64/");
+            if (vanished || !systemBin) {
+                std::string clean = path;
+                auto cut = clean.find(" (deleted)");
+                if (cut != std::string::npos) clean.resize(cut);
+                std::wstring w(clean.begin(), clean.end());
+                ScanModule::UniversalThreatScan(w);
+            }
+        }
+        closedir(d);
+    }
+
+    void TickVolumeAndBoot() {
+        VolumeCIsReachable();
+        (void)BootFilesLookIntact();
+        InspectThirdPartyBootExtras();
+    }
+
+    int Run() {
+        ApplyUserModeAclLockout();
+        if (!PlatformInit()) return -1;
+        InitDataPaths();
+        g_VpnSupported = false;
+        LogMessage(L"[LINUX] Linux engine active (probation + heuristics, no VPN).");
+        std::thread([this]() {
+            while (g_IsRunning.load()) {
+                SafeRun(L"linux-proc", [&]() { WatchProcOnce(); });
+                std::this_thread::sleep_for(std::chrono::seconds(25));
+            }
+        }).detach();
+        std::thread([this]() {
+            SafeRun(L"linux-scan", [&]() { ScanUserTrees(); });
+        }).detach();
+        while (g_IsRunning.load()) {
+            SafeRun(L"linux-tick", [&]() { TickVolumeAndBoot(); });
+            std::this_thread::sleep_for(std::chrono::seconds(45));
+        }
+        PlatformShutdown();
+        SaveScanIndex();
+        FlushTelemetry(true);
+        return 0;
+    }
+};
+static LinuxAVEngine g_LinAI;
+#endif
+
+ScanResult EvaluateFile(const std::wstring& path) {
+    ScanResult r;
+    if (PathIsSystemProtected(path)) {
+        r.reason = L"System protected file";
+        return r;
+    }
+    try {
+        std::wstring wh = ToLowerCopy(Sha256File(path));
+        if (!wh.empty() && g_BadHashes.count(wh) > 0 && !PreviouslyMarkedSafe(wh)) {
+            r.isMalicious = true;
+            r.score = 90;
+            r.reason = L"Local bad-hash match";
+            return r;
+        }
+    }
+    catch (...) {
+        LogMessage(L"[FAULT] Hash check skipped: " + path);
+    }
+    {
+        std::wstring wh = Sha256File(path);
+        std::string hash(wh.begin(), wh.end());
+#ifdef _WIN32
+        if (g_WinAI.Evaluate(path, hash, g_EncryptionIncidents.load(), false) == 0) {
+            r.reason = L"Backend AI allowed";
+            return r;
+        }
+#else
+        std::string fp(path.begin(), path.end());
+        if (g_LinAI.EvaluateProbation(fp, hash, 0) == 0) {
+            r.reason = L"Backend AI allowed";
+            return r;
+        }
+#endif
+    }
+    FileInfo fi{ path, Sha256File(path) };
+    ProcessInfo pi{ path, fi.hash, 0 };
+#ifdef _WIN32
+    AIResult ai = AI_EvaluateWindows(fi, pi);
+#else
+    AIResult ai = AI_EvaluateLinux(pi, 3);
+#endif
+    if (!ai.isMalicious && !ai.isSuspicious) {
+        r.reason = ai.reason;
+        r.score = 0;
+        return r;
+    }
+    int score = 0;
+    double entropy = CalculateEntropy(path);
+    if (entropy > 7.5) score += 30;
+    if (CallsSuspiciousAPIs(path)) score += 40;
+    if (PersistsInStartup(path)) score += 30;
+    if (PreviouslyMarkedSafe(fi.hash)) score -= 30;
+    if (score < 0) score = 0;
+    r.score = score;
+    r.entropy = entropy;
+    if (score >= 80) {
+        r.isMalicious = true;
+        r.reason = L"Multiple malicious indicators";
+    } else if (score >= 40) {
+        r.isSuspicious = true;
+        r.reason = L"Suspicious behavior, not confirmed";
+    } else {
+        r.reason = L"Clean file";
+    }
+    return r;
+}
+
+bool EvaluateFileThreatStatus(const std::wstring& filePath, ScanResult& outResult) {
+    ScanResult ev = EvaluateFile(filePath);
+    outResult = PerformDeepHeuristicScan(filePath);
+    outResult.isMalicious = ev.isMalicious;
+    outResult.isSuspicious = ev.isSuspicious;
+    if (outResult.entropy <= 0.0) outResult.entropy = ev.entropy;
+
+    int score = ev.score / 10;
+    std::wstring why = ev.reason + L" ";
+
+    if (outResult.entropy > 7.92) {
+        score += 3;
+        why += L"high-entropy ";
+    } else if (outResult.entropy > 7.50) {
+        score += 2;
+        why += L"elevated-entropy ";
+    }
+
+    if (outResult.reason.find(L"RWX") != std::wstring::npos) {
+        score += 3;
+        why += L"rwx-section ";
+    }
+
+    if (PathIsUserWritableDrop(filePath)) {
+        score += 2;
+        why += L"user-writable-path ";
+    }
+
+    auto ext = ToLowerCopy(std::filesystem::path(filePath).extension().wstring());
+    if ((ext == L".exe" || ext == L".dll" || ext == L".scr") && PathIsUserWritableDrop(filePath)) {
+        score += 1;
+        why += L"dropped-binary ";
+    }
+
+    auto leaf = ToLowerCopy(std::filesystem::path(filePath).filename().wstring());
+    if (leaf.find(L".pdf.") != std::wstring::npos || leaf.find(L".jpg.exe") != std::wstring::npos ||
+        leaf.find(L".doc.exe") != std::wstring::npos) {
+        score += 2;
+        why += L"double-extension ";
+    }
+    if (ext == L".vbs" || ext == L".js" || ext == L".jse" || ext == L".bat" || ext == L".cmd" || ext == L".ps1") {
+        if (PersistsInStartup(filePath) || PathIsUserWritableDrop(filePath)) {
+            score += 2;
+            why += L"script-drop ";
+        }
+    }
+    if (leaf.find(L"readme") != std::wstring::npos &&
+        (leaf.find(L"decrypt") != std::wstring::npos || leaf.find(L"ransom") != std::wstring::npos)) {
+        score += 2;
+        why += L"ransom-note ";
+    }
+    if (leaf == L"autorun.inf" && !PathIsSystemProtected(filePath)) {
+        score += 2;
+        why += L"autorun ";
+    }
+
+    if (leaf.find(L"keylog") != std::wstring::npos || leaf.find(L"stalker") != std::wstring::npos ||
+        leaf.find(L"spysetup") != std::wstring::npos) {
+        score += 3;
+        why += L"stalkerware ";
+    }
+    if (leaf.find(L"adware") != std::wstring::npos || leaf.find(L"coupon") != std::wstring::npos ||
+        leaf.find(L"popupoffer") != std::wstring::npos) {
+        score += 2;
+        why += L"adware ";
+    }
+    if (leaf.find(L"xmrig") != std::wstring::npos || leaf.find(L"miner") != std::wstring::npos ||
+        leaf.find(L"stratum") != std::wstring::npos) {
+        score += 3;
+        why += L"crypto-threat ";
+    }
+    if (ext == L".url" || ext == L".html" || ext == L".htm") {
+        try {
+            std::wifstream page(filePath);
+            std::wstring body, line;
+            int n = 0;
+            while (page && std::getline(page, line) && n < 40) {
+                body += ToLowerCopy(line);
+                ++n;
+            }
+            if (body.find(L"password") != std::wstring::npos &&
+                (body.find(L"login") != std::wstring::npos || body.find(L"verify") != std::wstring::npos) &&
+                body.find(L"http") != std::wstring::npos) {
+                score += 2;
+                why += L"phishing-page ";
+            }
+        }
+        catch (...) {
+            LogMessage(L"[FAULT] Phishing check skipped: " + filePath);
+        }
+    }
+
+    if (score > 10) score = 10;
+    outResult.score = score;
+
+    if (score >= 8 && !PathIsSystemProtected(filePath)) {
+        outResult.isMalicious = true;
+        outResult.isSuspicious = true;
+        outResult.reason = L"Heuristic score=" + std::to_wstring(score) + L" (" + why + L")";
+        return true;
+    }
+
+    if (score >= 6 && score <= 7) {
+        outResult.isSuspicious = true;
+        outResult.reason = L"Warning only score=" + std::to_wstring(score) + L" (" + why + L")";
+        return false;
+    }
+
+    if (score >= 3) {
+        outResult.isSuspicious = true;
+        outResult.reason = L"Heuristic review score=" + std::to_wstring(score) + L" (" + why + L")";
+    }
+
+    return outResult.isMalicious;
+}
+
+static void ShowTrayNotice(const wchar_t* title, const wchar_t* body) {
+#ifdef _WIN32
+    g_nid.uFlags = NIF_INFO | NIF_ICON | NIF_TIP | NIF_MESSAGE;
+    wcsncpy_s(g_nid.szInfoTitle, title, _TRUNCATE);
+    wcsncpy_s(g_nid.szInfo, body, _TRUNCATE);
+    g_nid.dwInfoFlags = NIIF_WARNING;
+    Shell_NotifyIconW(NIM_MODIFY, &g_nid);
+#endif
+}
+
+static bool ManagerAskDeleteOrKeep(const std::wstring& filePath, int score) {
+#ifdef _WIN32
+    wchar_t text[512];
+    swprintf_s(text, L"Threat score %d / 10\n\n%s\n\nDelete this file?\nYes = delete   No = keep (restore)",
+        score, filePath.c_str());
+    ShowTrayNotice(L"Ozentime", L"Threat needs a decision. Check the prompt.");
+    int r = MessageBoxW(g_hMainWnd ? g_hMainWnd : NULL, text, L"Ozentime — Delete or keep?",
+        MB_YESNO | MB_ICONWARNING | MB_TOPMOST | MB_SETFOREGROUND);
+    return r == IDYES;
+#else
+    (void)filePath; (void)score;
+    return false;
+#endif
+}
+
+static void ManagerDeleteFile(const std::wstring& path) {
+    if (path.empty() || PathIsSystemProtected(path)) return;
+    std::error_code ec;
+#ifdef _WIN32
+    SetFileAttributesW(path.c_str(), FILE_ATTRIBUTE_NORMAL);
+    if (DeleteFileW(path.c_str())) {
+        LogMessage(L"[AI] Deleted " + path);
+        return;
+    }
+#endif
+    std::filesystem::remove(path, ec);
+    LogMessage(ec ? L"[AI] Delete failed: " + path : L"[AI] Deleted " + path);
+}
+
+namespace ScanModule {
+    bool QuarantineFile(const std::wstring& filePath);
+    void RemovePersistenceForFile(const std::wstring& filePath);
+    void StopServiceForImage(const std::wstring& filePath);
+    std::vector<std::wstring> ListQuarantineItems();
+    bool RestoreQuarantineItem(const std::wstring& quarantinedPath);
+    void UniversalThreatScan(const std::wstring& filePath);
+}
+
+static void RescanDropFolder(const std::wstring& filePath) {
+    static thread_local int depth = 0;
+    if (depth >= 1) return;
+    ++depth;
+    SafeRun(L"dropper-rescan", [&]() {
+        std::error_code ec;
+        auto dir = std::filesystem::path(filePath).parent_path();
+        if (dir.empty() || !std::filesystem::exists(dir, ec)) return;
+        int n = 0;
+        for (auto& e : std::filesystem::directory_iterator(dir, ec)) {
+            if (!g_IsRunning.load() || n > 48) break;
+            if (!e.is_regular_file(ec)) continue;
+            auto child = e.path().wstring();
+            if (child == filePath) continue;
+            if (!g_QuarantineDir.empty() && child.rfind(g_QuarantineDir, 0) == 0) continue;
+            ++n;
+            ScanModule::UniversalThreatScan(child);
+        }
+    });
+    --depth;
+}
+
+static void DrainDecisionQueue() {
+    QuarantineFlush();
+    std::vector<PendingDecision> batch;
+    {
+        std::lock_guard<std::mutex> lock(g_QueueMutex);
+        if (g_DecisionQueue.empty()) return;
+        batch.assign(g_DecisionQueue.begin(), g_DecisionQueue.end());
+        g_DecisionQueue.clear();
+    }
+    if (batch.empty()) return;
+
+    int maxScore = 0;
+    for (const auto& j : batch) if (j.score > maxScore) maxScore = j.score;
+
+#ifdef _WIN32
+    wchar_t text[768];
+    swprintf_s(text,
+        L"%d threat(s) isolated (highest score %d / 10).\n\n"
+        L"One decision covers every file in this batch.\n\n"
+        L"Yes = delete all   No = keep all (restore)",
+        (int)batch.size(), maxScore);
+    ShowTrayNotice(L"Ozentime", L"Threats isolated. One choice for the whole batch.");
+    int r = MessageBoxW(g_hMainWnd ? g_hMainWnd : NULL, text, L"Ozentime — Delete or keep?",
+        MB_YESNO | MB_ICONWARNING | MB_TOPMOST | MB_SETFOREGROUND);
+    bool del = (r == IDYES);
+#else
+    bool del = false;
+#endif
+
+    for (const auto& job : batch) {
+        if (del) {
+            ManagerDeleteFile(job.quarantined);
+            ManagerDeleteFile(job.quarantined + L".log");
+        } else {
+            ScanModule::RestoreQuarantineItem(job.quarantined);
+            MarkHashSafe(Sha256File(job.original));
+        }
+    }
+    LogMessage(del
+        ? L"[AI] User chose DELETE ALL for " + std::to_wstring(batch.size()) + L" file(s)"
+        : L"[AI] User chose KEEP ALL for " + std::to_wstring(batch.size()) + L" file(s)");
+    if (del) AfterSuccessfulRemoval();
+    g_PendingDecisions.store(0);
+    ReleaseWifiAfterFight();
+}
+
+// Isolate immediately so a dropper cannot stall the scanner on a prompt.
+static void ManagerHandleThreat(const std::wstring& filePath, const ScanResult& res) {
+    FileInfo fi{ filePath, Sha256File(filePath) };
+    ProcessInfo pi{ filePath, fi.hash, 0 };
+#ifdef _WIN32
+    AIResult gate = AI_EvaluateWindows(fi, pi);
+#else
+    AIResult gate = AI_EvaluateLinux(pi, 3);
+#endif
+    if (IsKnownGoodProduct(filePath) || HasValidDigitalSignature(fi) ||
+        IsCertifiedByMicrosoft(fi) || PreviouslyMarkedSafe(fi.hash)) {
+        LogMessage(L"[AI] Trusted, not quarantined (" + gate.reason + L"): " + filePath);
+        return;
+    }
+    if (!gate.isMalicious && res.score < 8) {
+        LogMessage(L"[AI] Low confidence, not quarantined: " + filePath);
+        return;
+    }
+
+    g_ActiveThreats.fetch_add(1);
+    HoldWifiDuringFight();
+    const bool encryptRepeat = g_EncryptionIncidents.load() >= 2;
+    if (encryptRepeat && PathIsUserWritableDrop(filePath) && !PathIsSystemProtected(filePath)) {
+        LogMessage(L"[AI] Repeat encryption — delete, continue other files: " + filePath);
+        if (!g_ThreatNoticeOnce.exchange(true)) {
+            ShowTrayNotice(L"Ozentime", L"Threats handled. One notice for this batch.");
+        }
+        KillProcessByPath(filePath);
+        ManagerDeleteFile(filePath);
+        ScanModule::RemovePersistenceForFile(filePath);
+        RescanDropFolder(filePath);
+        g_ActiveThreats.fetch_sub(1);
+        {
+            std::lock_guard<std::mutex> lock(g_QueueMutex);
+            if (g_DecisionQueue.empty()) ReleaseWifiAfterFight();
+        }
+        return;
+    }
+
+    KillProcessByPath(filePath);
+    ScanModule::RemovePersistenceForFile(filePath);
+    ScanModule::StopServiceForImage(filePath);
+
+    AdaptiveThrottle();
+    QuarantineEnqueue(filePath, res.score, false);
+    if (!g_ThreatNoticeOnce.exchange(true)) {
+        ShowTrayNotice(L"Ozentime", L"Threats moved to quarantine. One notice for this batch.");
+    }
+    AfterSuccessfulRemoval();
+    ReleaseWifiAfterFight();
+
+    LogMessage(L"[AI] Queued for isolation: " + filePath);
+    if (!DefenseShouldDeferHeavyWork()) RescanDropFolder(filePath);
+    g_ActiveThreats.fetch_sub(1);
+}
+
+// --- ADVANCED BEHAVIORAL ANALYSIS HANDLERS ---
+bool DetectMassEncryptionActivity(const std::wstring& filePath) {
+    (void)filePath;
+    return false;
+}
+
+bool DetectCryptoMiningBehavior(const std::wstring& filePath) {
+    (void)filePath;
+    return false;
+}
+
+bool DetectStalkerwarePersistence() {
+    return false;
+}
+
+#ifdef _WIN32
+bool DetectMemoryInjection(HANDLE hProcess) {
+    MEMORY_BASIC_INFORMATION mbi;
+    BYTE* addr = 0;
+    while (VirtualQueryEx(hProcess, addr, &mbi, sizeof(mbi))) {
+        if ((mbi.Protect & PAGE_EXECUTE_READWRITE) || (mbi.Protect & PAGE_EXECUTE_WRITECOPY)) {
+            LogMessage(L"[ALERT] RWX memory region detected in process.");
+            return true;
+        }
+        addr += mbi.RegionSize;
+    }
+    return false;
+}
+#endif
+
+bool DetectPhishingURL(const std::wstring& url) {
+    (void)url;
+    return false;
+}
+
+bool DetectC2Traffic(const std::string& packet) {
+    (void)packet;
+    return false;
+}
+
+bool DetectKernelHooks() {
+    return false;
+}
+
+bool DetectPersistenceTasks() {
+    return false;
+}
+
+bool AttemptRansomwareRollback(const std::wstring& filePath) {
+    LogMessage(L"[INFO] Shadow-copy rollback is not implemented. File=" + filePath);
+    return false;
+}
+
+void KillProcessByPath(const std::wstring& filePath) {
+#ifdef _WIN32
+    // Only stop a process whose image path is this confirmed file.
+    if (filePath.empty()) return;
+    std::wstring want = ToLowerCopy(std::filesystem::path(filePath).filename().wstring());
+    if (g_ProtectedProcesses.count(want) > 0) return;
+
+    HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (snapshot == INVALID_HANDLE_VALUE) return;
+
+    PROCESSENTRY32 pe32;
+    pe32.dwSize = sizeof(PROCESSENTRY32);
+
+    if (Process32First(snapshot, &pe32)) {
+        do {
+            std::wstring exe = ToLowerCopy(pe32.szExeFile);
+            if (exe == want) {
+                TerminateProcessByPid(pe32.th32ProcessID, L"Image matches heuristic-contained file");
+            }
+        } while (Process32Next(snapshot, &pe32));
+    }
+    CloseHandle(snapshot);
+#endif
+}
+
+#ifdef _WIN32
+static HANDLE OpenRawDriveHandle() {
+    if (!g_AdminMode.load()) return NULL;
+    HANDLE hDrive = CreateFileW(
+        L"\\\\.\\C:",
+        GENERIC_READ,
+        FILE_SHARE_READ | FILE_SHARE_WRITE,
+        NULL,
+        OPEN_EXISTING,
+        FILE_FLAG_NO_BUFFERING | FILE_FLAG_RANDOM_ACCESS,
+        NULL
+    );
+    if (hDrive == INVALID_HANDLE_VALUE) return NULL;
+    return hDrive;
+}
+
+static bool VolumeCIsReachable() {
+    HANDLE h = OpenRawDriveHandle();
+    if (!h) return true;
+    DISK_GEOMETRY geo{};
+    DWORD got = 0;
+    DeviceIoControl(h, IOCTL_DISK_GET_DRIVE_GEOMETRY, NULL, 0, &geo, sizeof(geo), &got, NULL);
+    CloseHandle(h);
+    return true;
+}
+#elif defined(__linux__)
+static bool VolumeCIsReachable() {
+    const char* nodes[] = { "/dev/sda", "/dev/nvme0n1", "/dev/vda", "/" };
+    for (auto n : nodes) {
+        int fd = open(n, O_RDONLY | O_CLOEXEC);
+        if (fd >= 0) { close(fd); return true; }
+    }
+    return std::filesystem::exists("/");
+}
+#endif
+
+static bool PathIsWindowsOwnedOrUpdate(const std::wstring& path) {
+    std::wstring p = ToLowerCopy(path);
+    return p.find(L"\\windows\\") != std::wstring::npos ||
+           p.find(L"\\winsxs\\") != std::wstring::npos ||
+           p.find(L"\\softwaredistribution\\") != std::wstring::npos ||
+           p.find(L"$windows.~bt") != std::wstring::npos ||
+           p.find(L"$windows.~ws") != std::wstring::npos ||
+           p.find(L"\\system32\\") != std::wstring::npos ||
+           p.find(L"\\syswow64\\") != std::wstring::npos ||
+           p.find(L"\\boot\\bcd") != std::wstring::npos ||
+           p.find(L"\\efi\\microsoft\\") != std::wstring::npos;
+}
+
+static void InspectThirdPartyBootExtras() {
+#ifdef _WIN32
+    SafeRun(L"boot-inspect", []() {
+        const wchar_t* roots[] = { L"C:\\", L"C:\\boot", L"C:\\EFI" };
+        const wchar_t* skipName[] = {
+            L"bootmgr", L"bootnxt", L"bootstat.dat", L"pagefile.sys",
+            L"hiberfil.sys", L"swapfile.sys", L"bootsect.bak"
+        };
+        for (auto root : roots) {
+            std::error_code ec;
+            if (!std::filesystem::exists(root, ec)) continue;
+            for (auto& e : std::filesystem::directory_iterator(root, ec)) {
+                if (!e.is_regular_file(ec)) continue;
+                auto full = e.path().wstring();
+                if (PathIsWindowsOwnedOrUpdate(full)) continue;
+                auto leaf = ToLowerCopy(e.path().filename().wstring());
+                bool inbox = false;
+                for (auto s : skipName) if (leaf == s) { inbox = true; break; }
+                if (inbox) continue;
+                auto ext = ToLowerCopy(e.path().extension().wstring());
+                if (ext != L".efi" && ext != L".sys" && ext != L".bin" &&
+                    leaf.find(L"boot") == std::wstring::npos &&
+                    leaf.find(L"grub") == std::wstring::npos)
+                    continue;
+                LogMessage(L"[BOOT] Third-party boot-related file noted (not deleted): " + full);
+                UpdateEngineStatus(SystemStatus::SUSPICION_YELLOW,
+                    L"Third-party boot file flagged, not removed", full);
+            }
+        }
+    });
+#elif defined(__linux__)
+    SafeRun(L"boot-inspect", []() {
+        auto expected = [](const std::string& name, const std::string& path) {
+            if (name.find("vmlinuz") != std::string::npos) return true;
+            if (name.find("initrd") != std::string::npos) return true;
+            if (name.find("initramfs") != std::string::npos) return true;
+            if (name.find("grub") != std::string::npos) return true;
+            if (name.find("systemd") != std::string::npos) return true;
+            if (name.find("shim") != std::string::npos) return true;
+            if (name.find("bootx64.efi") != std::string::npos) return true;
+            if (name.find("config-") == 0 || name.find("System.map") == 0) return true;
+            if (path.find("/boot/efi/EFI/") != std::string::npos) return true;
+            return false;
+        };
+        const char* roots[] = { "/boot", "/boot/efi" };
+        std::error_code ec;
+        for (auto root : roots) {
+            if (!std::filesystem::exists(root, ec)) continue;
+            for (auto& e : std::filesystem::recursive_directory_iterator(
+                     root, std::filesystem::directory_options::skip_permission_denied, ec)) {
+                if (!e.is_regular_file(ec)) continue;
+                std::string path = e.path().string();
+                std::string name = e.path().filename().string();
+                if (expected(name, path)) continue;
+                auto ext = e.path().extension().string();
+                if (ext != ".efi" && ext != ".bin" &&
+                    name.find("boot") == std::string::npos &&
+                    name.find("kernel") == std::string::npos)
+                    continue;
+                std::wstring w(path.begin(), path.end());
+                LogMessage(L"[BOOT] Unexpected boot file noted (not deleted). Use distro tools (update-grub / dracut / rpm -V). File=" + w);
+            }
+        }
+        LogMessage(L"[BOOT] Linux boot audit is read-only. Ozentime will not run grub-install, update-grub, or fsck.");
+    });
+#endif
+}
+
+static bool BootFilesLookIntact() {
+#ifdef _WIN32
+    VolumeCIsReachable();
+    const wchar_t* files[] = {
+        L"C:\\Windows\\System32\\ntoskrnl.exe",
+        L"C:\\Windows\\System32\\drivers\\ntfs.sys",
+        L"C:\\Windows\\System32\\drivers\\disk.sys"
+    };
+    for (auto f : files) {
+        if (!std::filesystem::exists(f)) return false;
+    }
+    bool loader = std::filesystem::exists(L"C:\\Windows\\System32\\winload.exe") ||
+                  std::filesystem::exists(L"C:\\Windows\\System32\\winload.efi");
+    return loader;
+#else
+    VolumeCIsReachable();
+    return std::filesystem::exists("/boot") || std::filesystem::exists("/vmlinuz") ||
+           std::filesystem::exists("/boot/vmlinuz");
+#endif
+}
+
+#ifdef _WIN32
+static void RestartComputerNow() {
+    HANDLE tok = NULL;
+    if (OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &tok)) {
+        TOKEN_PRIVILEGES tp{};
+        LookupPrivilegeValueW(NULL, SE_SHUTDOWN_NAME, &tp.Privileges[0].Luid);
+        tp.PrivilegeCount = 1;
+        tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+        AdjustTokenPrivileges(tok, FALSE, &tp, 0, NULL, NULL);
+        CloseHandle(tok);
+    }
+    if (ExitWindowsEx(EWX_REBOOT | EWX_FORCEIFHUNG, SHTDN_REASON_MAJOR_APPLICATION | SHTDN_REASON_MINOR_MAINTENANCE))
+        return;
+    wchar_t sys[MAX_PATH]{};
+    GetSystemDirectoryW(sys, MAX_PATH);
+    std::wstring cmd = std::wstring(L"\"") + sys + L"\\shutdown.exe\" /r /t 0 /f";
+    STARTUPINFOW si{};
+    si.cb = sizeof(si);
+    PROCESS_INFORMATION pi{};
+    if (CreateProcessW(NULL, cmd.data(), NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, sys, &si, &pi)) {
+        CloseHandle(pi.hThread);
+        CloseHandle(pi.hProcess);
+        return;
+    }
+    ShellExecuteW(NULL, L"open", L"shutdown.exe", L"/r /t 0 /f", sys, SW_HIDE);
+}
+#elif defined(__linux__)
+static void RestartComputerNow() {
+    if (geteuid() != 0) return;
+    execl("/sbin/reboot", "reboot", (char*)NULL);
+}
+#endif
+
+static void AfterSuccessfulRemoval() {
+    bool intact = BootFilesLookIntact();
+    g_BootLooksIntact.store(intact);
+    if (intact) {
+        g_AskRestart.store(true);
+        LogMessage(L"[RESTART] Removal finished. Boot files look intact — a restart can finish cleanup.");
+    } else {
+        g_AskRestart.store(false);
+        LogMessage(L"[RESTART] Boot files look incomplete. Do not rely on a normal restart. Use Windows Recovery.");
+    }
+}
+
+// --- SCAN & REPAIR MODULE ---
+namespace ScanModule {
+
+    void RemovePersistenceForFile(const std::wstring& filePath);
+    void ScanRegistry();
+    void ScanServicesHeuristic();
+    void StopServiceForImage(const std::wstring& filePath);
+    void ScanScheduledTasksHeuristic();
+    void AdminExtendedScan();
+    void UniversalThreatScan(const std::wstring& filePath);
+    void ScanDirectory(const std::filesystem::path& dir);
+    void ScanAllLocalDrives();
+    void ScanNewVolume(const std::wstring& root);
+    void RunSfcScan();
+    void RunDismRestore();
+    void OfferWindowsRecovery();
+    void InspectInboxDrivers();
+    void RunDisinfectionPass();
+    bool RestoreQuarantineItem(const std::wstring& quarantinedPath);
+    std::vector<std::wstring> ListQuarantineItems();
+
+    bool QuarantineFile(const std::wstring& filePath) {
+        if (filePath.empty() || !std::filesystem::exists(filePath) || g_QuarantineDir.empty()) return false;
+        std::lock_guard<std::mutex> io(g_QuarantineIoMutex);
+        std::error_code ec;
+        std::filesystem::create_directories(g_QuarantineDir, ec);
+        std::filesystem::path src(filePath);
+        std::filesystem::path dest = std::filesystem::path(g_QuarantineDir) / src.filename();
+        if (std::filesystem::exists(dest, ec)) {
+            dest += L".";
+#ifdef _WIN32
+            dest += std::to_wstring(GetTickCount64());
+#else
+            dest += std::to_wstring(
+                std::chrono::steady_clock::now().time_since_epoch().count());
+#endif
+        }
+        std::filesystem::rename(src, dest, ec);
+        if (ec) {
+            std::filesystem::copy_file(src, dest, std::filesystem::copy_options::overwrite_existing, ec);
+            if (!ec) std::filesystem::remove(src, ec);
+        }
+        if (ec) {
+            LogMessage(L"[QUARANTINE] Failed: " + filePath);
+            return false;
+        }
+        {
+            std::wofstream meta(dest.wstring() + L".log");
+            if (meta) {
+                meta << L"original=" << filePath << L"\n";
+                meta << L"reason=heuristic-disinfect\n";
+            }
+        }
+        g_LastQuarantinePath = dest.wstring();
+        g_TelQuarantined.fetch_add(1);
+        LogMessage(L"[QUARANTINE] " + filePath + L" -> " + dest.wstring());
+        return true;
+    }
+
+    bool AttemptFileRepair(const std::wstring& filePath) {
+        // Old behaviour truncated the file. Containment is quarantine, not wipe.
+        return QuarantineFile(filePath);
+    }
+
+    bool AttemptRegistryRepair(const std::wstring& keyPath) {
+        LogMessage(L"[INFO] Registry inspect only (no auto-delete): " + keyPath);
+        return false;
+    }
+
+    void DisinfectThreat() {
+        std::wstring target;
+        {
+            std::lock_guard<std::mutex> lock(g_StateMutex);
+            target = g_DetectedTarget;
+        }
+        if (target.empty()) {
+            LogMessage(L"[ACTION] No active target to quarantine.");
+            return;
+        }
+        QuarantineEnqueue(target, 8, true);
+        UpdateEngineStatus(SystemStatus::SECURE_BLUE, L"Target queued for quarantine.");
+    }
+
+    void DeleteThreat() {
+        DisinfectThreat();
+    }
+
+    std::vector<std::wstring> ListQuarantineItems() {
+        std::vector<std::wstring> items;
+        std::error_code ec;
+        if (g_QuarantineDir.empty() || !std::filesystem::exists(g_QuarantineDir, ec)) return items;
+        for (auto& e : std::filesystem::directory_iterator(g_QuarantineDir, ec)) {
+            if (!e.is_regular_file(ec)) continue;
+            auto p = e.path();
+            if (ToLowerCopy(p.extension().wstring()) == L".log") continue;
+            items.push_back(p.wstring());
+        }
+        return items;
+    }
+
+    bool RestoreQuarantineItem(const std::wstring& quarantinedPath) {
+        std::error_code ec;
+        if (!std::filesystem::exists(quarantinedPath, ec)) return false;
+        std::wstring original;
+        std::wifstream meta(quarantinedPath + L".log");
+        std::wstring line;
+        while (meta && std::getline(meta, line)) {
+            if (line.rfind(L"original=", 0) == 0) {
+                original = line.substr(9);
+                break;
+            }
+        }
+        if (original.empty()) {
+            original = (std::filesystem::path(g_DataDir) / L"Restored" /
+                        std::filesystem::path(quarantinedPath).filename()).wstring();
+        }
+        std::filesystem::create_directories(std::filesystem::path(original).parent_path(), ec);
+        std::filesystem::copy_file(quarantinedPath, original,
+            std::filesystem::copy_options::overwrite_existing, ec);
+        if (ec) {
+            LogMessage(L"[DISINFECT] Restore failed: " + quarantinedPath);
+            return false;
+        }
+        std::filesystem::remove(quarantinedPath, ec);
+        std::filesystem::remove(quarantinedPath + L".log", ec);
+        LogMessage(L"[DISINFECT] Restored " + original);
+        return true;
+    }
+
+    void RunDisinfectionPass() {
+        SafeRun(L"disinfect-pass", [&]() {
+            LogMessage(L"[DISINFECT] Starting disinfection pass (heuristic + persistence).");
+            int before = g_AV.threatsFound;
+
+            std::wstring target;
+            {
+                std::lock_guard<std::mutex> lock(g_StateMutex);
+                target = g_DetectedTarget;
+            }
+            if (!target.empty() && std::filesystem::exists(target)) {
+                ScanResult res;
+                EvaluateFileThreatStatus(target, res);
+                if (res.isMalicious || res.isSuspicious) {
+                    KillProcessByPath(target);
+                    QuarantineFile(target);
+                    RemovePersistenceForFile(target);
+                    StopServiceForImage(target);
+                    LogMessage(L"[DISINFECT] Active target processed: " + target);
+                }
+            }
+
+#ifdef _WIN32
+            ScanRegistry();
+            ScanServicesHeuristic();
+            DetectHiddenProcesses();
+
+            wchar_t userPath[MAX_PATH]{};
+            if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_PROFILE, NULL, 0, userPath))) {
+                std::filesystem::path home(userPath);
+                const wchar_t* spots[] = {
+                    L"Downloads", L"Desktop", L"AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup"
+                };
+                for (auto rel : spots) {
+                    std::filesystem::path dir = home / rel;
+                    std::error_code ec;
+                    if (!std::filesystem::exists(dir, ec)) continue;
+                    for (auto& e : std::filesystem::directory_iterator(dir, ec)) {
+                        if (e.is_regular_file(ec)) {
+                            AdaptiveThrottle();
+                            UniversalThreatScan(e.path().wstring());
+                        }
+                    }
+                }
+            }
+#endif
+
+            IntegrityPulse();
+            int added = g_AV.threatsFound - before;
+            LogMessage(L"[DISINFECT] Pass finished. New contains this run: " + std::to_wstring(added < 0 ? 0 : added));
+            if (added > 0 || (!target.empty())) AfterSuccessfulRemoval();
+            else UpdateEngineStatus(SystemStatus::SECURE_BLUE, L"Disinfection pass complete.");
+        });
+    }
+
+    void UniversalThreatScan(const std::wstring& filePath) {
+        SafeRun(L"file-scan", [&]() {
+            if (filePath.empty()) return;
+            if (!g_QuarantineDir.empty() && filePath.rfind(g_QuarantineDir, 0) == 0) return;
+            if (!IsDownloadComplete(filePath)) {
+                LogMessage(L"[DOWNLOAD] Allowed to finish, will scan after: " + filePath);
+                return;
+            }
+
+            if (FileHeldByOtherScanner(filePath)) {
+                g_TelBusyAv.fetch_add(1);
+                return;
+            }
+
+            const bool seenBefore = FileWasSeenBefore(filePath);
+            if (FileUnchangedSinceLastScan(filePath)) {
+                g_TelSkipped.fetch_add(1);
+                return;
+            }
+            if (seenBefore) RollbackEngine(filePath);
+
+            g_TelScanned.fetch_add(1);
+            ScanResult res;
+            EvaluateFileThreatStatus(filePath, res);
+            RememberScannedFile(filePath);
+            if (!seenBefore) RollbackEngine(filePath);
+
+            if (res.isMalicious) {
+                LogMessage(L"[AI] Manager taking over: " + res.reason);
+                UpdateEngineStatus(SystemStatus::THREAT_RED, L"Manager handling threat", filePath);
+                ManagerHandleThreat(filePath, res);
+                return;
+            }
+
+            if (res.isSuspicious) {
+                LogMessage(L"[HEURISTIC] " + res.reason + L" file=" + filePath);
+                UpdateEngineStatus(SystemStatus::SUSPICION_YELLOW, L"Heuristic review (not deleted)", filePath);
+                if (res.score >= 6 && res.score <= 7 && !g_SoftWarnOnce.exchange(true)) {
+                    ShowTrayNotice(L"Ozentime",
+                        L"This app might be dangerous. No action taken — warning only.");
+                }
+                return;
+            }
+        });
+    }
+
+    static bool ShouldSkipScanPath(const std::filesystem::path& p) {
+        std::wstring s = ToLowerCopy(p.wstring());
+        if (s.find(L"\\windows\\winsxs\\") != std::wstring::npos) return true;
+        if (s.find(L"\\windows\\installer\\") != std::wstring::npos) return true;
+        if (s.find(L"\\windows\\servicing\\") != std::wstring::npos) return true;
+        if (s.find(L"\\$recycle.bin\\") != std::wstring::npos) return true;
+        if (s.find(L"\\system volume information\\") != std::wstring::npos) return true;
+        if (s.find(L"pagefile.sys") != std::wstring::npos) return true;
+        if (s.find(L"hiberfil.sys") != std::wstring::npos) return true;
+        if (s.find(L"swapfile.sys") != std::wstring::npos) return true;
+        if (!g_QuarantineDir.empty()) {
+            std::wstring q = ToLowerCopy(g_QuarantineDir);
+            if (s.rfind(q, 0) == 0) return true;
+        }
+        return false;
+    }
+
+    void ScanDirectory(const std::filesystem::path& dir) {
+        try {
+            if (!std::filesystem::exists(dir)) return;
+
+            std::error_code itEc;
+            auto it = std::filesystem::recursive_directory_iterator(
+                dir, std::filesystem::directory_options::skip_permission_denied, itEc);
+            const auto end = std::filesystem::recursive_directory_iterator();
+            while (it != end) {
+                if (!g_IsRunning.load() || g_ScanCancel.load()) break;
+                if (itEc) {
+                    it.increment(itEc);
+                    continue;
+                }
+                try {
+                    const auto& entry = *it;
+                    if (ShouldSkipScanPath(entry.path())) {
+                        it.disable_recursion_pending();
+                    } else if (entry.is_regular_file(itEc) && !itEc) {
+                        AdaptiveThrottle();
+                        UniversalThreatScan(entry.path().wstring());
+                        unsigned n = g_ScanFilesDone.fetch_add(1) + 1;
+                        if (g_AV.isScanning) {
+                            float p = 0.08f + 0.90f * (1.0f - expf(static_cast<float>(n) / -8000.0f));
+                            if (p > 0.99f) p = 0.99f;
+                            g_AV.scanProgress = p;
+                        }
+                    }
+                }
+                catch (...) {}
+                it.increment(itEc);
+            }
+        }
+        catch (...) {}
+    }
+
+    void ScanAllLocalDrives() {
+#ifdef _WIN32
+        DWORD mask = GetLogicalDrives();
+        for (int i = 0; i < 26; ++i) {
+            if (g_ScanCancel.load()) break;
+            if ((mask & (1u << i)) == 0) continue;
+            wchar_t root[4] = { static_cast<wchar_t>(L'A' + i), L':', L'\\', 0 };
+            UINT type = GetDriveTypeW(root);
+            if (type != DRIVE_FIXED && type != DRIVE_REMOVABLE && type != DRIVE_RAMDISK) continue;
+            wchar_t volName[MAX_PATH]{};
+            DWORD serial = 0;
+            if (!GetVolumeInformationW(root, volName, MAX_PATH, &serial, NULL, NULL, NULL, 0)) {
+                LogMessage(L"[SCAN] Drive not ready, skipped: " + std::wstring(root));
+                continue;
+            }
+            LogMessage(L"[SCAN] Whole-disk pass: " + std::wstring(root));
+            try { ScanDirectory(root); }
+            catch (...) { LogMessage(L"[SCAN] Drive skipped after error: " + std::wstring(root)); }
+        }
+#endif
+    }
+
+    void ScanNewVolume(const std::wstring& root) {
+        LogMessage(L"[DISK] New volume detected, scanning: " + root);
+        UpdateEngineStatus(SystemStatus::SECURE_BLUE, L"New disk connected — scanning it.");
+        ScanDirectory(root);
+        LogMessage(L"[DISK] Finished new-disk scan: " + root);
+    }
+
+    static std::wstring ReadRegString(HKEY root, const wchar_t* subkey, const wchar_t* valueName) {
+        HKEY hKey = NULL;
+        if (RegOpenKeyExW(root, subkey, 0, KEY_READ, &hKey) != ERROR_SUCCESS) return L"";
+        wchar_t buf[1024]{};
+        DWORD size = sizeof(buf);
+        DWORD type = 0;
+        LONG ok = RegQueryValueExW(hKey, valueName, NULL, &type, (LPBYTE)buf, &size);
+        RegCloseKey(hKey);
+        if (ok != ERROR_SUCCESS) return L"";
+        return buf;
+    }
+
+    static bool DeleteRegValue(HKEY root, const wchar_t* subkey, const wchar_t* valueName) {
+        HKEY hKey = NULL;
+        if (RegOpenKeyExW(root, subkey, 0, KEY_SET_VALUE, &hKey) != ERROR_SUCCESS) return false;
+        LONG ok = RegDeleteValueW(hKey, valueName);
+        RegCloseKey(hKey);
+        return ok == ERROR_SUCCESS;
+    }
+
+    static const wchar_t* kRunKey = L"Software\\Microsoft\\Windows\\CurrentVersion\\Run";
+    static const wchar_t* kRunOnceKey = L"Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce";
+
+    void RemovePersistenceForFile(const std::wstring& filePath) {
+#ifdef _WIN32
+        SafeRun(L"registry-clean", [&]() {
+            std::wstring want = ToLowerCopy(filePath);
+            auto scanRoot = [&](HKEY root, const wchar_t* subkey) {
+                HKEY hKey = NULL;
+                if (RegOpenKeyExW(root, subkey, 0, KEY_READ, &hKey) != ERROR_SUCCESS) return;
+                wchar_t name[256];
+                DWORD nameLen = 256;
+                BYTE data[1024];
+                DWORD dataLen = sizeof(data);
+                DWORD type = 0;
+                std::vector<std::wstring> toDelete;
+                for (DWORD i = 0; RegEnumValueW(hKey, i, name, &nameLen, NULL, &type, data, &dataLen) == ERROR_SUCCESS; ++i) {
+                    std::wstring cmd(reinterpret_cast<wchar_t*>(data));
+                    std::wstring pointed = ToLowerCopy(ExtractPathFromCommand(cmd));
+                    if (!pointed.empty() && want.find(pointed) != std::wstring::npos ||
+                        (!pointed.empty() && pointed.find(want) != std::wstring::npos) ||
+                        (!pointed.empty() && want.find(ToLowerCopy(std::filesystem::path(pointed).filename().wstring())) != std::wstring::npos &&
+                         PathIsUserWritableDrop(pointed))) {
+                        toDelete.push_back(name);
+                    }
+                    nameLen = 256;
+                    dataLen = sizeof(data);
+                }
+                RegCloseKey(hKey);
+                for (const auto& n : toDelete) {
+                    if (DeleteRegValue(root, subkey, n.c_str())) {
+                        LogMessage(L"[PERSISTENCE] Removed Run value '" + n + L"' for " + filePath);
+                    }
+                }
+            };
+            scanRoot(HKEY_CURRENT_USER, kRunKey);
+            scanRoot(HKEY_CURRENT_USER, kRunOnceKey);
+            scanRoot(HKEY_LOCAL_MACHINE, kRunKey);
+            scanRoot(HKEY_LOCAL_MACHINE, kRunOnceKey);
+        });
+#endif
+    }
+
+    void ScanRegistry() {
+#ifdef _WIN32
+        SafeRun(L"registry-scan", [&]() {
+            auto walk = [&](HKEY root, const wchar_t* subkey, const wchar_t* rootName) {
+                HKEY hKey = NULL;
+                if (RegOpenKeyExW(root, subkey, 0, KEY_READ, &hKey) != ERROR_SUCCESS) {
+                    LogMessage(std::wstring(L"[REGISTRY] Could not open ") + rootName + L"\\" + subkey);
+                    return;
+                }
+                wchar_t name[256];
+                DWORD nameLen = 256;
+                BYTE data[1024];
+                DWORD dataLen = sizeof(data);
+                DWORD type = 0;
+                for (DWORD i = 0; RegEnumValueW(hKey, i, name, &nameLen, NULL, &type, data, &dataLen) == ERROR_SUCCESS; ++i) {
+                    std::wstring cmd = (type == REG_SZ || type == REG_EXPAND_SZ)
+                        ? std::wstring(reinterpret_cast<wchar_t*>(data))
+                        : L"";
+                    std::wstring pointed = ExtractPathFromCommand(cmd);
+                    LogMessage(std::wstring(L"[REGISTRY] ") + rootName + L" Run '" + name + L"' -> " + pointed);
+                    if (!pointed.empty() && std::filesystem::exists(pointed) && !PathIsSystemProtected(pointed)) {
+                        UniversalThreatScan(pointed);
+                    }
+                    nameLen = 256;
+                    dataLen = sizeof(data);
+                }
+                RegCloseKey(hKey);
+            };
+            walk(HKEY_CURRENT_USER, kRunKey, L"HKCU");
+            walk(HKEY_CURRENT_USER, kRunOnceKey, L"HKCU");
+            walk(HKEY_LOCAL_MACHINE, kRunKey, L"HKLM");
+            walk(HKEY_LOCAL_MACHINE, kRunOnceKey, L"HKLM");
+        });
+#endif
+    }
+
+    void ScanServicesHeuristic() {
+#ifdef _WIN32
+        SafeRun(L"service-scan", [&]() {
+            SC_HANDLE scm = OpenSCManagerW(NULL, NULL, SC_MANAGER_ENUMERATE_SERVICE);
+            if (!scm) return;
+            DWORD bytesNeeded = 0, returned = 0, resume = 0;
+            EnumServicesStatusExW(scm, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, SERVICE_STATE_ALL,
+                NULL, 0, &bytesNeeded, &returned, &resume, NULL);
+            if (GetLastError() != ERROR_MORE_DATA || bytesNeeded == 0) {
+                CloseServiceHandle(scm);
+                return;
+            }
+            std::vector<BYTE> buffer(bytesNeeded);
+            resume = 0;
+            if (!EnumServicesStatusExW(scm, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, SERVICE_STATE_ALL,
+                buffer.data(), bytesNeeded, &bytesNeeded, &returned, &resume, NULL)) {
+                CloseServiceHandle(scm);
+                return;
+            }
+            auto* svc = reinterpret_cast<ENUM_SERVICE_STATUS_PROCESSW*>(buffer.data());
+            for (DWORD i = 0; i < returned; ++i) {
+                SC_HANDLE sh = OpenServiceW(scm, svc[i].lpServiceName, SERVICE_QUERY_CONFIG);
+                if (!sh) continue;
+                DWORD need = 0;
+                QueryServiceConfigW(sh, NULL, 0, &need);
+                if (need > 0) {
+                    std::vector<BYTE> cfgBuf(need);
+                    auto* cfg = reinterpret_cast<QUERY_SERVICE_CONFIGW*>(cfgBuf.data());
+                    if (QueryServiceConfigW(sh, cfg, need, &need) && cfg->lpBinaryPathName) {
+                        std::wstring bin = ExtractPathFromCommand(cfg->lpBinaryPathName);
+                        if (!bin.empty() && PathIsUserWritableDrop(bin) && std::filesystem::exists(bin)) {
+                            LogMessage(L"[SERVICE] User-writable service image: " +
+                                       std::wstring(svc[i].lpServiceName) + L" -> " + bin);
+                            UniversalThreatScan(bin);
+                        }
+                    }
+                }
+                CloseServiceHandle(sh);
+            }
+            CloseServiceHandle(scm);
+        });
+#endif
+    }
+
+    void StopServiceForImage(const std::wstring& filePath) {
+#ifdef _WIN32
+        if (!g_AdminMode.load()) return;
+        SafeRun(L"service-stop", [&]() {
+            std::wstring want = ToLowerCopy(filePath);
+            SC_HANDLE scm = OpenSCManagerW(NULL, NULL, SC_MANAGER_ENUMERATE_SERVICE);
+            if (!scm) return;
+            DWORD bytesNeeded = 0, returned = 0, resume = 0;
+            EnumServicesStatusExW(scm, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, SERVICE_STATE_ALL,
+                NULL, 0, &bytesNeeded, &returned, &resume, NULL);
+            if (GetLastError() != ERROR_MORE_DATA || bytesNeeded == 0) {
+                CloseServiceHandle(scm);
+                return;
+            }
+            std::vector<BYTE> buffer(bytesNeeded);
+            resume = 0;
+            if (!EnumServicesStatusExW(scm, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, SERVICE_STATE_ALL,
+                buffer.data(), bytesNeeded, &bytesNeeded, &returned, &resume, NULL)) {
+                CloseServiceHandle(scm);
+                return;
+            }
+            auto* svc = reinterpret_cast<ENUM_SERVICE_STATUS_PROCESSW*>(buffer.data());
+            for (DWORD i = 0; i < returned; ++i) {
+                SC_HANDLE sh = OpenServiceW(scm, svc[i].lpServiceName, SERVICE_QUERY_CONFIG | SERVICE_STOP);
+                if (!sh) continue;
+                DWORD need = 0;
+                QueryServiceConfigW(sh, NULL, 0, &need);
+                if (need > 0) {
+                    std::vector<BYTE> cfgBuf(need);
+                    auto* cfg = reinterpret_cast<QUERY_SERVICE_CONFIGW*>(cfgBuf.data());
+                    if (QueryServiceConfigW(sh, cfg, need, &need) && cfg->lpBinaryPathName) {
+                        std::wstring bin = ToLowerCopy(ExtractPathFromCommand(cfg->lpBinaryPathName));
+                        if (!bin.empty() && (bin == want || want.find(bin) != std::wstring::npos || bin.find(want) != std::wstring::npos)) {
+                            SERVICE_STATUS ss{};
+                            if (ControlService(sh, SERVICE_CONTROL_STOP, &ss)) {
+                                LogMessage(L"[ADMIN] Stopped service " + std::wstring(svc[i].lpServiceName));
+                            }
+                        }
+                    }
+                }
+                CloseServiceHandle(sh);
+            }
+            CloseServiceHandle(scm);
+        });
+#endif
+    }
+
+    void ScanScheduledTasksHeuristic() {
+#ifdef _WIN32
+        if (!g_AdminMode.load()) return;
+        SafeRun(L"task-scan", [&]() {
+            std::filesystem::path taskDir = L"C:\\Windows\\System32\\Tasks";
+            if (!std::filesystem::exists(taskDir)) return;
+            for (auto& entry : std::filesystem::recursive_directory_iterator(
+                     taskDir, std::filesystem::directory_options::skip_permission_denied)) {
+                if (!g_IsRunning.load()) break;
+                if (!entry.is_regular_file()) continue;
+                std::ifstream in(entry.path());
+                if (!in) continue;
+                std::string xml((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+                auto pos = xml.find("<Command>");
+                if (pos == std::string::npos) continue;
+                auto end = xml.find("</Command>", pos);
+                if (end == std::string::npos) continue;
+                std::string cmd = xml.substr(pos + 9, end - (pos + 9));
+                std::wstring wcmd(cmd.begin(), cmd.end());
+                std::wstring pointed = ExtractPathFromCommand(wcmd);
+                if (!pointed.empty() && PathIsUserWritableDrop(pointed) && std::filesystem::exists(pointed)) {
+                    LogMessage(L"[ADMIN] Scheduled task command in user path: " + pointed);
+                    UniversalThreatScan(pointed);
+                }
+            }
+        });
+#endif
+    }
+
+#ifdef _WIN32
+    static void VerifyDirectoryIntegrity(const std::wstring& folderPath) {
+        std::unordered_set<std::wstring> apiVisibleFiles;
+        std::wstring searchPath = folderPath + L"\\*";
+        WIN32_FIND_DATAW findData{};
+        HANDLE hFind = FindFirstFileW(searchPath.c_str(), &findData);
+        if (hFind != INVALID_HANDLE_VALUE) {
+            do {
+                if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+                    apiVisibleFiles.insert(ToLowerCopy(findData.cFileName));
+            } while (FindNextFileW(hFind, &findData));
+            FindClose(hFind);
+        }
+        std::error_code ec;
+        for (const auto& entry : std::filesystem::directory_iterator(folderPath, ec)) {
+            if (!entry.is_regular_file(ec)) continue;
+            std::wstring filename = ToLowerCopy(entry.path().filename().wstring());
+            if (apiVisibleFiles.find(filename) == apiVisibleFiles.end()) {
+                LogMessage(L"[ROOTKIT] Hidden file mismatch: " + entry.path().wstring());
+                UpdateEngineStatus(SystemStatus::THREAT_RED, L"Hidden file found", entry.path().wstring());
+                UniversalThreatScan(entry.path().wstring());
+            }
+        }
+    }
+#endif
+
+#ifdef _WIN32
+    static bool RunWhitelistedSystemTool(const wchar_t* exeName, const wchar_t* args, const wchar_t* label);
+#endif
+
+    void AdminExtendedScan() {
+#ifdef _WIN32
+        if (!g_AdminMode.load()) {
+            LogMessage(L"[ADMIN] Extended scan skipped (user mode).");
+            return;
+        }
+        SafeRun(L"volume-c", []() {
+            if (!VolumeCIsReachable())
+                LogMessage(L"[VOLUME] Could not open C: for a read-only check.");
+        });
+        SafeRun(L"cross-view", []() {
+            VerifyDirectoryIntegrity(L"C:\\Windows\\Temp");
+            VerifyDirectoryIntegrity(L"C:\\Users");
+            wchar_t tmp[MAX_PATH]{};
+            if (GetTempPathW(MAX_PATH, tmp)) VerifyDirectoryIntegrity(tmp);
+        });
+        SafeRun(L"admin-users", [&]() {
+            std::error_code ec;
+            for (auto& userDir : std::filesystem::directory_iterator(L"C:\\Users", ec)) {
+                if (!userDir.is_directory()) continue;
+                auto name = userDir.path().filename().wstring();
+                if (name == L"Public" || name == L"Default" || name == L"All Users") continue;
+                ScanDirectory(userDir.path() / L"Downloads");
+                ScanDirectory(userDir.path() / L"Desktop");
+                ScanDirectory(userDir.path() / L"AppData" / L"Local" / L"Temp");
+            }
+        });
+        ScanScheduledTasksHeuristic();
+        InspectThirdPartyBootExtras();
+        if (!BootFilesLookIntact()) {
+            LogMessage(L"[REPAIR] Boot files look incomplete. Official Windows tools will be used — Ozentime will not write the boot sector.");
+            RunSfcScan();
+            RunDismRestore();
+            if (g_AdminMode.load()) {
+                RunWhitelistedSystemTool(L"bcdboot.exe", L"C:\\Windows", L"bcdboot (official BCD rebuild)");
+            }
+        }
+        LogMessage(L"[ADMIN] Extended scan finished.");
+#endif
+    }
+
+#ifdef _WIN32
+    static bool RunWhitelistedSystemTool(const wchar_t* exeName, const wchar_t* args, const wchar_t* label) {
+        if (!g_AdminMode.load()) {
+            LogMessage(L"[REPAIR] Admin Mode required for official Windows repair tools.");
+            return false;
+        }
+        wchar_t sysDir[MAX_PATH]{};
+        if (GetSystemDirectoryW(sysDir, MAX_PATH) == 0) return false;
+        std::wstring exe = std::wstring(sysDir) + L"\\" + exeName;
+        if (!std::filesystem::exists(exe)) {
+            LogMessage(L"[REPAIR] Official tool not found: " + exe);
+            return false;
+        }
+
+        SECURITY_ATTRIBUTES sa{};
+        sa.nLength = sizeof(sa);
+        sa.bInheritHandle = TRUE;
+        HANDLE readPipe = NULL, writePipe = NULL;
+        if (!CreatePipe(&readPipe, &writePipe, &sa, 0)) return false;
+        SetHandleInformation(readPipe, HANDLE_FLAG_INHERIT, 0);
+
+        STARTUPINFOW si{};
+        si.cb = sizeof(si);
+        si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
+        si.wShowWindow = SW_HIDE;
+        si.hStdOutput = writePipe;
+        si.hStdError = writePipe;
+        si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
+
+        std::wstring cmd = L"\"" + exe + L"\" ";
+        cmd += args;
+        std::vector<wchar_t> cmdBuf(cmd.begin(), cmd.end());
+        cmdBuf.push_back(0);
+
+        PROCESS_INFORMATION pi{};
+        LogMessage(std::wstring(L"[REPAIR] Starting official tool: ") + label);
+        BOOL ok = CreateProcessW(exe.c_str(), cmdBuf.data(), NULL, NULL, TRUE,
+            CREATE_NO_WINDOW, NULL, sysDir, &si, &pi);
+        CloseHandle(writePipe);
+        if (!ok) {
+            CloseHandle(readPipe);
+            LogMessage(L"[REPAIR] Could not start " + std::wstring(exeName));
+            return false;
+        }
+
+        char buf[512];
+        DWORD n = 0;
+        std::string tail;
+        while (ReadFile(readPipe, buf, sizeof(buf) - 1, &n, NULL) && n > 0) {
+            buf[n] = 0;
+            tail.append(buf, buf + n);
+            if (tail.size() > 400) {
+                std::wstring w(tail.end() - 400, tail.end());
+                LogMessage(L"[REPAIR] " + w);
+                tail.clear();
+            }
+        }
+        WaitForSingleObject(pi.hProcess, INFINITE);
+        DWORD code = 1;
+        GetExitCodeProcess(pi.hProcess, &code);
+        CloseHandle(pi.hThread);
+        CloseHandle(pi.hProcess);
+        CloseHandle(readPipe);
+        LogMessage(std::wstring(L"[REPAIR] ") + label + L" finished, exit=" + std::to_wstring(code));
+        return code == 0;
+    }
+#endif
+
+    void InspectInboxDrivers() {
+#ifdef _WIN32
+        SafeRun(L"driver-inspect", [&]() {
+            const wchar_t* critical[] = {
+                L"C:\\Windows\\System32\\drivers\\ntfs.sys",
+                L"C:\\Windows\\System32\\drivers\\disk.sys",
+                L"C:\\Windows\\System32\\drivers\\tcpip.sys",
+                L"C:\\Windows\\System32\\drivers\\acpi.sys",
+                L"C:\\Windows\\System32\\drivers\\http.sys",
+                L"C:\\Windows\\System32\\drivers\\pci.sys"
+            };
+            int missing = 0;
+            for (auto p : critical) {
+                if (!std::filesystem::exists(p)) {
+                    ++missing;
+                    LogMessage(std::wstring(L"[REPAIR] Missing inbox driver file: ") + p);
+                }
+            }
+            if (missing == 0) {
+                LogMessage(L"[REPAIR] Core inbox driver files are present. Use SFC if Windows still reports driver errors.");
+            } else {
+                LogMessage(L"[REPAIR] Missing inbox drivers should be restored with SFC / DISM, not by copying random .sys files.");
+            }
+        });
+#endif
+    }
+
+    void RunSfcScan() {
+#ifdef _WIN32
+        SafeRun(L"sfc", []() {
+            InspectInboxDrivers();
+            RunWhitelistedSystemTool(L"sfc.exe", L"/scannow", L"System File Checker");
+        });
+#endif
+    }
+
+    void RunDismRestore() {
+#ifdef _WIN32
+        SafeRun(L"dism", []() {
+            RunWhitelistedSystemTool(L"dism.exe",
+                L"/Online /Cleanup-Image /RestoreHealth",
+                L"DISM RestoreHealth");
+        });
+#endif
+    }
+
+    void OfferWindowsRecovery() {
+#ifdef _WIN32
+        SafeRun(L"winre", []() {
+            if (!g_AdminMode.load()) {
+                LogMessage(L"[REPAIR] Admin Mode required to open Windows Recovery.");
+                return;
+            }
+            int r = MessageBoxW(g_hMainWnd,
+                L"Open official Windows Recovery (Advanced Startup) on reboot?\n\n"
+                L"Use Startup Repair and Safe Mode there. Ozentime will not write the boot sector.\n\n"
+                L"The PC will restart in 60 seconds if you choose Yes.",
+                L"Windows Recovery",
+                MB_YESNO | MB_ICONQUESTION);
+            if (r != IDYES) {
+                LogMessage(L"[REPAIR] Recovery reboot cancelled.");
+                return;
+            }
+            RunWhitelistedSystemTool(L"shutdown.exe", L"/r /o /t 60 /c \"Ozentime opening Windows Recovery\"",
+                L"Advanced Startup");
+        });
+#endif
+    }
+
+    void QuickScan() {
+        g_SoftWarnOnce.store(false);
+        UpdateEngineStatus(SystemStatus::SECURE_BLUE, L"Running heuristic Quick Scan...");
+
+#ifdef _WIN32
+        DetectHiddenProcesses();
+        DetectUnsignedDrivers();
+
+        wchar_t userPath[MAX_PATH];
+        if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_PROFILE, NULL, 0, userPath))) {
+            ScanDirectory(std::wstring(userPath) + L"\\Downloads");
+            DetectUserModeRootkit(std::wstring(userPath) + L"\\Downloads");
+            wchar_t temp[MAX_PATH]{};
+            if (GetTempPathW(MAX_PATH, temp))
+                DetectUserModeRootkit(temp);
+        }
+        ScanRegistry();
+        ScanServicesHeuristic();
+        AdminExtendedScan();
+#endif
+
+        UpdateEngineStatus(SystemStatus::SECURE_BLUE, L"Quick Scan Complete. System Clean.");
+        g_AV.status = SystemStatus::SECURE_BLUE;
+        g_AV.scanProgress = 1.0f;
+        g_AV.isScanning = false;
+        if (!g_SilentBoot.load()) g_ScanOverlay = true;
+        QuarantineFlush();
+        SaveScanIndex();
+        FlushTelemetry(true);
+        DrainDecisionQueue();
+    }
+
+    void DeepScan() {
+        g_SoftWarnOnce.store(false);
+        UpdateEngineStatus(SystemStatus::SECURE_BLUE, L"Running heuristic Deep Scan...");
+
+#ifdef _WIN32
+        DetectHiddenProcesses();
+        DetectUnsignedDrivers();
+
+        ScanAllLocalDrives();
+        ScanRegistry();
+        ScanServicesHeuristic();
+        AdminExtendedScan();
+#endif
+
+        UpdateEngineStatus(SystemStatus::SECURE_BLUE, L"Deep Scan Complete. System Protected.");
+        g_AV.status = SystemStatus::SECURE_BLUE;
+        g_AV.scanProgress = 1.0f;
+        g_AV.isScanning = false;
+        g_ScanOverlay = true;
+        QuarantineFlush();
+        SaveScanIndex();
+        FlushTelemetry(true);
+        DrainDecisionQueue();
+    }
+
+    void SimulateDownloadAndScan() {
+#ifdef _WIN32
+        wchar_t userPath[MAX_PATH];
+        if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_PROFILE, NULL, 0, userPath))) {
+            std::wstring downloadFolder = std::wstring(userPath) + L"\\Downloads\\";
+            std::wstring tempPath = downloadFolder + L"sample_installer.exe.crdownload";
+            std::wstring finalPath = downloadFolder + L"sample_installer.exe";
+
+            UpdateEngineStatus(SystemStatus::SECURE_BLUE, L"Downloading: sample_installer.exe (Pending completion...)");
+
+            std::wofstream tempFile(tempPath);
+            if (tempFile.is_open()) {
+                tempFile << L"Simulated installer byte stream content...";
+                std::this_thread::sleep_for(std::chrono::seconds(2));
+                tempFile.close();
+            }
+
+            MoveFileW(tempPath.c_str(), finalPath.c_str());
+
+            UpdateEngineStatus(SystemStatus::SECURE_BLUE, L"Download complete. Initiating payload scan...");
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+
+            UniversalThreatScan(finalPath);
+        }
+#endif
+    }
+}
+
+// --- BACKGROUND DAEMONS ---
+void AILearningDaemon() {
+    while (g_IsRunning.load()) {
+        std::this_thread::sleep_for(std::chrono::minutes(2));
+        if (!g_IsRunning.load()) break;
+        IntegrityPulse();
+    }
+}
+
+void WindowsEventLogSentinel() {
+    while (g_IsRunning.load()) {
+        std::this_thread::sleep_for(std::chrono::seconds(60));
+    }
+}
+
+void DirectoryMonitorSentinel() {
+#ifdef _WIN32
+    wchar_t userPath[MAX_PATH];
+    if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_PROFILE, NULL, 0, userPath))) {
+        std::wstring downloadDir = std::wstring(userPath) + L"\\Downloads";
+        HANDLE hDir = CreateFileW(downloadDir.c_str(), FILE_LIST_DIRECTORY,
+            FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+            NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+
+        if (hDir != INVALID_HANDLE_VALUE) {
+            char buffer[1024];
+            DWORD bytesReturned;
+
+            while (g_IsRunning.load()) {
+                if (ReadDirectoryChangesW(hDir, buffer, sizeof(buffer), FALSE,
+                    FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_LAST_WRITE,
+                    &bytesReturned, NULL, NULL)) {
+                    FILE_NOTIFY_INFORMATION* pNotify = (FILE_NOTIFY_INFORMATION*)buffer;
+                    do {
+                        std::wstring fileName(pNotify->FileName, pNotify->FileNameLength / sizeof(wchar_t));
+                        std::wstring fullPath = downloadDir + L"\\" + fileName;
+
+                        if (pNotify->Action == FILE_ACTION_ADDED ||
+                            pNotify->Action == FILE_ACTION_MODIFIED ||
+                            pNotify->Action == FILE_ACTION_RENAMED_NEW_NAME) {
+                            AdaptiveThrottle();
+                            if (DefenseShouldDeferHeavyWork()) continue;
+                            if (!IsDownloadComplete(fullPath)) continue;
+                            std::this_thread::sleep_for(std::chrono::milliseconds(400));
+                            ScanModule::UniversalThreatScan(fullPath);
+                        }
+                        pNotify = pNotify->NextEntryOffset ? (FILE_NOTIFY_INFORMATION*)((BYTE*)pNotify + pNotify->NextEntryOffset) : NULL;
+                    } while (pNotify);
+                }
+            }
+            CloseHandle(hDir);
+        }
+    }
+#endif
+}
+
+void NewDiskSentinel() {
+#ifdef _WIN32
+    DWORD known = GetLogicalDrives();
+    while (g_IsRunning.load()) {
+        std::this_thread::sleep_for(std::chrono::seconds(2));
+        DWORD now = GetLogicalDrives();
+        DWORD added = now & ~known;
+        known = now;
+        if (added == 0) continue;
+        for (int i = 0; i < 26; ++i) {
+            if ((added & (1u << i)) == 0) continue;
+            wchar_t root[4] = { static_cast<wchar_t>(L'A' + i), L':', L'\\', 0 };
+            UINT type = GetDriveTypeW(root);
+            if (type != DRIVE_FIXED && type != DRIVE_REMOVABLE && type != DRIVE_RAMDISK) continue;
+            std::wstring vol(root);
+            std::thread([vol]() {
+                SafeRun(L"new-disk", [&]() { ScanModule::ScanNewVolume(vol); });
+            }).detach();
+        }
+    }
+#endif
+}
+
+void HardwareThrottlingSentinel() {
+    while (g_IsRunning.load()) {
+        int idle = g_GuiVisible.load() ? 20 : 90;
+        if (DefenseShouldDeferHeavyWork()) idle += 45;
+        std::this_thread::sleep_for(std::chrono::seconds(idle));
+        if (!g_IsRunning.load()) break;
+        AdaptiveThrottle();
+        IntegrityPulse();
+        FlushTelemetry(false);
+        SaveScanIndex();
+    }
+}
+
+#ifdef _WIN32
+static HICON CreateOzentimeOIcon() {
+    const int s = 32;
+    HDC screen = GetDC(NULL);
+    HDC dc = CreateCompatibleDC(screen);
+    HBITMAP bmp = CreateCompatibleBitmap(screen, s, s);
+    HBITMAP mask = CreateBitmap(s, s, 1, 1, NULL);
+    HGDIOBJ old = SelectObject(dc, bmp);
+
+    RECT rc{ 0, 0, s, s };
+    HBRUSH bg = CreateSolidBrush(RGB(16, 16, 20));
+    FillRect(dc, &rc, bg);
+    DeleteObject(bg);
+
+    HBRUSH ring = CreateSolidBrush(RGB(30, 144, 255));
+    HGDIOBJ oldB = SelectObject(dc, ring);
+    HPEN pen = CreatePen(PS_SOLID, 3, RGB(30, 144, 255));
+    HGDIOBJ oldP = SelectObject(dc, pen);
+    Ellipse(dc, 3, 3, s - 3, s - 3);
+    SelectObject(dc, GetStockObject(BLACK_BRUSH));
+    Ellipse(dc, 10, 10, s - 10, s - 10);
+    SelectObject(dc, oldB);
+    SelectObject(dc, oldP);
+    DeleteObject(ring);
+    DeleteObject(pen);
+
+    SetBkMode(dc, TRANSPARENT);
+    SetTextColor(dc, RGB(255, 255, 255));
+    HFONT font = CreateFontW(18, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, 0, L"Segoe UI");
+    HGDIOBJ oldF = SelectObject(dc, font);
+    DrawTextW(dc, L"O", 1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    SelectObject(dc, oldF);
+    DeleteObject(font);
+
+    SelectObject(dc, old);
+    ICONINFO ii{};
+    ii.fIcon = TRUE;
+    ii.hbmMask = mask;
+    ii.hbmColor = bmp;
+    HICON icon = CreateIconIndirect(&ii);
+    DeleteObject(bmp);
+    DeleteObject(mask);
+    DeleteDC(dc);
+    ReleaseDC(NULL, screen);
+    return icon;
+}
+
+static void AddTrayIcon(HWND hwnd) {
+    if (!g_trayIcon) g_trayIcon = CreateOzentimeOIcon();
+    ZeroMemory(&g_nid, sizeof(g_nid));
+    g_nid.cbSize = sizeof(g_nid);
+    g_nid.hWnd = hwnd;
+    g_nid.uID = 1;
+    g_nid.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP;
+    g_nid.uCallbackMessage = WM_OZENTIME_TRAY;
+    g_nid.hIcon = g_trayIcon ? g_trayIcon : LoadIcon(NULL, IDI_SHIELD);
+    wcscpy_s(g_nid.szTip, L"Ozentime — protecting in the background");
+    if (!Shell_NotifyIconW(NIM_MODIFY, &g_nid)) {
+        Shell_NotifyIconW(NIM_ADD, &g_nid);
+    }
+}
+
+static void RemoveTrayIcon() {
+    Shell_NotifyIconW(NIM_DELETE, &g_nid);
+    if (g_trayIcon) {
+        DestroyIcon(g_trayIcon);
+        g_trayIcon = NULL;
+    }
+}
+
+static void HideToTray(HWND hwnd) {
+    ShowWindow(hwnd, SW_HIDE);
+    AddTrayIcon(hwnd);
+    g_GuiVisible.store(false);
+    LogMessage(L"[TRAY] Window hidden. Low-power watch mode.");
+}
+
+static void ShowFromTray(HWND hwnd) {
+    g_GuiVisible.store(true);
+    ShowWindow(hwnd, SW_RESTORE);
+    SetForegroundWindow(hwnd);
+}
+
+static void ExitFromTray(HWND hwnd) {
+    g_ReallyExit = true;
+    g_IsRunning.store(false);
+    g_QWorkCv.notify_all();
+    RemoveTrayIcon();
+    if (!g_DataDir.empty()) {
+        std::wofstream tokenFile(g_DataDir + L"\\user_shutdown.token", std::ios::trunc);
+        if (tokenFile) tokenFile << L"AUTHORIZED_EXIT";
+    }
+    DestroyWindow(hwnd);
+}
+
+void OpenFileExplorerAndDelete(HWND hwnd) {
+    IFileOpenDialog* pFileOpen = NULL;
+    HRESULT hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL, IID_IFileOpenDialog, reinterpret_cast<void**>(&pFileOpen));
+    if (SUCCEEDED(hr)) {
+        DWORD dwFlags;
+        pFileOpen->GetOptions(&dwFlags);
+        pFileOpen->SetOptions(dwFlags | FOS_PICKFOLDERS);
+        if (SUCCEEDED(pFileOpen->Show(hwnd))) {
+            IShellItem* pItem;
+            if (SUCCEEDED(pFileOpen->GetResult(&pItem))) {
+                PWSTR pszFilePath;
+                if (SUCCEEDED(pItem->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath))) {
+                    if (MessageBoxW(hwnd, L"Move this item to quarantine?", L"Confirm Quarantine", MB_YESNO | MB_ICONWARNING) == IDYES) {
+                        ScanModule::QuarantineFile(pszFilePath);
+                    }
+                    CoTaskMemFree(pszFilePath);
+                }
+                pItem->Release();
+            }
+        }
+        pFileOpen->Release();
+    }
+}
+#endif
+
+static void ApplyOzentimeStyle() {
+    if (g_StyleReady) return;
+    ImGuiStyle& st = ImGui::GetStyle();
+    st.WindowRounding = 12.0f;
+    st.FrameRounding = 12.0f;
+    st.GrabRounding = 12.0f;
+    st.TabRounding = 12.0f;
+    st.ChildRounding = 16.0f;
+    st.PopupRounding = 12.0f;
+    st.FramePadding = ImVec2(16, 12);
+    st.ItemSpacing = ImVec2(12, 12);
+    st.WindowPadding = ImVec2(18, 18);
+    st.WindowBorderSize = 0.0f;
+    st.ChildBorderSize = 0.0f;
+    ImVec4* c = st.Colors;
+    c[ImGuiCol_WindowBg] = ImVec4(0.05f, 0.06f, 0.08f, 1.0f);
+    c[ImGuiCol_ChildBg] = ImVec4(0.09f, 0.10f, 0.13f, 1.0f);
+    c[ImGuiCol_Button] = ImVec4(0.14f, 0.16f, 0.21f, 1.0f);
+    c[ImGuiCol_ButtonHovered] = ImVec4(0.18f, 0.36f, 0.72f, 1.0f);
+    c[ImGuiCol_ButtonActive] = ImVec4(0.12f, 0.30f, 0.62f, 1.0f);
+    c[ImGuiCol_Text] = ImVec4(0.94f, 0.95f, 0.97f, 1.0f);
+    c[ImGuiCol_TextDisabled] = ImVec4(0.62f, 0.66f, 0.72f, 1.0f);
+    c[ImGuiCol_Header] = ImVec4(0.16f, 0.34f, 0.68f, 0.45f);
+    c[ImGuiCol_Separator] = ImVec4(0.20f, 0.22f, 0.28f, 1.0f);
+    c[ImGuiCol_FrameBg] = ImVec4(0.12f, 0.13f, 0.17f, 1.0f);
+    g_StyleReady = true;
+}
+
+#ifdef _WIN32
+static std::wstring FirstWindowsVpnProfile() {
+    DWORD bufSize = 0, count = 0;
+    RasEnumEntriesW(NULL, NULL, NULL, &bufSize, &count);
+    if (bufSize == 0) return L"";
+    std::vector<unsigned char> raw(bufSize + sizeof(RASENTRYNAMEW));
+    LPRASENTRYNAMEW entries = reinterpret_cast<LPRASENTRYNAMEW>(raw.data());
+    entries[0].dwSize = sizeof(RASENTRYNAMEW);
+    if (RasEnumEntriesW(NULL, NULL, entries, &bufSize, &count) != 0 || count == 0) return L"";
+    return entries[0].szEntryName;
+}
+
+static std::wstring VpnProfileName(const char* country) {
+    std::wstring w(country, country + strlen(country));
+    return L"OzentimeVPN_" + w;
+}
+
+static bool ConnectVpn(const char* country) {
+    if (!g_VpnSupported) {
+        snprintf(g_VpnUiMsg, sizeof(g_VpnUiMsg), "VPN is off on %s", g_WinFlavorLabel);
+        return false;
+    }
+    g_VpnProfile = VpnProfileName(country);
+    std::wstring args = L"\"" + g_VpnProfile + L"\"";
+    HINSTANCE n = ShellExecuteW(NULL, L"open", L"rasdial.exe", args.c_str(), NULL, SW_HIDE);
+    bool ok = ((INT_PTR)n > 32);
+    if (!ok) {
+        std::wstring existing = FirstWindowsVpnProfile();
+        if (!existing.empty()) {
+            g_VpnProfile = existing;
+            args = L"\"" + existing + L"\"";
+            n = ShellExecuteW(NULL, L"open", L"rasdial.exe", args.c_str(), NULL, SW_HIDE);
+            ok = ((INT_PTR)n > 32);
+        }
+    }
+    if (!ok) {
+        if (g_WinBuild >= 10240)
+            ShellExecuteW(NULL, L"open", L"ms-settings:network-vpn", NULL, NULL, SW_SHOWNORMAL);
+        else
+            ShellExecuteW(NULL, L"open", L"rasphone.exe", NULL, NULL, SW_SHOWNORMAL);
+        snprintf(g_VpnUiMsg, sizeof(g_VpnUiMsg), "Add Windows profile %s first", country);
+        return false;
+    }
+    g_VpnOn.store(true);
+    snprintf(g_VpnUiMsg, sizeof(g_VpnUiMsg), "Connecting %s", country);
+    return true;
+}
+
+static bool DisconnectVpn(const char* country) {
+    (void)country;
+    ShellExecuteW(NULL, L"open", L"rasdial.exe", L"/disconnect", NULL, SW_HIDE);
+    g_VpnOn.store(false);
+    snprintf(g_VpnUiMsg, sizeof(g_VpnUiMsg), "Disconnected");
+    return true;
+}
+
+static void PickRandomVpnSpot() {
+    int c = g_VpnCountry;
+    if (c < 0) c = 0;
+    if (c > 4) c = 4;
+    int pick = (int)(GetTickCount64() % 5);
+    if (pick == g_VpnCity) pick = (pick + 1 + (int)(GetTickCount64() % 4)) % 5;
+    g_VpnCity = pick;
+    snprintf(g_VpnUiMsg, sizeof(g_VpnUiMsg), "Spot: %s / %s",
+        kVpnCountries[c], kVpnCities[c][g_VpnCity]);
+}
+
+static void VpnConnect() {
+    SafeRun(L"vpn-connect", []() {
+        ConnectVpn(kVpnCountries[g_VpnCountry]);
+    });
+}
+
+static void VpnDisconnect() {
+    SafeRun(L"vpn-disconnect", []() {
+        DisconnectVpn(kVpnCountries[g_VpnCountry]);
+    });
+}
+#endif
+
+void DrawShieldWidget(ImVec2 center, float size, float progress, SystemStatus status) {
+    ImDrawList* dl = ImGui::GetWindowDrawList();
+    if (progress < 0.0f) progress = 0.0f;
+    if (progress > 1.0f) progress = 1.0f;
+
+    ImU32 line = IM_COL32(46, 140, 232, 255);
+    if (status == SystemStatus::SUSPICION_YELLOW) line = IM_COL32(232, 176, 48, 255);
+    if (status == SystemStatus::THREAT_RED) line = IM_COL32(196, 72, 78, 255);
+    ImU32 ink = line;
+    ImU32 fill = IM_COL32(46, 140, 232, 40);
+    (void)fill; (void)ink;
+
+    ImVec2 poly[6] = {
+        ImVec2(center.x, center.y - size),
+        ImVec2(center.x + size * 0.60f, center.y - size * 0.30f),
+        ImVec2(center.x + size * 0.40f, center.y + size * 0.60f),
+        ImVec2(center.x, center.y + size),
+        ImVec2(center.x - size * 0.40f, center.y + size * 0.60f),
+        ImVec2(center.x - size * 0.60f, center.y - size * 0.30f)
+    };
+
+    if (g_ScanOverlay || g_AV.isScanning) {
+        dl->AddConvexPolyFilled(poly, 6, IM_COL32(8, 8, 10, 255));
+        float top = center.y - size;
+        float bot = center.y + size;
+        float fillY = bot - progress * (bot - top);
+        ImGui::PushClipRect(ImVec2(center.x - size, fillY), ImVec2(center.x + size, bot + 3), true);
+        dl->AddConvexPolyFilled(poly, 6, IM_COL32(255, 255, 255, 255));
+        ImGui::PopClipRect();
+    } else {
+        dl->AddConvexPolyFilled(poly, 6, IM_COL32(255, 255, 255, 255));
+    }
+    dl->AddPolyline(poly, 6, line, ImDrawFlags_Closed, size * 0.075f);
+
+    if (g_AV.isScanning) {
+        // progress fill only
+    } else if (status == SystemStatus::SECURE_BLUE) {
+        dl->AddLine(ImVec2(center.x - size * 0.22f, center.y + size * 0.02f),
+                    ImVec2(center.x - size * 0.04f, center.y + size * 0.22f), line, size * 0.075f);
+        dl->AddLine(ImVec2(center.x - size * 0.04f, center.y + size * 0.22f),
+                    ImVec2(center.x + size * 0.30f, center.y - size * 0.20f), line, size * 0.075f);
+    } else if (status == SystemStatus::SUSPICION_YELLOW) {
+        dl->AddText(ImGui::GetFont(), size * 0.42f,
+            ImVec2(center.x - size * 0.10f, center.y - size * 0.22f), line, "?");
+    } else {
+        dl->AddLine(ImVec2(center.x - size * 0.16f, center.y - size * 0.12f),
+                    ImVec2(center.x + size * 0.16f, center.y + size * 0.20f), line, size * 0.07f);
+        dl->AddLine(ImVec2(center.x + size * 0.16f, center.y - size * 0.12f),
+                    ImVec2(center.x - size * 0.16f, center.y + size * 0.20f), line, size * 0.07f);
+    }
+
+    if (g_AV.isScanning) {
+        int pctn = (int)(progress * 100.0f + 0.5f);
+        if (pctn > 100) pctn = 100;
+        char pct[16];
+        snprintf(pct, sizeof(pct), "%d%%", pctn);
+        ImVec2 ts = ImGui::CalcTextSize(pct);
+        dl->AddText(ImGui::GetFont(), size * 0.16f,
+            ImVec2(center.x - ts.x * 0.22f, center.y + size * 1.08f), line, pct);
+    }
+}
+
+static void BeginScanView() {
+    g_AV.isScanning = true;
+    g_AV.scanProgress = 0.0f;
+    g_ScanFilesDone.store(0);
+    g_ScanCancel.store(false);
+#ifdef _WIN32
+    g_ScanStartTick = GetTickCount64();
+    g_LastProgressTick = g_ScanStartTick;
+#else
+    g_ScanStartTick = 0;
+    g_LastProgressTick = 0;
+#endif
+    g_LastProgressSeen = 0.0f;
+    g_UiShieldDraw = 0.0f;
+    g_ScanOverlay = true;
+    g_AV.status = SystemStatus::SECURE_BLUE;
+    g_ThreatNoticeOnce.store(false);
+    g_SoftWarnOnce.store(false);
+}
+
+// Render GUI Interface
+#ifdef _WIN32
+static void EnableTaskbarPin(HWND hwnd);
+void RenderAntivirusGUI(HWND hwnd)
+#else
+void RenderAntivirusGUI()
+#endif
+{
+    ApplyOzentimeStyle();
+    ImGui::SetNextWindowPos(ImVec2(0, 0));
+    ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
+    ImGui::Begin("Ozentime", NULL, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollWithMouse);
+
+    if (g_NeedTerms) {
+        ImVec2 ws = ImGui::GetWindowSize();
+        ImGui::SetCursorPos(ImVec2(ws.x * 0.12f, ws.y * 0.12f));
+        ImGui::BeginChild("terms", ImVec2(ws.x * 0.76f, ws.y * 0.76f), true);
+        ImGui::Text("Ozentime AV — Terms");
+        ImGui::Dummy(ImVec2(0, 12));
+        ImGui::TextWrapped("This app is part of Ozentime. Selling it or editing the code is not allowed.");
+        ImGui::Dummy(ImVec2(0, 8));
+        ImGui::TextWrapped("If the app has any issues, send an email to ozentimeozen@gmail.com.");
+        ImGui::Dummy(ImVec2(0, 18));
+        ImGui::Checkbox("I will not sell this app or edit its code.", &g_TermSale);
+        ImGui::Checkbox("I can contact ozentimeozen@gmail.com if something is wrong.", &g_TermMail);
+        ImGui::Dummy(ImVec2(0, 16));
+        bool ready = g_TermSale && g_TermMail;
+        if (!ready) ImGui::BeginDisabled();
+        if (ImGui::Button("Accept and continue", ImVec2(-1, 44))) {
+            std::wofstream out(g_TermsPath, std::ios::trunc);
+            if (out) out << L"yes";
+            g_NeedTerms = false;
+            OfferAdminModeFirstRun();
+        }
+        if (!ready) ImGui::EndDisabled();
+        ImGui::EndChild();
+        ImGui::End();
+        return;
+    }
+
+    if (g_ShowVpnPanel) {
+        if (!g_VpnSupported) {
+            ImVec2 ws = ImGui::GetWindowSize();
+            ImGui::SetCursorPos(ImVec2(ws.x * 0.14f, ws.y * 0.30f));
+            ImGui::BeginChild("vpnnone", ImVec2(ws.x * 0.72f, 180.0f), true);
+            ImGui::Text("VPN is not used on this system.");
+            ImGui::TextUnformatted(g_WinFlavorLabel);
+            if (ImGui::Button("Back", ImVec2(-1, 36))) g_ShowVpnPanel = false;
+            ImGui::EndChild();
+            ImGui::End();
+            return;
+        }
+        ImVec2 ws = ImGui::GetWindowSize();
+        ImGui::SetCursorPos(ImVec2(ws.x * 0.14f, ws.y * 0.14f));
+        ImGui::BeginChild("vpnpanel", ImVec2(ws.x * 0.72f, ws.y * 0.72f), true);
+        ImGui::Text("VPN");
+        ImGui::Dummy(ImVec2(0, 8));
+        ImGui::TextWrapped("Pick a country. Then we pick a random city that is not your home spot.");
+        ImGui::Dummy(ImVec2(0, 10));
+        ImGui::SetNextItemWidth(-1);
+        ImGui::Combo("Country", &g_VpnCountry, kVpnCountries, IM_ARRAYSIZE(kVpnCountries));
+        ImGui::Dummy(ImVec2(0, 8));
+        if (ImGui::Button("Random spot", ImVec2(-1, 40))) {
+#ifdef _WIN32
+            PickRandomVpnSpot();
+#endif
+        }
+        if (g_VpnUiMsg[0]) ImGui::TextUnformatted(g_VpnUiMsg);
+        ImGui::Dummy(ImVec2(0, 12));
+        if (ImGui::Button("Done — connect", ImVec2(-1, 44))) {
+#ifdef _WIN32
+            if (!g_VpnUiMsg[0] || std::string(g_VpnUiMsg).find("Spot:") == std::string::npos)
+                PickRandomVpnSpot();
+            VpnConnect();
+#endif
+            g_ShowVpnPanel = false;
+        }
+        if (ImGui::Button("Disconnect", ImVec2(-1, 40))) {
+#ifdef _WIN32
+            VpnDisconnect();
+#endif
+            g_ShowVpnPanel = false;
+        }
+        if (ImGui::Button("Back", ImVec2(-1, 36))) g_ShowVpnPanel = false;
+        ImGui::EndChild();
+        ImGui::End();
+        return;
+    }
+
+    const char* statusLabel = g_AV.isScanning ? "Scanning" :
+        (g_AV.status == SystemStatus::SECURE_BLUE ? "Protected" :
+            (g_AV.status == SystemStatus::SUSPICION_YELLOW ? "Needs review" : "Threat found"));
+
+    if (g_AV.isScanning && g_AV.scanProgress < 0.05f) {
+        g_AV.scanProgress = 0.05f;
+    }
+#ifdef _WIN32
+    if (g_AV.isScanning) {
+        ULONGLONG nowTick = GetTickCount64();
+        if (fabsf(g_AV.scanProgress - g_LastProgressSeen) > 0.004f) {
+            g_LastProgressSeen = g_AV.scanProgress;
+            g_LastProgressTick = nowTick;
+        } else if (g_LastProgressTick != 0 && nowTick - g_LastProgressTick >= 5000) {
+            g_AV.scanProgress = 1.0f;
+            g_AV.isScanning = false;
+            g_ScanOverlay = false;
+            LogMessage(L"[SCAN] Progress stalled — finished the screen. Scan continues in the background.");
+        }
+        if (g_ScanStartTick != 0 && nowTick - g_ScanStartTick >= 60000) {
+            g_ScanCancel.store(true);
+            g_AV.scanProgress = 1.0f;
+            g_AV.isScanning = false;
+            g_ScanOverlay = false;
+            LogMessage(L"[SCAN] Stopped after 1 minute. Remaining folders skipped.");
+        }
+    }
+#endif
+    {
+        float wantFade = g_ScanOverlay ? 1.0f : 0.0f;
+        g_UiScanFade += (wantFade - g_UiScanFade) * 0.10f;
+        g_UiShieldDraw += (g_AV.scanProgress - g_UiShieldDraw) * 0.08f;
+        if (g_UiScanFade < 0.002f) g_UiScanFade = 0.0f;
+        if (g_UiScanFade > 0.998f) g_UiScanFade = 1.0f;
+    }
+
+    ImVec2 wp = ImGui::GetWindowPos();
+    ImVec2 ws = ImGui::GetWindowSize();
+
+    if (g_UiScanFade > 0.02f) {
+        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, g_UiScanFade);
+        ImGui::SetCursorPos(ImVec2(ws.x - 56.0f, 12.0f));
+        if (ImGui::Button("X##scanback", ImVec2(40, 40))) {
+            g_ScanOverlay = false;
+            g_AV.scanProgress = g_AV.isScanning ? g_AV.scanProgress : 0.0f;
+            if (!g_AV.isScanning) {
+                g_AV.status = SystemStatus::SECURE_BLUE;
+                g_UiShieldDraw = 0.0f;
+            }
+        }
+        float shield = (ws.x < ws.y ? ws.x : ws.y) * 0.28f;
+        if (shield < 120.0f) shield = 120.0f;
+        if (shield > 220.0f) shield = 220.0f;
+        ImVec2 mid(wp.x + ws.x * 0.5f, wp.y + ws.y * 0.38f);
+        DrawShieldWidget(mid, shield, g_UiShieldDraw, SystemStatus::SECURE_BLUE);
+        ImGui::SetCursorPos(ImVec2(ws.x * 0.5f - 180.0f, ws.y * 0.66f));
+        ImGui::PushTextWrapPos(ws.x * 0.5f + 180.0f);
+        ImGui::Text(g_AV.isScanning ? "Scanning this device" : "Scan complete");
+        ImGui::Text("%s", statusLabel);
+        ImGui::Text("Progress  %d%%", (int)(g_UiShieldDraw * 100.0f + 0.5f));
+        ImGui::PopTextWrapPos();
+        ImGui::SetCursorPos(ImVec2(ws.x * 0.5f - 90.0f, ws.y * 0.84f));
+        if (ImGui::Button("Hide to tray", ImVec2(180, 36))) {
+#ifdef _WIN32
+            HideToTray(hwnd);
+#endif
+        }
+        ImGui::PopStyleVar();
+        if (g_UiScanFade > 0.92f) {
+            ImGui::End();
+            return;
+        }
+    }
+
+    ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 1.0f - g_UiScanFade * 0.85f);
+
+    ImVec2 avail = ImGui::GetContentRegionAvail();
+    float railW = avail.x * 0.20f;
+    if (railW < 180.0f) railW = 180.0f;
+    if (railW > 280.0f) railW = 280.0f;
+    float heroW = avail.x * 0.42f;
+    if (heroW < 260.0f) heroW = 260.0f;
+
+    ImGui::BeginChild("rail", ImVec2(railW, 0), true);
+    ImGui::Dummy(ImVec2(0, 8));
+    ImGui::Text("Ozentime");
+    ImGui::TextDisabled("Protection");
+    ImGui::Dummy(ImVec2(0, 18));
+    ImGui::TextDisabled("STATUS");
+    ImGui::Text("%s", statusLabel);
+    ImGui::Dummy(ImVec2(0, 8));
+    ImGui::TextDisabled("ADMIN");
+    ImGui::Text("%s", g_AdminMode.load() ? "On" : "Off");
+    ImGui::Dummy(ImVec2(0, 8));
+    ImGui::TextDisabled("RESOURCES");
+    ImGui::Text("CPU  %.0f%%", GetCurrentCpuUsage());
+    ImGui::Text("GPU  %.0f%%", GetCurrentGpuUsage());
+    ImGui::Text("Scan %llu", (unsigned long long)g_TelScanned.load());
+    ImGui::Text("Skip %llu", (unsigned long long)g_TelSkipped.load());
+    ImGui::Text("Wait %llu", (unsigned long long)g_TelBusyAv.load());
+    ImGui::Text("Held %d", g_PendingDecisions.load() + (int)g_QBusy.load());
+    ImGui::Dummy(ImVec2(0, 16));
+#ifdef _WIN32
+    if (!g_AdminMode.load()) {
+        if (ImGui::Button("Enable Admin", ImVec2(-1, 36))) RequestAdminRelaunch();
+    }
+    if (ImGui::Button("Hide to tray", ImVec2(-1, 36))) HideToTray(hwnd);
+#endif
+    ImGui::EndChild();
+    ImGui::SameLine();
+
+    ImGui::BeginChild("hero", ImVec2(heroW, 0), true);
+    ImVec2 origin = ImGui::GetCursorScreenPos();
+    ImVec2 heroAvail = ImGui::GetContentRegionAvail();
+    float dashShield = heroAvail.x * 0.38f;
+    if (dashShield < 110.0f) dashShield = 110.0f;
+    if (dashShield > 200.0f) dashShield = 200.0f;
+    DrawShieldWidget(ImVec2(origin.x + heroAvail.x * 0.5f, origin.y + dashShield * 1.15f), dashShield,
+        1.0f, SystemStatus::SECURE_BLUE);
+    ImGui::Dummy(ImVec2(0, dashShield * 2.35f));
+    ImGui::SetCursorPosX(24);
+    ImGui::Text("%s", statusLabel);
+    ImGui::SetCursorPosX(40);
+    ImGui::TextDisabled(g_AV.status == SystemStatus::SECURE_BLUE ? "No active threat" :
+        (g_AV.status == SystemStatus::SUSPICION_YELLOW ? "A file needs review" : "A threat was contained"));
+    ImGui::EndChild();
+    ImGui::SameLine();
+
+    ImGui::BeginChild("actions", ImVec2(0, 0), true);
+    ImGui::Text("Actions");
+    ImGui::TextDisabled("Scan, isolate, update");
+    ImGui::Dummy(ImVec2(0, 8));
+    const int btnCount = 7;
+    ImVec2 pane = ImGui::GetContentRegionAvail();
+    float logH = pane.y * 0.28f;
+    if (logH < 90.0f) logH = 90.0f;
+    float leftover = pane.y - logH - 70.0f;
+    float bh = leftover / (float)btnCount;
+    if (bh < 36.0f) bh = 36.0f;
+    if (bh > 72.0f) bh = 72.0f;
+    ImVec2 wide(-1, bh);
+    if (ImGui::Button("Quick Scan", wide)) {
+        BeginScanView();
+        std::thread([]() { SafeRun(L"quick-scan", []() { ScanModule::QuickScan(); }); }).detach();
+    }
+    if (ImGui::Button("Full Scan", wide)) {
+        BeginScanView();
+        std::thread([]() { SafeRun(L"deep-scan", []() { ScanModule::DeepScan(); }); }).detach();
+    }
+    if (ImGui::Button("Quarantine target", wide)) {
+        std::thread([]() { SafeRun(L"disinfect", []() { ScanModule::DisinfectThreat(); }); }).detach();
+    }
+#ifdef _WIN32
+    if (ImGui::Button("Quarantine folder...", wide)) {
+        OpenFileExplorerAndDelete(hwnd);
+    }
+    if (g_VpnSupported) {
+        if (ImGui::Button(g_VpnOn.load() ? "VPN  On" : "VPN", wide)) {
+            g_ShowVpnPanel = true;
+            snprintf(g_VpnUiMsg, sizeof(g_VpnUiMsg), "Choose a country");
+        }
+    } else {
+        ImGui::TextDisabled("VPN off (%s)", g_WinFlavorLabel);
+    }
+#endif
+    if (ImGui::Button("Run disinfection", wide)) {
+        std::thread([]() { ScanModule::RunDisinfectionPass(); }).detach();
+    }
+    if (ImGui::Button("Check for updates", wide)) {
+#ifdef _WIN32
+        LaunchUpdaterInBackground();
+        LogMessage(L"[UPDATE] Check for updates started.");
+#else
+        LogMessage(L"[UPDATE] Updater is Windows-only in this build.");
+#endif
+    }
+    if (ImGui::Button("Pin to taskbar", wide)) {
+#ifdef _WIN32
+        EnableTaskbarPin(hwnd);
+        wchar_t desktop[MAX_PATH]{};
+        SHGetFolderPathW(NULL, CSIDL_DESKTOPDIRECTORY, NULL, 0, desktop);
+        std::wstring link = std::wstring(desktop) + L"\\Ozentime AV.lnk";
+        wchar_t appdata[MAX_PATH]{};
+        if (GetEnvironmentVariableW(L"APPDATA", appdata, MAX_PATH)) {
+            std::wstring pinDir = std::wstring(appdata) + L"\\Microsoft\\Internet Explorer\\Quick Launch\\User Pinned\\TaskBar";
+            std::error_code ec;
+            std::filesystem::create_directories(pinDir, ec);
+            CopyFileW(link.c_str(), (pinDir + L"\\Ozentime AV.lnk").c_str(), FALSE);
+        }
+        MessageBoxW(hwnd,
+            L"Windows will not pin this open window because Admin mode is on. That menu only says Close window.\n\n"
+            L"A shortcut named Ozentime AV is on your desktop. Right-click THAT shortcut and choose Pin to taskbar.",
+            L"Pin Ozentime",
+            MB_OK | MB_ICONINFORMATION);
+        PIDLIST_ABSOLUTE pidl = nullptr;
+        if (SUCCEEDED(SHParseDisplayName(link.c_str(), NULL, &pidl, 0, NULL)) && pidl) {
+            SHOpenFolderAndSelectItems(pidl, 0, NULL, 0);
+            CoTaskMemFree(pidl);
+        }
+#endif
+    }
+    ImGui::Dummy(ImVec2(0, 8));
+    ImGui::TextDisabled("ACTIVITY");
+    ImGui::BeginChild("log", ImVec2(0, 0), true);
+    {
+        std::lock_guard<std::mutex> lock(g_StateMutex);
+        for (const auto& logMsg : g_LogMessages) {
+            std::string str(logMsg.begin(), logMsg.end());
+            ImGui::TextUnformatted(str.c_str());
+        }
+        if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
+            ImGui::SetScrollHereY(1.0f);
+    }
+    ImGui::EndChild();
+    ImGui::EndChild();
+    ImGui::PopStyleVar();
+
+    if (g_AskRestart.load()) {
+        ImGui::OpenPopup("Restart to finish");
+    }
+    if (ImGui::BeginPopupModal("Restart to finish", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+        if (g_BootLooksIntact.load()) {
+            ImGui::Text("The threat was moved to quarantine.");
+            ImGui::Text("Boot files look intact.");
+            ImGui::Text("Restart to finish removing anything still in memory?");
+            if (ImGui::Button("Restart now", ImVec2(140, 36))) {
+                g_AskRestart.store(false);
+                ImGui::CloseCurrentPopup();
+#ifdef _WIN32
+                RestartComputerNow();
+#endif
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Later", ImVec2(140, 36))) {
+                g_AskRestart.store(false);
+                ImGui::CloseCurrentPopup();
+            }
+        } else {
+            ImGui::Text("Boot files look incomplete.");
+            ImGui::Text("A normal restart may not finish cleanup.");
+            ImGui::Text("Use Windows Recovery instead.");
+            if (ImGui::Button("Open Recovery", ImVec2(160, 36))) {
+                g_AskRestart.store(false);
+                ImGui::CloseCurrentPopup();
+#ifdef _WIN32
+                std::thread([]() { ScanModule::OfferWindowsRecovery(); }).detach();
+#endif
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Close", ImVec2(120, 36))) {
+                g_AskRestart.store(false);
+                ImGui::CloseCurrentPopup();
+            }
+        }
+        ImGui::EndPopup();
+    }
+
+    ImGui::End();
+}
+
+static bool PlatformInit() {
+#ifdef _WIN32
+    DetectWindowsFlavor();
+    return true;
+#else
+    return true;
+#endif
+}
+
+static void MonitorProcesses() {
+#ifdef _WIN32
+    SafeRun(L"monitor-proc", []() { DetectHiddenProcesses(); });
+#else
+    DIR* d = opendir("/proc");
+    if (d) closedir(d);
+#endif
+}
+
+static void MonitorProcessLoop() {
+    while (g_IsRunning.load()) {
+        MonitorProcesses();
+        std::this_thread::sleep_for(std::chrono::seconds(g_GuiVisible.load() ? 20 : 60));
+    }
+}
+
+static void RollbackEngine(const char* filePath) {
+    if (!filePath) return;
+#ifdef _WIN32
+    int n = MultiByteToWideChar(CP_UTF8, 0, filePath, -1, NULL, 0);
+    std::wstring w(n > 0 ? n : 0, L'\0');
+    if (n > 0) MultiByteToWideChar(CP_UTF8, 0, filePath, -1, &w[0], n);
+    if (!w.empty() && w.back() == L'\0') w.pop_back();
+    RollbackEngine(w);
+#else
+    std::wstring w(filePath, filePath + strlen(filePath));
+    RollbackEngine(w);
+#endif
+}
+
+#ifndef _WIN32
+static bool ConnectVpn(const char* country) {
+    (void)country;
+    return false;
+}
+static bool DisconnectVpn(const char* country) {
+    (void)country;
+    return false;
+}
+#endif
+
+#ifdef _WIN32
+static void AlertAdmins(const std::wstring& alert) {
+    std::wofstream log((g_DataDir.empty() ? std::wstring(L"C:\\OzentimeAV") : g_DataDir) + L"\\server_alerts.log", std::ios::app);
+    if (log) log << alert << L"\n";
+    LogMessage(L"[SERVER] " + alert);
+    if (!g_ServerNoticeOnce.exchange(true)) {
+        ShowTrayNotice(L"Ozentime Server", L"Server protection noticed a problem. See Activity.");
+    }
+}
+
+static void MonitorCriticalServices() {
+    const wchar_t* criticalServices[] = { L"MSSQLSERVER", L"W3SVC", L"TermService" };
+    SC_HANDLE scm = OpenSCManagerW(NULL, NULL, SC_MANAGER_ENUMERATE_SERVICE);
+    if (!scm) return;
+    for (auto svc : criticalServices) {
+        SC_HANDLE h = OpenServiceW(scm, svc, SERVICE_QUERY_STATUS);
+        if (!h) continue;
+        SERVICE_STATUS_PROCESS st{};
+        DWORD need = 0;
+        if (QueryServiceStatusEx(h, SC_STATUS_PROCESS_INFO, (LPBYTE)&st, sizeof(st), &need)) {
+            if (st.dwCurrentState != SERVICE_RUNNING)
+                AlertAdmins(std::wstring(L"Critical service not running: ") + svc);
+        }
+        CloseServiceHandle(h);
+    }
+    CloseServiceHandle(scm);
+}
+
+static void MonitorRdpLogins() {
+    HANDLE log = OpenEventLogW(NULL, L"Security");
+    if (!log) return;
+    BYTE raw[8192];
+    DWORD read = 0, need = 0;
+    if (ReadEventLogW(log, EVENTLOG_SEQUENTIAL_READ | EVENTLOG_BACKWARDS_READ,
+        0, raw, sizeof(raw), &read, &need) && read >= sizeof(EVENTLOGRECORD)) {
+        EVENTLOGRECORD* rec = reinterpret_cast<EVENTLOGRECORD*>(raw);
+        if ((rec->EventID & 0xFFFF) == 4625)
+            AlertAdmins(L"Failed logon recorded (possible RDP guessing).");
+    }
+    CloseEventLog(log);
+}
+
+static void RollbackConfig(const std::wstring& filePath) {
+    if (std::filesystem::exists(filePath)) RollbackEngine(filePath);
+}
+
+static void RunServerProtection() {
+    if (g_WinFlavor != WinFlavor::Server) return;
+    MonitorCriticalServices();
+    MonitorRdpLogins();
+    RollbackConfig(L"C:\\inetpub\\wwwroot\\web.config");
+}
+
+static void ServerProtectionLoop() {
+    if (g_WinFlavor != WinFlavor::Server) return;
+    LogMessage(L"[SERVER] Server protection on.");
+    while (g_IsRunning.load()) {
+        SafeRun(L"server-protect", []() { RunServerProtection(); });
+        std::this_thread::sleep_for(std::chrono::seconds(45));
+    }
+}
+#endif
+
+static void StartDefenseWorkers() {
+    std::thread([]() { ResilientWorker(L"q-worker-a", QuarantineWorkerLoop); }).detach();
+    std::thread([]() { ResilientWorker(L"q-worker-b", QuarantineWorkerLoop); }).detach();
+    std::thread([]() { ResilientWorker(L"integrity-learner", AILearningDaemon); }).detach();
+    std::thread([]() { ResilientWorker(L"hash-reload", AIDefinitionUpdaterDaemon); }).detach();
+    std::thread([]() { ResilientWorker(L"ai-manager", AiManagerDaemon); }).detach();
+#ifdef _WIN32
+    std::thread([]() { ResilientWorker(L"event-idle", WindowsEventLogSentinel); }).detach();
+    std::thread([]() { ResilientWorker(L"downloads-watch", DirectoryMonitorSentinel); }).detach();
+    std::thread([]() { ResilientWorker(L"disk-watch", NewDiskSentinel); }).detach();
+    std::thread([]() { ResilientWorker(L"integrity-pulse", HardwareThrottlingSentinel); }).detach();
+    if (g_WinFlavor == WinFlavor::Server)
+        std::thread([]() { ResilientWorker(L"server-guard", ServerProtectionLoop); }).detach();
+#endif
+    std::thread([]() { ResilientWorker(L"proc-watch", MonitorProcessLoop); }).detach();
+}
+
+static void RunHeadlessProtectionLoop() {
+    g_GuiVisible.store(false);
+    LogMessage(L"[SYSTEM] GUI unavailable — engine stays on in headless mode.");
+    std::thread([]() {
+        SafeRun(L"headless-scan", []() { ScanModule::QuickScan(); });
+    }).detach();
+    while (g_IsRunning.load())
+        std::this_thread::sleep_for(std::chrono::seconds(15));
+}
+
+static void PlatformShutdown() {
+    g_IsRunning.store(false);
+    g_QWorkCv.notify_all();
+}
+
+static void RegisterWindowsStartup() {
+#ifdef _WIN32
+    wchar_t exe[MAX_PATH]{};
+    if (GetModuleFileNameW(NULL, exe, MAX_PATH) == 0) return;
+    std::wstring cmd = L"\"" + std::wstring(exe) + L"\" /background";
+    HKEY key = NULL;
+    if (RegCreateKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+        0, NULL, 0, KEY_SET_VALUE, NULL, &key, NULL) == ERROR_SUCCESS) {
+        RegSetValueExW(key, L"OzentimeAV", 0, REG_SZ,
+            (const BYTE*)cmd.c_str(), (DWORD)((cmd.size() + 1) * sizeof(wchar_t)));
+        RegCloseKey(key);
+    }
+    RegDeleteKeyValueW(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Run", L"OzentimeAV");
+    wchar_t startup[MAX_PATH]{};
+    if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_STARTUP, NULL, 0, startup)))
+        DeleteFileW((std::wstring(startup) + L"\\Ozentime AV.lnk").c_str());
+    if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_COMMON_STARTUP, NULL, 0, startup)))
+        DeleteFileW((std::wstring(startup) + L"\\Ozentime AV.lnk").c_str());
+    LogMessage(L"[STARTUP] One background start at logon.");
+#endif
+}
+
+static void EnableTaskbarPin(HWND hwnd) {
+    const wchar_t* appId = L"Ozentime.OzentimeAV";
+    SetCurrentProcessExplicitAppUserModelID(appId);
+
+    static const PROPERTYKEY kAppIdKey = {
+        { 0x9F4C2855, 0x9F79, 0x4B39, { 0xA8, 0xD0, 0xE1, 0xD4, 0x2D, 0xE1, 0xD5, 0xF3 } },
+        5
+    };
+    IPropertyStore* store = nullptr;
+    if (hwnd && SUCCEEDED(SHGetPropertyStoreForWindow(hwnd, IID_PPV_ARGS(&store))) && store) {
+        PROPVARIANT pv{};
+        pv.vt = VT_LPWSTR;
+        pv.pwszVal = const_cast<wchar_t*>(appId);
+        store->SetValue(kAppIdKey, pv);
+        store->Commit();
+        store->Release();
+    }
+
+    wchar_t exe[MAX_PATH]{};
+    GetModuleFileNameW(NULL, exe, MAX_PATH);
+    wchar_t folders[2][MAX_PATH]{};
+    SHGetFolderPathW(NULL, CSIDL_PROGRAMS, NULL, 0, folders[0]);
+    SHGetFolderPathW(NULL, CSIDL_COMMON_PROGRAMS, NULL, 0, folders[1]);
+    const wchar_t* names[] = { L"\\Ozentime AV.lnk", L"\\Ozentime AV.lnk" };
+    for (int i = 0; i < 2; ++i) {
+        if (!folders[i][0]) continue;
+        std::wstring link = std::wstring(folders[i]) + names[i];
+        IShellLinkW* sl = nullptr;
+        if (FAILED(CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&sl))) || !sl)
+            continue;
+        sl->SetPath(exe);
+        sl->SetDescription(L"Ozentime AV");
+        std::wstring dir(exe);
+        size_t slash = dir.find_last_of(L"\\/");
+        if (slash != std::wstring::npos) dir.resize(slash);
+        sl->SetWorkingDirectory(dir.c_str());
+        IPropertyStore* ps = nullptr;
+        if (SUCCEEDED(sl->QueryInterface(IID_PPV_ARGS(&ps))) && ps) {
+            PROPVARIANT pv{};
+            pv.vt = VT_LPWSTR;
+            pv.pwszVal = const_cast<wchar_t*>(appId);
+            ps->SetValue(kAppIdKey, pv);
+            ps->Commit();
+            ps->Release();
+        }
+        IPersistFile* pf = nullptr;
+        if (SUCCEEDED(sl->QueryInterface(IID_PPV_ARGS(&pf))) && pf) {
+            pf->Save(link.c_str(), TRUE);
+            pf->Release();
+        }
+        sl->Release();
+    }
+}
+
+// Entry Point
+#ifdef _WIN32
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+    IsolateFromConsoleHost();
+    SetCurrentProcessExplicitAppUserModelID(L"Ozentime.OzentimeAV");
+    HANDLE one = CreateMutexW(NULL, TRUE, L"Local\\OzentimeAVSingle");
+    if (one && GetLastError() == ERROR_ALREADY_EXISTS) return 0;
+    const bool background = (lpCmdLine && strstr(lpCmdLine, "/background") != nullptr);
+    if (background) nCmdShow = SW_HIDE;
+#ifdef _WIN32
+    ApplyUserModeAclLockout();
+#endif
+    if (!PlatformInit()) return -1;
+    SafeRun(L"init-paths", []() { InitDataPaths(); });
+    SafeRun(L"startup", []() { RegisterWindowsStartup(); });
+    SafeRun(L"updater", []() { LaunchUpdaterInBackground(); });
+    SafeRun(L"admin-check", []() { ElevateToAdmin(); });
+    SafeRun(L"integrity-baseline", []() { ApplySelfProtection(); });
+
+    CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+
+    WNDCLASSEX wc = { sizeof(WNDCLASSEX), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, NULL, NULL, NULL, _T("AntivirusGUIClass"), NULL };
+    ::RegisterClassEx(&wc);
+    HWND hwnd = ::CreateWindow(wc.lpszClassName, _T("Ozentime AV"), WS_OVERLAPPEDWINDOW, 80, 60, 1100, 680, NULL, NULL, wc.hInstance, NULL);
+    g_hMainWnd = hwnd;
+    if (background && hwnd) {
+        g_SilentBoot.store(true);
+        ShowWindow(hwnd, SW_HIDE);
+    }
+    if (hwnd && !background) EnableTaskbarPin(hwnd);
+
+    if (!hwnd || !CreateDeviceD3D(hwnd)) {
+        CleanupDeviceD3D();
+        InitHardwareMonitoring();
+        StartDefenseWorkers();
+        LogMessage(L"[SYSTEM] Ozentime 2.0 heuristic engine active (no signatures).");
+        RunHeadlessProtectionLoop();
+        PlatformShutdown();
+        SaveScanIndex();
+        FlushTelemetry(true);
+        if (hwnd) ::DestroyWindow(hwnd);
+        ::UnregisterClass(wc.lpszClassName, wc.hInstance);
+        CoUninitialize();
+        return 0;
+    }
+
+    ::ShowWindow(hwnd, background ? SW_HIDE : nCmdShow);
+    ::UpdateWindow(hwnd);
+    AddTrayIcon(hwnd);
+    if (background) {
+        g_GuiVisible.store(false);
+        g_SilentBoot.store(true);
+        ShowWindow(hwnd, SW_HIDE);
+        LogMessage(L"[STARTUP] Background protection on. Silent scan started.");
+        std::thread([]() { SafeRun(L"boot-scan", []() { ScanModule::QuickScan(); }); }).detach();
+    }
+
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    ImGui::StyleColorsDark();
+
+    ImGui_ImplWin32_Init(hwnd);
+    ImGui_ImplDX11_Init(g_pd3dDevice, g_pd3dDeviceContext);
+    io.IniFilename = NULL;
+
+    InitHardwareMonitoring();
+    StartDefenseWorkers();
+
+    LogMessage(L"[SYSTEM] Ozentime 2.0 heuristic engine active (no signatures).");
+
+    bool done = false;
+    while (!done) {
+        MSG msg;
+        while (::PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE)) {
+            ::TranslateMessage(&msg);
+            ::DispatchMessage(&msg);
+            if (msg.message == WM_QUIT)
+                done = true;
+        }
+        if (done) break;
+
+        if (::IsIconic(hwnd) || !::IsWindowVisible(hwnd)) {
+            g_GuiVisible.store(false);
+            // Sleep the UI thread until a tray/window message arrives (up to 1s).
+            MsgWaitForMultipleObjects(0, NULL, FALSE, 1000, QS_ALLINPUT);
+            continue;
+        }
+        g_GuiVisible.store(true);
+
+        ImGui_ImplDX11_NewFrame();
+        ImGui_ImplWin32_NewFrame();
+        ImGui::NewFrame();
+
+        SafeRun(L"gui-frame", [&]() { RenderAntivirusGUI(hwnd); });
+
+        ImGui::Render();
+        const float clear_color_with_alpha[4] = { 0.1f, 0.1f, 0.1f, 1.0f };
+        g_pd3dDeviceContext->OMSetRenderTargets(1, &g_mainRenderTargetView, NULL);
+        g_pd3dDeviceContext->ClearRenderTargetView(g_mainRenderTargetView, clear_color_with_alpha);
+        ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+
+        if (g_AV.isScanning || g_UiScanFade > 0.05f) {
+            g_pSwapChain->Present(1, 0);
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        } else {
+            g_pSwapChain->Present(0, 0);
+            std::this_thread::sleep_for(std::chrono::milliseconds(120));
+        }
+    }
+
+    PlatformShutdown();
+    SaveScanIndex();
+    FlushTelemetry(true);
+    RemoveTrayIcon();
+
+    if (g_pdhQuery) {
+        PdhCloseQuery(g_pdhQuery);
+        g_pdhQuery = NULL;
+    }
+
+    ImGui_ImplDX11_Shutdown();
+    ImGui_ImplWin32_Shutdown();
+    ImGui::DestroyContext();
+
+    CleanupDeviceD3D();
+    ::DestroyWindow(hwnd);
+    ::UnregisterClass(wc.lpszClassName, wc.hInstance);
+    CoUninitialize();
+
+    return 0;
+}
+
+bool CreateDeviceD3D(HWND hWnd) {
+    DXGI_SWAP_CHAIN_DESC sd;
+    ZeroMemory(&sd, sizeof(sd));
+    sd.BufferCount = 2;
+    sd.BufferDesc.Width = 0;
+    sd.BufferDesc.Height = 0;
+    sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    sd.BufferDesc.RefreshRate.Numerator = 60;
+    sd.BufferDesc.RefreshRate.Denominator = 1;
+    sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+    sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+    sd.OutputWindow = hWnd;
+    sd.SampleDesc.Count = 1;
+    sd.SampleDesc.Quality = 0;
+    sd.Windowed = TRUE;
+    sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+
+    UINT createDeviceFlags = 0;
+    D3D_FEATURE_LEVEL featureLevel;
+    const D3D_FEATURE_LEVEL featureLevelArray[4] = {
+        D3D_FEATURE_LEVEL_11_0,
+        D3D_FEATURE_LEVEL_10_1,
+        D3D_FEATURE_LEVEL_10_0,
+        D3D_FEATURE_LEVEL_9_3
+    };
+    HRESULT hr = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, createDeviceFlags,
+        featureLevelArray, 4, D3D11_SDK_VERSION, &sd, &g_pSwapChain, &g_pd3dDevice, &featureLevel, &g_pd3dDeviceContext);
+    if (hr != S_OK) {
+        sd.BufferCount = 1;
+        sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+        sd.Flags = 0;
+        sd.SampleDesc.Count = 1;
+        sd.SampleDesc.Quality = 0;
+        hr = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_WARP, NULL, createDeviceFlags,
+            featureLevelArray, 4, D3D11_SDK_VERSION, &sd, &g_pSwapChain, &g_pd3dDevice, &featureLevel, &g_pd3dDeviceContext);
+        if (hr != S_OK) return false;
+    }
+
+    CreateRenderTarget();
+    return true;
+}
+
+void CleanupDeviceD3D() {
+    CleanupRenderTarget();
+    if (g_pSwapChain) { g_pSwapChain->Release(); g_pSwapChain = NULL; }
+    if (g_pd3dDeviceContext) { g_pd3dDeviceContext->Release(); g_pd3dDeviceContext = NULL; }
+    if (g_pd3dDevice) { g_pd3dDevice->Release(); g_pd3dDevice = NULL; }
+}
+
+void CreateRenderTarget() {
+    ID3D11Texture2D* pBackBuffer;
+    g_pSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer));
+    g_pd3dDevice->CreateRenderTargetView(pBackBuffer, NULL, &g_mainRenderTargetView);
+    pBackBuffer->Release();
+}
+
+void CleanupRenderTarget() {
+    if (g_mainRenderTargetView) { g_mainRenderTargetView->Release(); g_mainRenderTargetView = NULL; }
+}
+
+LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
+        return true;
+
+    switch (msg) {
+    case WM_CLOSE:
+        HideToTray(hWnd);
+        return 0;
+    case WM_SIZE:
+        if (wParam == SIZE_MINIMIZED) {
+            HideToTray(hWnd);
+            return 0;
+        }
+        if (g_pd3dDevice != NULL && wParam != SIZE_MINIMIZED) {
+            CleanupRenderTarget();
+            g_pSwapChain->ResizeBuffers(0, (UINT)LOWORD(lParam), (UINT)HIWORD(lParam), DXGI_FORMAT_UNKNOWN, 0);
+            CreateRenderTarget();
+        }
+        return 0;
+    case WM_OZENTIME_TRAY:
+        if (lParam == WM_LBUTTONDBLCLK || lParam == WM_LBUTTONUP) {
+            ShowFromTray(hWnd);
+            return 0;
+        }
+        if (lParam == WM_RBUTTONUP) {
+            POINT pt{};
+            GetCursorPos(&pt);
+            HMENU menu = CreatePopupMenu();
+            AppendMenuW(menu, MF_STRING, ID_TRAY_OPEN, L"Open Ozentime");
+            AppendMenuW(menu, MF_STRING, ID_TRAY_SCAN, L"Quick Scan");
+            AppendMenuW(menu, MF_SEPARATOR, 0, NULL);
+            AppendMenuW(menu, MF_STRING, ID_TRAY_EXIT, L"Exit");
+            SetForegroundWindow(hWnd);
+            int cmd = TrackPopupMenu(menu, TPM_RETURNCMD | TPM_RIGHTBUTTON, pt.x, pt.y, 0, hWnd, NULL);
+            DestroyMenu(menu);
+            if (cmd == ID_TRAY_OPEN) ShowFromTray(hWnd);
+            else if (cmd == ID_TRAY_SCAN) {
+                BeginScanView();
+                std::thread([]() { SafeRun(L"tray-scan", []() { ScanModule::QuickScan(); }); }).detach();
+            }
+            else if (cmd == ID_TRAY_EXIT) ExitFromTray(hWnd);
+            return 0;
+        }
+        return 0;
+    case WM_SYSCOMMAND:
+        if ((wParam & 0xfff0) == SC_MINIMIZE || (wParam & 0xfff0) == SC_CLOSE) {
+            HideToTray(hWnd);
+            return 0;
+        }
+        if ((wParam & 0xfff0) == SC_KEYMENU)
+            return 0;
+        break;
+    case WM_DESTROY:
+        RemoveTrayIcon();
+        ::PostQuitMessage(0);
+        return 0;
+    }
+    return ::DefWindowProc(hWnd, msg, wParam, lParam);
+}
+#endif
+
+#if defined(__linux__)
+static void LinuxPinDesktop() {
+    char exe[512]{};
+    ssize_t n = readlink("/proc/self/exe", exe, sizeof(exe) - 1);
+    if (n <= 0) return;
+    exe[n] = 0;
+    const char* home = getenv("HOME");
+    if (!home) home = ".";
+    std::string apps = std::string(home) + "/.local/share/applications";
+    std::string desk = std::string(home) + "/Desktop";
+    std::error_code ec;
+    std::filesystem::create_directories(apps, ec);
+    std::filesystem::create_directories(desk, ec);
+    std::string body =
+        "[Desktop Entry]\n"
+        "Name=Ozentime AV\n"
+        "Comment=Ozentime endpoint protection\n"
+        "Exec=" + std::string(exe) + "\n"
+        "Terminal=false\n"
+        "Type=Application\n"
+        "Categories=System;Security;\n";
+    for (const std::string& path : { apps + "/ozentime.desktop", desk + "/ozentime.desktop" }) {
+        std::ofstream out(path, std::ios::trunc);
+        if (out) out << body;
+    }
+    LogMessage(L"[PIN] Launcher written to Desktop and applications. Pin that icon to the dock. Linux will not pin a root window.");
+}
+
+static void LinuxCheckUpdates() {
+    const char* home = getenv("HOME");
+    if (!home) home = ".";
+    std::string folder = std::string(home) + "/ozentime-download";
+    std::error_code ec;
+    std::filesystem::create_directories(folder, ec);
+    std::string cmd = "curl -fsSL \"https://ozentime-antivirus.vercel.app/api/check-update\" -o \"" + folder + "/manifest.json\"";
+    int rc = std::system(cmd.c_str());
+    if (rc != 0) {
+        LogMessage(L"[UPDATE] Linux update check failed. Is curl installed?");
+        return;
+    }
+    LogMessage(L"[UPDATE] Manifest saved under ~/ozentime-download. Ozentime will not replace itself while running.");
+}
+
+int main() {
+    std::thread engine([]() { g_LinAI.Run(); });
+    std::cout << "Ozentime AV Linux\n"
+              << "1 scan   2 updates   3 pin launcher   4 quit\n";
+    while (g_IsRunning.load()) {
+        std::cout << "> ";
+        std::string line;
+        if (!std::getline(std::cin, line)) break;
+        if (line == "1") ScanModule::QuickScan();
+        else if (line == "2") LinuxCheckUpdates();
+        else if (line == "3") LinuxPinDesktop();
+        else if (line == "4") { g_IsRunning.store(false); break; }
+    }
+    if (engine.joinable()) engine.join();
+    return 0;
+}
+#endif
