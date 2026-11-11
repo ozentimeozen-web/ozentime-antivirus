@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ozentimeAV | Protection that works</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --blue: #2563eb;
+      --blue-dark: #1d4ed8;
+      --ink: #0f172a;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --bg: #f8fafc;
+      --card: #ffffff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Inter, "Segoe UI", sans-serif;
+      background: #f4f7fb;
+      color: var(--ink);
+      line-height: 1.55;
+    }
+    a { color: inherit; text-decoration: none; }
+    header {
+      position: sticky; top: 0; z-index: 20;
+      background: rgba(255,255,255,0.9);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(226,232,240,0.8);
+    }
+    .nav {
+      max-width: 1120px; margin: 0 auto; padding: 16px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 18px; }
+    .logo .mark {
+      width: 28px; height: 28px; border-radius: 8px;
+      background: var(--blue); color: #fff;
+      display: grid; place-items: center; font-size: 14px;
+    }
+    nav { display: flex; align-items: center; gap: 28px; color: #334155; font-weight: 500; font-size: 15px; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--blue); color: #fff; font-weight: 600;
+      border-radius: 10px; padding: 12px 18px; border: 0;
+    }
+    .btn:hover { background: var(--blue-dark); }
+    .btn.ghost { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+    .btn.soft { background: #e8eefc; color: var(--blue-dark); }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+    .hero {
+      padding: 72px 0 40px;
+      display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 40px; align-items: center;
+    }
+    .pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: #eef2ff; color: #3730a3; border-radius: 999px;
+      padding: 6px 12px; font-size: 13px; font-weight: 600; margin-bottom: 18px;
+    }
+    h1 { font-size: 56px; line-height: 1.05; letter-spacing: -1.2px; margin-bottom: 16px; }
+    h1 span { color: var(--blue); display: block; }
+    .lead { color: var(--muted); font-size: 18px; max-width: 520px; margin-bottom: 24px; }
+    .cta { display: flex; gap: 12px; margin-bottom: 18px; }
+    .checks { display: flex; gap: 16px; color: #334155; font-size: 14px; }
+    .checks span { color: var(--blue); font-weight: 700; margin-right: 4px; }
+    .preview {
+      position: relative;
+      background: #fff; border-radius: 22px; padding: 18px;
+      box-shadow: 0 30px 80px rgba(37,99,235,0.12);
+    }
+    .preview img { width: 100%; border-radius: 14px; display: block; background: #0f172a; }
+    .chip {
+      position: absolute; background: #fff; border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(15,23,42,0.08);
+      padding: 10px 12px; font-size: 13px; font-weight: 600;
+    }
+    .chip.top { top: 18px; right: -8px; }
+    .chip.bot { left: -10px; bottom: 40px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+    .section { padding: 70px 0; text-align: center; }
+    .kicker { color: var(--blue); font-size: 12px; letter-spacing: 1.4px; font-weight: 700; margin-bottom: 10px; }
+    h2 { font-size: 40px; letter-spacing: -0.6px; margin-bottom: 10px; }
+    .sub { color: var(--muted); margin-bottom: 32px; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; text-align: left; }
+    .card {
+      background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 22px;
+      box-shadow: 0 8px 24px rgba(15,23,42,0.04);
+    }
+    .icon {
+      width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center;
+      background: #eef2ff; color: var(--blue); margin-bottom: 14px; font-weight: 800;
+    }
+    .plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; text-align: left; }
+    .plan { background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 24px; position: relative; }
+    .plan.rec { border: 2px solid var(--blue); box-shadow: 0 16px 40px rgba(37,99,235,0.12); }
+    .badge {
+      position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+      background: var(--blue); color: #fff; font-size: 11px; font-weight: 700;
+      border-radius: 999px; padding: 4px 10px;
+    }
+    .plan h3 { font-size: 28px; margin: 8px 0 4px; }
+    .price { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+    .plan ul { list-style: none; margin: 16px 0 20px; }
+    .plan li { padding: 6px 0; color: #334155; }
+    .plan li:before { content: "✓ "; color: var(--blue); font-weight: 800; }
+    .file { font-size: 12px; color: var(--muted); margin-top: 10px; }
+    .banner {
+      background: linear-gradient(90deg, #1d4ed8, #2563eb);
+      color: #fff; border-radius: 22px; padding: 36px 40px;
+      display: flex; justify-content: space-between; align-items: center; gap: 20px;
+    }
+    .banner h3 { font-size: 32px; margin: 6px 0; }
+    .banner .btn { background: #fff; color: var(--blue-dark); }
+    footer {
+      margin-top: 50px; background: #fff; border-top: 1px solid var(--line);
+      padding: 22px 0 40px;
+    }
+    .foot {
+      display: flex; justify-content: space-between; align-items: center; gap: 12px;
+      color: var(--muted); font-size: 14px;
+    }
+    .policy-wrap { margin-top: 28px; }
+    .policy-btn {
+      width: 100%; text-align: left; background: #fff; border: 1px solid var(--line);
+      border-radius: 16px; padding: 18px 20px; font-size: 16px; font-weight: 700;
+      cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+    }
+    .policy {
+      display: none; background: #fff; border: 1px solid var(--line); border-top: 0;
+      border-radius: 0 0 16px 16px; padding: 8px 22px 22px; text-align: left; color: #334155;
+    }
+    .policy.open { display: block; }
+    .policy h4 { margin: 16px 0 6px; color: var(--ink); }
+    .policy a { color: var(--blue); }
+    @media (max-width: 900px) {
+      .hero, .grid, .plans { grid-template-columns: 1fr; }
+      h1 { font-size: 40px; }
+      nav .hide { display: none; }
+      .banner { flex-direction: column; align-items: flex-start; }
+      .foot { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav">
+      <a class="logo" href="#top"><span class="mark">✓</span> ozentimeAV</a>
+      <nav>
+        <a class="hide" href="#features">Protection</a>
+        <a class="hide" href="#plans">Plans</a>
+        <a class="hide" href="#about">About</a>
+        <a class="btn" href="#plans">Get protected</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap" id="top">
+    <section class="hero">
+      <div>
+        <div class="pill">✓ Security that stays out of your way</div>
+        <h1>Protection that works.<span>Peace of mind that lasts.</span></h1>
+        <p class="lead">Simple, lightweight antivirus protection built to keep your computer safe without slowing it down.</p>
+        <div class="cta">
+          <a class="btn" href="#plans">Choose your protection →</a>
+          <a class="btn ghost" href="#about">See how it works</a>
+        </div>
+        <div class="checks"><span>✓</span> Lightweight &nbsp; <span>✓</span> Easy to use &nbsp; <span>✓</span> Windows and Linux</div>
+      </div>
+      <div class="preview">
+        <img src="ozentimegui.png" alt="ozentimeAV protection screen">
+        <div class="chip top"><span class="dot" style="background:#22c55e"></span> Real-time protection<br><span style="font-weight:500;color:#64748b">Active now</span></div>
+        <div class="chip bot"><span class="dot" style="background:#2563eb"></span> System impact<br><span style="font-weight:500;color:#64748b">Low</span></div>
+      </div>
+    </section>
+
+    <section class="section" id="features">
+      <div class="kicker">QUIETLY POWERFUL</div>
+      <h2>Security without the complexity</h2>
+      <p class="sub">Everything you need to stay protected, with none of the clutter you don't.</p>
+      <div class="grid">
+        <article class="card">
+          <div class="icon">✓</div>
+          <h3>Always watching</h3>
+          <p>Continuous protection helps identify suspicious files before they can cause harm.</p>
+        </article>
+        <article class="card">
+          <div class="icon">⚡</div>
+          <h3>Remarkably light</h3>
+          <p>Efficient scanning keeps OzentimeAV quick, responsive, and easy on your system.</p>
+        </article>
+        <article class="card">
+          <div class="icon">◇</div>
+          <h3>Simple by design</h3>
+          <p>Clear controls and straightforward statuses make staying secure effortless.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="plans">
+      <div class="kicker">CHOOSE YOUR PROTECTION</div>
+      <h2>One less thing to worry about</h2>
+      <p class="sub">Pick the edition that fits your PC. Both are free.</p>
+      <div class="plans">
+        <article class="plan">
+          <div class="kicker">ESSENTIAL PROTECTION</div>
+          <h3>1.5 Pro</h3>
+          <div class="price">Free</div>
+          <p>User-mode heuristic scanner for older hardware and low resource use.</p>
+          <ul>
+            <li>File and process scanning</li>
+            <li>Heuristic checks</li>
+            <li>Threat file deletion</li>
+          </ul>
+          <a class="btn" href="ozentime_download/ozentime1.5pro.exe" download>Download 1.5 Pro →</a>
+          <div class="file">ozentime1.5pro.exe</div>
+        </article>
+        <article class="plan rec">
+          <span class="badge">RECOMMENDED</span>
+          <div class="kicker">MOST POPULAR</div>
+          <h3>2.0 Flagship</h3>
+          <div class="price">Free</div>
+          <p>Updated on 27/10/2026. Windows 7–11 and all Linux distros.</p>
+          <ul>
+            <li>Everything in 1.5 Pro</li>
+            <li>AI engine</li>
+            <li>VPN, not encrypted</li>
+            <li>Protection from start</li>
+          </ul>
+          <a class="btn" href="ozentime_download/OzentimeAV.exe" download>Download 2.0 →</a>
+          <div class="file">OzentimeAV.exe · Updater included</div>
+        </article>
+        <article class="plan">
+          <div class="kicker">UPDATES</div>
+          <h3>Updater</h3>
+          <div class="price">Free</div>
+          <p>New versions are published through the official updater.</p>
+          <ul>
+            <li>Official updates only</li>
+            <li>Use with 2.0</li>
+            <li>Do not use copies from other sites</li>
+          </ul>
+          <a class="btn ghost" href="ozentime_download/OzentimeUpdater.exe" download>Download updater</a>
+          <div class="file">OzentimeUpdater.exe</div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="about">
+      <div class="banner">
+        <div>
+          <div class="kicker" style="color:#dbeafe">READY WHEN YOU ARE</div>
+          <h3>Make your computer feel safe again.</h3>
+          <p>Download OzentimeAV and add a quiet, dependable layer of protection to your day.</p>
+        </div>
+        <a class="btn" href="#plans">View protection plans →</a>
+      </div>
+    </section>
+
+    <section class="policy-wrap" id="policy">
+      <button class="policy-btn" id="policyBtn" type="button">
+        Privacy & download policy <span id="arrow">+</span>
+      </button>
+      <div class="policy" id="policyBox">
+        <h4>Your privacy</h4>
+        <p>OzentimeAV does not steal your data or privacy in any way. We respect your privacy and your data, and we want to keep it safe.</p>
+        <h4>What we do on your PC</h4>
+        <p>We keep publishing new versions through the official updater.</p>
+        <h4>Do not modify or fake OzentimeAV</h4>
+        <p>The antivirus should not be modified, and it should not be given out in unauthorized ways. Any user who does this, or who fakes OzentimeAV, will be dealt with by OSL (Ozentime Security Labs) through legal court.</p>
+        <h4>Download only from this site</h4>
+        <p>With all due respect, users should only download our software from this official website, not from any other website trying to mimic us. If you find any such website, please contact us at <a href="mailto:ozentimeozen@gmail.com">ozentimeozen@gmail.com</a>.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap foot">
+      <a class="logo" href="#top"><span class="mark">✓</span> ozentimeAV</a>
+      <span>Lightweight protection for everyday peace of mind.</span>
+      <span>© 2026 OzentimeAV. All rights reserved.</span>
+    </div>
+  </footer>
+
+  <script>
+    const btn = document.getElementById("policyBtn");
+    const box = document.getElementById("policyBox");
+    const arrow = document.getElementById("arrow");
+    btn.addEventListener("click", function () {
+      const open = box.classList.toggle("open");
+      arrow.textContent = open ? "−" : "+";
+    });
+  </script>
+</body>
+</html>
